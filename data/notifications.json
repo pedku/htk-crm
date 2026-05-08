@@ -1,0 +1,46 @@
+{
+  "work_order_templates": {
+    "recibido": {
+      "asunto": "📥 Equipo recibido",
+      "mensaje": "🛠️ *HTK INGENIERIA*\n\nHola {cliente}, su {equipo} {marca} {modelo} ha sido recibido en nuestro taller.\n\nPronto le daremos el diagnóstico sin costo.\n\nGracias por confiar en nosotros.\n\n— HTK INGENIERIA ⚡"
+    },
+    "diagnosticando": {
+      "asunto": "🔍 Diagnosticando",
+      "mensaje": "🛠️ *HTK INGENIERIA*\n\nHola {cliente}, estamos revisando su {equipo} {marca} {modelo}.\n\nApenas tengamos el diagnóstico le enviamos el detalle y presupuesto.\n\n— HTK INGENIERIA ⚡"
+    },
+    "presupuestado": {
+      "asunto": "💰 Presupuesto listo",
+      "mensaje": "🛠️ *HTK INGENIERIA*\n\nHola {cliente}, el diagnóstico de su {equipo} {marca} {modelo} está listo.\n\nFalla detectada: {diagnostico}\n💰 *Presupuesto: ${presupuesto} COP*\n\n¿Aprueba la reparación? Responda:\n✅ Sí, adelante\n❌ No, gracias\n\n— HTK INGENIERIA ⚡"
+    },
+    "aprobado": {
+      "asunto": "✅ Reparación aprobada",
+      "mensaje": "🛠️ *HTK INGENIERIA*\n\nHola {cliente}, hemos recibido su aprobación. Ya comenzamos la reparación de su {equipo} {marca} {modelo}.\n\nLe mantendremos al tanto del progreso.\n\n— HTK INGENIERIA ⚡"
+    },
+    "reparando": {
+      "asunto": "🔧 Reparación en curso",
+      "mensaje": "🛠️ *HTK INGENIERIA*\n\nHola {cliente}, su {equipo} {marca} {modelo} está en reparación.\n\nLe avisaremos cuando esté listo.\n\n— HTK INGENIERIA ⚡"
+    },
+    "esperando_repuestos": {
+      "asunto": "📦 Esperando repuestos",
+      "mensaje": "🛠️ *HTK INGENIERIA*\n\nHola {cliente}, su {equipo} {marca} {modelo} está en espera de un repuesto necesario para la reparación.\n\nApenas llegue, continuamos y le avisamos.\n\n— HTK INGENIERIA ⚡"
+    },
+    "completado": {
+      "asunto": "✅ Reparación completada",
+      "mensaje": "🛠️ *HTK INGENIERIA*\n\nHola {cliente}, su {equipo} {marca} {modelo} está listo para recoger.\n\n📍 Dirección: [dirección del taller]\n🕐 Horario: Lun-Vie 8AM-6PM / Sáb 8AM-1PM\n\nGracias por confiar en HTK INGENIERIA ⚡\n\n— HTK INGENIERIA"
+    },
+    "entregado": {
+      "asunto": "📤 Equipo entregado",
+      "mensaje": "🛠️ *HTK INGENIERIA*\n\nHola {cliente}, gracias por su visita. Esperamos que su {equipo} {marca} {modelo} quede funcionando perfectamente.\n\nSi tiene cualquier novedad, no dude en contactarnos.\n\n¡Gracias por confiar en HTK INGENIERIA! ⚡"
+    },
+    "cancelado": {
+      "asunto": "❌ Reparación cancelada",
+      "mensaje": "🛠️ *HTK INGENIERIA*\n\nHola {cliente}, hemos cancelado el servicio de su {equipo} {marca} {modelo} según lo solicitado.\n\nSi necesita algo más, estamos a su disposición.\n\n— HTK INGENIERIA ⚡"
+    }
+  },
+  "reminder": {
+    "3_dias_sin_novedad": {
+      "asunto": "⏳ Recordatorio de equipo en taller",
+      "mensaje": "🛠️ *HTK INGENIERIA*\n\nHola {cliente}, le recordamos que su {equipo} {marca} {modelo} sigue en nuestro taller en estado: {estado}.\n\nSi tiene alguna duda, escríbanos.\n\n— HTK INGENIERIA ⚡"
+    }
+  }
+}

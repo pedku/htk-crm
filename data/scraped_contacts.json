@@ -1,0 +1,229 @@
+[
+  {
+    "id": "PRO-003",
+    "nombre": "Climatek",
+    "url": "climatek.com.co",
+    "status": 200,
+    "telefonos": [
+      "+573006535947",
+      "+573048780487",
+      "+573071895424",
+      "+573126497170",
+      "+573137254901",
+      "+573137254902",
+      "+573137254903",
+      "+573170731707",
+      "+573202614378",
+      "+573202614379",
+      "+573267973856",
+      "+573333333333",
+      "+573398692810",
+      "+573414634146",
+      "+573464052287",
+      "+573499043977",
+      "+573529411764",
+      "+573529411766",
+      "+573536585365",
+      "+573594771241",
+      "+573594771242",
+      "+573658536585",
+      "+573660130718",
+      "+573660130719",
+      "+573692810457",
+      "+573725490196",
+      "+573790849673",
+      "+573856209150",
+      "+573888888888",
+      "+573902439024",
+      "+573921568626",
+      "+573921568627",
+      "+573954248366"
+    ],
+    "whatsapp": [
+      "5718954248366013",
+      "57516339869281",
+      "579349904397705"
+    ],
+    "emails": [
+      "contacto@climatek.com.co"
+    ]
+  },
+  {
+    "id": "PRO-004",
+    "nombre": "Servicio Ingeniería Refrigeración",
+    "url": "servicioingenieriarefrigeracion.com",
+    "status": 200,
+    "telefonos": [
+      "+573059176729",
+      "+573100000000",
+      "+573106467495"
+    ],
+    "whatsapp": [
+      "+573100000000",
+      "+573106467495",
+      "wa.me/573106467495"
+    ],
+    "emails": [
+      "soporte@servicioingenieriarefrigeracion.com",
+      "tu@correo.com"
+    ]
+  },
+  {
+    "id": "PRO-005",
+    "nombre": "Génesis Electric SAS",
+    "url": "genesiselectricsas.com",
+    "status": 200,
+    "telefonos": [],
+    "whatsapp": [],
+    "emails": []
+  },
+  {
+    "id": "PRO-006",
+    "nombre": "Serviquilla",
+    "url": "serviquilla.com",
+    "status": 200,
+    "telefonos": [
+      "+573235549393"
+    ],
+    "whatsapp": [
+      "+573235549393"
+    ],
+    "emails": [
+      "contacto@serviquilla.com"
+    ]
+  },
+  {
+    "id": "PRO-007",
+    "nombre": "Inyectoplast de Colombia SAS",
+    "url": "inyectoplastdecolombia.com.co",
+    "status": 200,
+    "telefonos": [
+      "+573106745251"
+    ],
+    "whatsapp": [
+      "wa.me/3106745251"
+    ],
+    "emails": [
+      "gerencia@inyectoplastdecolombia.com",
+      "inyectoplastdecolombia@hotmail.com"
+    ]
+  },
+  {
+    "id": "PRO-008",
+    "nombre": "Plastiatlantico SAS",
+    "url": "plastiatlantico.com.co",
+    "status": 200,
+    "telefonos": [
+      "+573145389722",
+      "+573333333333",
+      "+575731453897"
+    ],
+    "whatsapp": [],
+    "emails": []
+  },
+  {
+    "id": "PRO-009",
+    "nombre": "Plásticos Truher S.A.",
+    "url": "plasticostruher.com",
+    "status": 200,
+    "telefonos": [
+      "+573009128638"
+    ],
+    "whatsapp": [],
+    "emails": [
+      "manizales@plasticostruher.com",
+      "truher@plasticostruher.com"
+    ]
+  },
+  {
+    "id": "PRO-010",
+    "nombre": "Plastix Colombia",
+    "url": "plastix.com.co",
+    "status": 200,
+    "telefonos": [
+      "+573226221680"
+    ],
+    "whatsapp": [],
+    "emails": [
+      "admin@plastix.com.co"
+    ]
+  },
+  {
+    "id": "PRO-011",
+    "nombre": "Tu Aire Barranquilla",
+    "url": "tuairebarranquilla.com",
+    "status": 403,
+    "error": "HTTP 403"
+  },
+  {
+    "id": "PRO-012",
+    "nombre": "Servicio Técnico del Caribe",
+    "url": "serviciotecnicodelcaribe.com",
+    "status": 200,
+    "telefonos": [
+      "+573150477045",
+      "+573243482287"
+    ],
+    "whatsapp": [
+      "wa.me/573150477045"
+    ],
+    "emails": [
+      "luismiguelvillarreal@gmail.com"
+    ]
+  },
+  {
+    "id": "PRO-016",
+    "nombre": "Plásticos JR SAS",
+    "url": "plasticosjr.com.co",
+    "status": 200,
+    "telefonos": [
+      "+573005651353"
+    ],
+    "whatsapp": [],
+    "emails": [
+      "info@plasticosjr.com.co"
+    ]
+  },
+  {
+    "id": "PRO-017",
+    "nombre": "Electrolineras de Colombia (EDC)",
+    "url": "electrolineras.com.co",
+    "status": 200,
+    "telefonos": [
+      "+573097865384",
+      "+573123473235",
+      "+573157541244",
+      "+573919791905",
+      "+575731575412"
+    ],
+    "whatsapp": [],
+    "emails": [
+      "18d2f96d279149989b95faf0a4b41882@sentry-next.wixpress.com",
+      "5d1795a2db124a268f1e1bd88f503500@sentry.wixpress.com",
+      "605a7baede844d278b89dc95ae0a9123@sentry-next.wixpress.com",
+      "8c4075d5481d476e945486754f783364@sentry.io",
+      "c183baa23371454f99f417f6616b724d@sentry.wixpress.com",
+      "core-js-bundle@3.2.1",
+      "dd0a55ccb8124b9c9d938e3acf41f8aa@sentry.wixpress.com",
+      "focus-within-polyfill@5.0.9",
+      "info@electrolineras.com.co",
+      "intl-segmenter@11.7.10",
+      "lodash@4.17.21",
+      "react-dom@18.3.1",
+      "react@18.3.1",
+      "rspack@1.6.6"
+    ]
+  },
+  {
+    "id": "PRO-026",
+    "nombre": "Inprosolar",
+    "url": "inprosolar.co",
+    "status": 200,
+    "telefonos": [
+      "+573135498875",
+      "+576014669664"
+    ],
+    "whatsapp": [],
+    "emails": []
+  }
+]

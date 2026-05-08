@@ -1,0 +1,6 @@
+{"type":"memory.recall.recorded","timestamp":"2026-05-05T03:00:36.925Z","query":"pending tasks heartbeat cron","resultCount":1,"results":[{"path":"memory/2026-05-04.md","startLine":1,"endLine":14,"score":0.6342565905041038}]}
+{"type":"memory.recall.recorded","timestamp":"2026-05-06T20:09:04.162Z","query":"leads contact data","resultCount":1,"results":[{"path":"memory/2026-05-04.md","startLine":1,"endLine":14,"score":0.6342570194381144}]}
+{"type":"memory.recall.recorded","timestamp":"2026-05-07T03:24:46.468Z","query":"heartbeat pending tasks cron","resultCount":1,"results":[{"path":"memory/2026-05-04.md","startLine":1,"endLine":14,"score":1}]}
+{"type":"memory.recall.recorded","timestamp":"2026-05-07T14:01:12.486Z","query":"prospección leads briefing matutino","resultCount":1,"results":[{"path":"memory/2026-05-04.md","startLine":1,"endLine":14,"score":0.6342570318601979}]}
+{"type":"memory.recall.recorded","timestamp":"2026-05-07T14:23:11.631Z","query":"propuestas leads pitches orden enviar","resultCount":1,"results":[{"path":"memory/2026-05-04.md","startLine":1,"endLine":14,"score":0.6342570318601979}]}
+{"type":"memory.recall.recorded","timestamp":"2026-05-08T08:19:45.696Z","query":"heartbeat tasks pending cron","resultCount":1,"results":[{"path":"memory/2026-05-04.md","startLine":1,"endLine":14,"score":1}]}

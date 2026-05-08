@@ -1,0 +1,14 @@
+[
+  {
+    "id": "INT-20260507-172733",
+    "lead_id": "PRO-017",
+    "lead_nombre": "Electrolineras de Colombia (EDC)",
+    "tipo": "whatsapp",
+    "direccion": "recibido",
+    "resumen": "El contacto respondió al pitch de alianza. Pide RUT y Cámara de Comercio para conocer formalmente a HTK y agendar cita con el área de planeación.",
+    "detalle": "El contacto respondió:\n\"Buenas tardes. Esta semana estamos un poco copados en agenda y parte de la otra, pero voy a agendarlo previamente. Les solicito que diligenciemos un formato para conocerlos. Si es persona jurídica, anexar RUT y Cámara de Comercio para tener la información, correo, contacto, y poder agendar una cita con la persona de nuestra área que maneja planeación.\"\n\nInterpretación: Interés genuino en alianza comercial. Quieren conocer formalmente a HTK antes de la reunión.",
+    "fecha": "2026-05-07T17:27:33.906153",
+    "proximo_paso": "Pedro debe preparar RUT, Cámara de Comercio y portafolio de HTK para enviarlos a Electrolineras.",
+    "estado": "pendiente_envio_docs"
+  }
+]

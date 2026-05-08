@@ -1,0 +1,35 @@
+[
+  {
+    "id": "HTK-001",
+    "cliente": {
+      "nombre": "Carlos Méndez",
+      "telefono": "+573001234567"
+    },
+    "equipo": {
+      "tipo": "aire_acondicionado",
+      "marca": "Midea",
+      "modelo": "Inverter 12K BTU"
+    },
+    "falla_reportada": "No enciende, luce en el panel parpadea y hace ruido",
+    "diagnostico": null,
+    "presupuesto": null,
+    "estado": "recibido",
+    "historial": [
+      {
+        "fecha": "2026-05-05T23:35:00-05:00",
+        "estado": "recibido",
+        "descripcion": "Equipo recibido en taller. Cliente reporta que dejó de funcionar repentinamente.",
+        "notificado": false
+      }
+    ],
+    "fechas": {
+      "recibido": "2026-05-05T23:35:00-05:00",
+      "diagnostico": null,
+      "presupuesto_aprobado": null,
+      "completado": null,
+      "entregado": null
+    },
+    "notas_internas": "",
+    "activo": true
+  }
+]

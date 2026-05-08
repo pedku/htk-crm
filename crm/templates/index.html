@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM HTK INGENIERIA</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --htk-primary: #00d4aa;
+      --htk-dark: #0d1b2a;
+      --htk-card: #1b2838;
+      --htk-sidebar: #0f1a2b;
+    }
+    body { background: var(--htk-dark); font-family: 'Segoe UI', system-ui, sans-serif; }
+    .sidebar {
+      background: var(--htk-sidebar);
+      min-height: 100vh;
+      border-right: 1px solid rgba(255,255,255,0.06);
+    }
+    .sidebar .nav-link {
+      color: rgba(255,255,255,0.65);
+      padding: 12px 20px;
+      border-radius: 10px;
+      margin: 2px 8px;
+      transition: all 0.2s;
+    }
+    .sidebar .nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
+    .sidebar .nav-link.active { color: #fff; background: var(--htk-primary); color: #000; font-weight: 600; }
+    .sidebar .nav-link i { margin-right: 10px; font-size: 1.2em; }
+    .brand { 
+      padding: 20px; 
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 12px;
+    }
+    .brand h5 { color: var(--htk-primary); margin: 0; font-weight: 700; }
+    .brand small { color: rgba(255,255,255,0.4); }
+    .main-content { padding: 24px 32px; }
+    .stat-card {
+      background: var(--htk-card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 20px 24px;
+      transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card .icon { font-size: 2em; color: var(--htk-primary); }
+    .stat-card .number { font-size: 1.8em; font-weight: 700; }
+    .stat-card .label { color: rgba(255,255,255,0.5); font-size: 0.85em; }
+    .table-container {
+      background: var(--htk-card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .page-title { color: #fff; font-weight: 600; margin-bottom: 20px; }
+    .page-title i { color: var(--htk-primary); margin-right: 10px; }
+    .badge-estado { font-size: 0.75em; padding: 4px 10px; border-radius: 20px; }
+    .btn-htk { background: var(--htk-primary); color: #000; border: none; font-weight: 600; }
+    .btn-htk:hover { background: #00bf9a; color: #000; }
+    .btn-outline-htk { border-color: var(--htk-primary); color: var(--htk-primary); }
+    .btn-outline-htk:hover { background: var(--htk-primary); color: #000; }
+    .search-box { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 10px; padding: 8px 16px; }
+    .search-box:focus { border-color: var(--htk-primary); outline: none; background: rgba(255,255,255,0.08); }
+    .modal-content { background: var(--htk-card); border: 1px solid rgba(255,255,255,0.08); }
+    .modal-header { border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .modal-footer { border-top: 1px solid rgba(255,255,255,0.06); }
+    .form-control, .form-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+    .form-control:focus, .form-select:focus { border-color: var(--htk-primary); box-shadow: 0 0 0 0.2rem rgba(0,212,170,0.15); background: rgba(255,255,255,0.08); color: #fff; }
+    .form-control::placeholder { color: rgba(255,255,255,0.3); }
+    .form-label { color: rgba(255,255,255,0.7); font-size: 0.85em; font-weight: 500; }
+    .timeline { position: relative; padding-left: 30px; }
+    .timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.1); }
+    .timeline-item { position: relative; margin-bottom: 16px; }
+    .timeline-item::before { content: ''; position: absolute; left: -24px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--htk-primary); }
+    .timeline-item .date { font-size: 0.75em; color: rgba(255,255,255,0.4); }
+    .nav-tabs .nav-link { color: rgba(255,255,255,0.6); border: none; }
+    .nav-tabs .nav-link.active { color: var(--htk-primary); background: transparent; border-bottom: 2px solid var(--htk-primary); }
+    .table { color: rgba(255,255,255,0.85); font-size: 0.9em; }
+    .table thead th { color: rgba(255,255,255,0.5); font-weight: 500; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .table td { vertical-align: middle; border-color: rgba(255,255,255,0.04); }
+    .table-hover tbody tr:hover { background: rgba(255,255,255,0.03); }
+    .action-btn { padding: 4px 8px; border-radius: 6px; border: none; background: transparent; color: rgba(255,255,255,0.4); }
+    .action-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .action-btn.danger:hover { background: rgba(220,53,69,0.2); color: #dc3545; }
+    .action-btn.primary:hover { background: rgba(0,212,170,0.15); color: var(--htk-primary); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .conversion-badge { cursor: pointer; }
+    .toast-container { z-index: 9999; }
+    .progress-bar-htk { background: var(--htk-primary); }
+    .section-title { color: var(--htk-primary); font-size: 1.1em; font-weight: 600; margin-bottom: 12px; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--htk-dark); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="toastMsg" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+      <i class="bi bi-check-circle-fill text-success me-2"></i>
+      <strong class="me-auto">HTK CRM</strong>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+    </div>
+    <div class="toast-body" id="toastBody"></div>
+  </div>
+</div>
+
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-2 sidebar d-none d-md-block p-0">
+      <div class="brand">
+        <h5><i class="bi bi-lightning-fill"></i> HTK CRM</h5>
+        <small>Gestión integrada</small>
+      </div>
+      <nav class="nav flex-column">
+        <a class="nav-link active" href="#" data-tab="dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a class="nav-link" href="#" data-tab="clients"><i class="bi bi-people"></i> Clientes</a>
+        <a class="nav-link" href="#" data-tab="workorders"><i class="bi bi-tools"></i> Órdenes Trabajo</a>
+        <a class="nav-link" href="#" data-tab="leads"><i class="bi bi-graph-up-arrow"></i> Prospectos</a>
+        <a class="nav-link" href="#" data-tab="interactions"><i class="bi bi-chat-dots"></i> Interacciones</a>
+      </nav>
+      <div class="px-3 mt-4">
+        <small style="color:rgba(255,255,255,0.25); font-size:0.7em;">
+          HTK INGENIERIA ⚡<br>
+          v2.0 — CRM Integrado
+        </small>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="col-md-10 ms-auto main-content">
+
+      <!-- ===================== DASHBOARD ===================== -->
+      <div id="tab-dashboard" class="tab-content active">
+        <h3 class="page-title"><i class="bi bi-speedometer2"></i> Dashboard</h3>
+        <div class="row g-3" id="statsRow">
+          <div class="col-md-3">
+            <div class="stat-card">
+              <div class="d-flex justify-content-between align-items-center">
+                <div><span class="number" id="statTotalLeads">0</span><span class="label"> leads</span></div>
+                <i class="bi bi-graph-up-arrow icon"></i>
+              </div>
+              <div class="label mt-1">Total prospectos</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card">
+              <div class="d-flex justify-content-between align-items-center">
+                <div><span class="number" id="statClients">0</span><span class="label"> clientes</span></div>
+                <i class="bi bi-people icon"></i>
+              </div>
+              <div class="label mt-1">Registrados</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card">
+              <div class="d-flex justify-content-between align-items-center">
+                <div><span class="number" id="statActiveWO">0</span><span class="label"> activas</span></div>
+                <i class="bi bi-tools icon"></i>
+              </div>
+              <div class="label mt-1">Órdenes en taller</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card">
+              <div class="d-flex justify-content-between align-items-center">
+                <div><span class="number" id="statCompletedWO">0</span><span class="label"> completadas</span></div>
+                <i class="bi bi-check-circle icon"></i>
+              </div>
+              <div class="label mt-1">Entregadas</div>
+            </div>
+          </div>
+        </div>
+        <div class="row g-3 mt-2">
+          <div class="col-md-6">
+            <div class="table-container">
+              <div class="section-title"><i class="bi bi-pie-chart"></i> Órdenes por Estado</div>
+              <div id="woByStatusChart"></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="table-container">
+              <div class="section-title"><i class="bi bi-bar-chart"></i> Líneas de Interés</div>
+              <div id="leadsByLineaChart"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row g-3 mt-2">
+          <div class="col-md-12">
+            <div class="table-container">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="section-title mb-0"><i class="bi bi-clock-history"></i> Últimas Órdenes</div>
+              </div>
+              <table class="table table-hover" id="recentWOTable">
+                <thead><tr><th>ID</th><th>Cliente</th><th>Equipo</th><th>Estado</th><th>Recibido</th></tr></thead>
+                <tbody id="recentWOBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== CLIENTES ===================== -->
+      <div id="tab-clients" class="tab-content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="page-title mb-0"><i class="bi bi-people"></i> Clientes</h3>
+          <button class="btn btn-htk" onclick="showModal('client', null)"><i class="bi bi-plus-lg"></i> Nuevo Cliente</button>
+        </div>
+        <div class="table-container">
+          <div class="d-flex justify-content-between mb-3">
+            <input class="search-box" id="clientSearch" placeholder="Buscar cliente..." onkeyup="renderClients()" style="width:300px;">
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="table table-hover">
+              <thead><tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Estado</th><th>Segmento</th><th>Línea</th><th>Órdenes</th><th>Último contacto</th><th>Acciones</th></tr></thead>
+              <tbody id="clientsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== ÓRDENES DE TRABAJO ===================== -->
+      <div id="tab-workorders" class="tab-content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="page-title mb-0"><i class="bi bi-tools"></i> Órdenes de Trabajo</h3>
+          <button class="btn btn-htk" onclick="showModal('workorder', null)"><i class="bi bi-plus-lg"></i> Nueva Orden</button>
+        </div>
+        <div class="table-container">
+          <div class="d-flex justify-content-between mb-3">
+            <input class="search-box" id="woSearch" placeholder="Buscar orden..." onkeyup="renderWorkOrders()" style="width:300px;">
+            <select class="form-select" id="woStatusFilter" onchange="renderWorkOrders()" style="width:200px;">
+              <option value="">Todos los estados</option>
+              <option value="recibido">Recibido</option>
+              <option value="diagnosticando">Diagnosticando</option>
+              <option value="presupuestado">Presupuestado</option>
+              <option value="aprobado">Aprobado</option>
+              <option value="reparando">Reparando</option>
+              <option value="esperando_repuestos">Esperando Repuestos</option>
+              <option value="completado">Completado</option>
+              <option value="entregado">Entregado</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="table table-hover">
+              <thead><tr><th>ID</th><th>Cliente</th><th>Teléfono</th><th>Equipo</th><th>Falla</th><th>Presupuesto</th><th>Estado</th><th>Recibido</th><th>Acciones</th></tr></thead>
+              <tbody id="woBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== LEADS ===================== -->
+      <div id="tab-leads" class="tab-content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="page-title mb-0"><i class="bi bi-graph-up-arrow"></i> Prospectos (Leads)</h3>
+          <button class="btn btn-htk" onclick="showModal('lead', null)"><i class="bi bi-plus-lg"></i> Nuevo Prospecto</button>
+        </div>
+        <div class="table-container">
+          <div class="d-flex justify-content-between mb-3">
+            <input class="search-box" id="leadSearch" placeholder="Buscar prospecto..." onkeyup="renderLeads()" style="width:300px;">
+            <select class="form-select" id="leadStatusFilter" onchange="renderLeads()" style="width:200px;">
+              <option value="">Todos</option>
+              <option value="nuevo">Nuevo</option>
+              <option value="contactado">Contactado</option>
+              <option value="cotizado">Cotizado</option>
+              <option value="negociacion">Negociación</option>
+              <option value="ganado">Ganado</option>
+              <option value="perdido">Perdido</option>
+              <option value="cliente">Cliente</option>
+            </select>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="table table-hover">
+              <thead><tr><th>ID</th><th>Nombre</th><th>Contacto</th><th>Segmento</th><th>Línea</th><th>Estado</th><th>Valor Est.</th><th>Creado</th><th>Acciones</th></tr></thead>
+              <tbody id="leadsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== INTERACCIONES ===================== -->
+      <div id="tab-interactions" class="tab-content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="page-title mb-0"><i class="bi bi-chat-dots"></i> Interacciones</h3>
+        </div>
+        <div class="table-container">
+          <div style="overflow-x:auto;">
+            <table class="table table-hover">
+              <thead><tr><th>ID</th><th>Lead/Cliente</th><th>Tipo</th><th>Resumen</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
+              <tbody id="interactionsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL GENÉRICO ===== -->
+<div class="modal fade" id="genericModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="modalBody">
+      </div>
+      <div class="modal-footer" id="modalFooter">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── Globals ──────────────────────────────────────────────────────────
+const API = window.location.origin;
+let clients = [], workOrders = [], leads = [], interactions = [];
+let modalInstance = null;
+
+const ESTADOS_WO = {
+  recibido: {label:'Recibido', class:'bg-secondary'},
+  diagnosticando: {label:'🔍 Diagnosticando', class:'bg-info'},
+  presupuestado: {label:'💰 Presupuestado', class:'bg-warning text-dark'},
+  aprobado: {label:'✅ Aprobado', class:'bg-success'},
+  reparando: {label:'🔧 Reparando', class:'bg-primary'},
+  esperando_repuestos: {label:'📦 Esperando Repuestos', class:'bg-secondary'},
+  completado: {label:'✅ Completado', class:'bg-success'},
+  entregado: {label:'📤 Entregado', class:'bg-success'},
+  cancelado: {label:'❌ Cancelado', class:'bg-danger'}
+};
+
+const ESTADOS_LEAD = {
+  nuevo: {label:'Nuevo', class:'bg-secondary'},
+  contactado: {label:'Contactado', class:'bg-info'},
+  cotizado: {label:'Cotizado', class:'bg-warning text-dark'},
+  negociacion: {label:'Negociación', class:'bg-primary'},
+  ganado: {label:'Ganado', class:'bg-success'},
+  perdido: {label:'Perdido', class:'bg-danger'},
+  cliente: {label:'Cliente', class:'bg-success'}
+};
+
+const ESTADOS_CLIENTE = {
+  lead: {label:'Lead', class:'bg-secondary'},
+  contacto: {label:'Contacto', class:'bg-info'},
+  cliente: {label:'Cliente', class:'bg-success'},
+  inactivo: {label:'Inactivo', class:'bg-danger'}
+};
+
+// ── Toast ────────────────────────────────────────────────────────────
+function showToast(msg, type='success') {
+  const t = document.getElementById('toastMsg');
+  document.getElementById('toastBody').textContent = msg;
+  t.querySelector('.toast-header i').className = type==='success' ? 'bi bi-check-circle-fill text-success me-2' : 'bi bi-exclamation-triangle-fill text-danger me-2';
+  const bs = new bootstrap.Toast(t);
+  bs.show();
+}
+
+// ── Tab Navigation ──────────────────────────────────────────────────
+document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+    this.classList.add('active');
+    const tab = this.dataset.tab;
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'dashboard') loadDashboard();
+    if (tab === 'clients') loadClients();
+    if (tab === 'workorders') loadWorkOrders();
+    if (tab === 'leads') loadLeads();
+    if (tab === 'interactions') loadInteractions();
+  });
+});
+
+// ── Data Loading ────────────────────────────────────────────────────
+async function fetchJSON(url) { const r = await fetch(url); return r.json(); }
+
+async function loadDashboard() {
+  try {
+    const stats = await fetchJSON('/api/stats');
+    document.getElementById('statTotalLeads').textContent = stats.total_leads;
+    document.getElementById('statClients').textContent = stats.total_clients;
+    document.getElementById('statActiveWO').textContent = stats.active_work_orders;
+    document.getElementById('statCompletedWO').textContent = stats.completed_work_orders;
+
+    // WO by status
+    const wc = document.getElementById('woByStatusChart');
+    const statusMap = stats.wo_by_status || {};
+    wc.innerHTML = Object.keys(ESTADOS_WO).map(s => {
+      const count = statusMap[s] || 0;
+      const pct = stats.total_work_orders > 0 ? (count / stats.total_work_orders * 100) : 0;
+      if (count === 0) return '';
+      return `<div class="mb-2">
+        <div class="d-flex justify-content-between">
+          <small>${ESTADOS_WO[s].label}</small>
+          <small>${count}</small>
+        </div>
+        <div class="progress" style="height:6px;">
+          <div class="progress-bar progress-bar-htk" style="width:${pct}%"></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Leads by linea
+    const lc = document.getElementById('leadsByLineaChart');
+    const lineaMap = stats.leads_by_linea || {};
+    const colorMap = { automatizacion:'#00d4aa', iot:'#0dcaf0', mantenimiento:'#ffc107', cargadores:'#dc3545', varios:'#6c757d' };
+    lc.innerHTML = Object.entries(lineaMap).map(([linea, count]) => {
+      const pct = stats.total_leads > 0 ? (count / stats.total_leads * 100) : 0;
+      const color = colorMap[linea] || '#6c757d';
+      return `<div class="mb-2">
+        <div class="d-flex justify-content-between">
+          <small>${linea.charAt(0).toUpperCase() + linea.slice(1)}</small>
+          <small>${count}</small>
+        </div>
+        <div class="progress" style="height:6px;">
+          <div class="progress-bar" style="width:${pct}%;background:${color}"></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Recent WO
+    const orders = await fetchJSON('/api/work_orders');
+    const recent = orders.slice(-10).reverse();
+    document.getElementById('recentWOBody').innerHTML = recent.map(o => {
+      const es = ESTADOS_WO[o.estado] || {label:o.estado, class:'bg-secondary'};
+      return `<tr>
+        <td><strong>${o.id}</strong></td>
+        <td>${o.cliente?.nombre || '-'}</td>
+        <td>${o.equipo?.marca || ''} ${o.equipo?.modelo || ''}</td>
+        <td><span class="badge ${es.class}">${es.label}</span></td>
+        <td>${formatDate(o.fechas?.recibido)}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) { showToast('Error al cargar dashboard', 'danger'); }
+}
+
+function formatDate(iso) {
+  if (!iso) return '-';
+  try { const d = new Date(iso); return d.toLocaleDateString('es-CO'); }
+  catch(e) { return iso; }
+}
+
+function formatCurrency(n) {
+  if (!n && n !== 0) return '-';
+  return '$' + Number(n).toLocaleString('es-CO');
+}
+
+function formatDateTime(iso) {
+  if (!iso) return '-';
+  try { const d = new Date(iso); return d.toLocaleString('es-CO'); }
+  catch(e) { return iso; }
+}
+
+// ── CLIENTES ────────────────────────────────────────────────────────
+async function loadClients() { clients = await fetchJSON('/api/clients'); renderClients(); }
+
+function renderClients() {
+  const q = (document.getElementById('clientSearch')?.value || '').toLowerCase();
+  const filtered = clients.filter(c =>
+    (c.nombre || '').toLowerCase().includes(q) || (c.telefono || '').includes(q) || (c.id || '').toLowerCase().includes(q)
+  );
+  document.getElementById('clientsBody').innerHTML = filtered.map(c => {
+    const es = ESTADOS_CLIENTE[c.estado] || {label:c.estado||'nuevo', class:'bg-secondary'};
+    return `<tr>
+      <td><strong>${c.id}</strong></td>
+      <td><strong>${c.nombre || '-'}</strong></td>
+      <td>${c.telefono || '-'}</td>
+      <td><span class="badge ${es.class}">${es.label}</span></td>
+      <td>${c.segmento || '-'}</td>
+      <td>${c.linea_interes || '-'}</td>
+      <td><span class="badge bg-info">${(c.ordenes||[]).length}</span></td>
+      <td><small>${formatDate(c.ultimo_contacto)}</small></td>
+      <td>
+        <button class="action-btn primary" onclick="showModal('client','${c.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
+        <button class="action-btn primary" onclick="showClientDetail('${c.id}')" title="Ver detalle"><i class="bi bi-eye"></i></button>
+        <button class="action-btn danger" onclick="deleteItem('clients','${c.id}','${c.nombre}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function showClientDetail(id) {
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+  
+  let detailHTML = `
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <p><strong>ID:</strong> ${c.id}</p>
+        <p><strong>Nombre:</strong> ${c.nombre || '-'}</p>
+        <p><strong>Teléfono:</strong> ${c.telefono || '-'}</p>
+        <p><strong>Estado:</strong> <span class="badge ${ESTADOS_CLIENTE[c.estado]?.class||'bg-secondary'}">${c.estado||'-'}</span></p>
+        <p><strong>Segmento:</strong> ${c.segmento || '-'}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>Línea Interés:</strong> ${c.linea_interes || '-'}</p>
+        <p><strong>Fuente:</strong> ${c.fuente || '-'}</p>
+        <p><strong>Primer Contacto:</strong> ${formatDate(c.primer_contacto)}</p>
+        <p><strong>Último Contacto:</strong> ${formatDate(c.ultimo_contacto)}</p>
+        <p><strong>Interacciones:</strong> ${c.interacciones_totales || 0}</p>
+      </div>
+    </div>`;
+
+  // Load linked work orders
+  try {
+    const full = await fetchJSON(`/api/clients/${id}`);
+    if (full.ordenes_detalle && full.ordenes_detalle.length > 0) {
+      detailHTML += `<hr><div class="section-title"><i class="bi bi-tools"></i> Órdenes de Trabajo</div>`;
+      full.ordenes_detalle.forEach(o => {
+        const es = ESTADOS_WO[o.estado] || {label:o.estado, class:'bg-secondary'};
+        detailHTML += `<div class="d-flex justify-content-between align-items-center p-2 mb-1" style="background:rgba(255,255,255,0.03);border-radius:8px;">
+          <div><strong>${o.id}</strong> — ${o.equipo?.marca||''} ${o.equipo?.modelo||''}</div>
+          <div><span class="badge ${es.class}">${es.label}</span> ${o.presupuesto ? '| '+formatCurrency(o.presupuesto) : ''}</div>
+        </div>`;
+      });
+    }
+  } catch(e) {}
+  
+  if (c.notas) {
+    detailHTML += `<hr><p><strong>Notas:</strong><br>${c.notas}</p>`;
+  }
+
+  setModal('Detalle del Cliente — ' + (c.nombre || c.id), detailHTML, '');
+  modalInstance.show();
+}
+
+// ── ÓRDENES DE TRABAJO ──────────────────────────────────────────────
+async function loadWorkOrders() { workOrders = await fetchJSON('/api/work_orders'); renderWorkOrders(); }
+
+function renderWorkOrders() {
+  const q = (document.getElementById('woSearch')?.value || '').toLowerCase();
+  const st = document.getElementById('woStatusFilter')?.value || '';
+  const filtered = workOrders.filter(o => {
+    if (st && o.estado !== st) return false;
+    return (o.cliente?.nombre || '').toLowerCase().includes(q) ||
+           (o.id || '').toLowerCase().includes(q) ||
+           (o.equipo?.marca || '').toLowerCase().includes(q) ||
+           (o.falla_reportada || '').toLowerCase().includes(q);
+  });
+  document.getElementById('woBody').innerHTML = filtered.map(o => {
+    const es = ESTADOS_WO[o.estado] || {label:o.estado, class:'bg-secondary'};
+    return `<tr>
+      <td><strong>${o.id}</strong></td>
+      <td>${o.cliente?.nombre || '-'}</td>
+      <td>${o.cliente?.telefono || '-'}</td>
+      <td>${o.equipo?.marca || ''} ${o.equipo?.modelo || ''} <small class="text-secondary">(${o.equipo?.tipo||''})</small></td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${o.falla_reportada||''}">${o.falla_reportada||'-'}</td>
+      <td>${formatCurrency(o.presupuesto)}</td>
+      <td><span class="badge ${es.class}">${es.label}</span></td>
+      <td><small>${formatDate(o.fechas?.recibido)}</small></td>
+      <td>
+        <button class="action-btn primary" onclick="showModal('workorder','${o.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
+        <button class="action-btn primary" onclick="showWODetail('${o.id}')" title="Ver detalle + historial"><i class="bi bi-eye"></i></button>
+        <button class="action-btn primary" onclick="showStatusModal('${o.id}')" title="Cambiar estado"><i class="bi bi-arrow-right-circle"></i></button>
+        <button class="action-btn danger" onclick="deleteItem('work_orders','${o.id}','${o.id}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function showWODetail(id) {
+  const o = workOrders.find(x => x.id === id);
+  if (!o) return;
+  
+  let detailHTML = `
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <p><strong>ID:</strong> ${o.id}</p>
+        <p><strong>Cliente:</strong> ${o.cliente?.nombre || '-'}</p>
+        <p><strong>Teléfono:</strong> ${o.cliente?.telefono || '-'}</p>
+        <p><strong>Equipo:</strong> ${o.equipo?.marca||''} ${o.equipo?.modelo||''} <span class="text-secondary">(${o.equipo?.tipo||''})</span></p>
+        <p><strong>Falla Reportada:</strong> ${o.falla_reportada || '-'}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>Diagnóstico:</strong> ${o.diagnostico || 'Pendiente'}</p>
+        <p><strong>Presupuesto:</strong> ${formatCurrency(o.presupuesto)}</p>
+        <p><strong>Estado:</strong> <span class="badge ${ESTADOS_WO[o.estado]?.class||'bg-secondary'}">${ESTADOS_WO[o.estado]?.label||o.estado}</span></p>
+        <p><strong>Notas Internas:</strong> ${o.notas_internas || '-'}</p>
+      </div>
+    </div>
+    <hr>
+    <div class="section-title"><i class="bi bi-clock-history"></i> Historial de Estados</div>
+    <div class="timeline">
+      ${(o.historial||[]).slice().reverse().map(h => `
+        <div class="timeline-item">
+          <div class="date">${formatDateTime(h.fecha)}</div>
+          <div><span class="badge ${ESTADOS_WO[h.estado]?.class||'bg-secondary'}">${ESTADOS_WO[h.estado]?.label||h.estado}</span></div>
+          <small>${h.descripcion}</small>
+        </div>
+      `).join('')}
+    </div>
+    <hr>
+    <div class="section-title"><i class="bi bi-calendar-event"></i> Fechas</div>
+    <div class="row">
+      <div class="col-md-4"><small>Recibido:</small><br><strong>${formatDateTime(o.fechas?.recibido)}</strong></div>
+      <div class="col-md-4"><small>Diagnóstico:</small><br><strong>${formatDateTime(o.fechas?.diagnostico)||'Pendiente'}</strong></div>
+      <div class="col-md-4"><small>Completado:</small><br><strong>${formatDateTime(o.fechas?.completado)||'Pendiente'}</strong></div>
+    </div>`;
+
+  setModal('Detalle: ' + o.id, detailHTML, '');
+  modalInstance.show();
+}
+
+function showStatusModal(id) {
+  const o = workOrders.find(x => x.id === id);
+  if (!o) return;
+  
+  const statuses = ['recibido','diagnosticando','presupuestado','aprobado','reparando','esperando_repuestos','completado','entregado','cancelado'];
+  const options = statuses.map(s => `<option value="${s}" ${s===o.estado?'selected':''}>${ESTADOS_WO[s]?.label||s}</option>`).join('');
+  
+  let detailHTML = `
+    <p><strong>Orden:</strong> ${o.id} — ${o.cliente?.nombre||''} (${o.equipo?.marca||''} ${o.equipo?.modelo||''})</p>
+    <div class="mb-3">
+      <label class="form-label">Estado actual</label>
+      <div>
+        <span class="badge ${ESTADOS_WO[o.estado]?.class||'bg-secondary'} fs-6">${ESTADOS_WO[o.estado]?.label||o.estado}</span>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Nuevo estado</label>
+      <select class="form-select" id="newStatus">${options}</select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Descripción del cambio</label>
+      <textarea class="form-control" id="statusDesc" rows="2" placeholder="¿Qué se hizo?"></textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Presupuesto (COP) — si aplica</label>
+      <input class="form-control" id="statusBudget" type="number" placeholder="Ej: 250000" value="${o.presupuesto||''}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Diagnóstico — si aplica</label>
+      <textarea class="form-control" id="statusDiagnostico" rows="2" placeholder="Diagnóstico técnico...">${o.diagnostico||''}</textarea>
+    </div>`;
+
+  setModal('🔄 Cambiar Estado — ' + o.id, detailHTML,
+    `<button class="btn btn-htk" onclick="updateStatus('${id}')"><i class="bi bi-check-lg"></i> Actualizar Estado</button>`
+  );
+  modalInstance.show();
+}
+
+async function updateStatus(id) {
+  const estado = document.getElementById('newStatus').value;
+  const descripcion = document.getElementById('statusDesc').value || `Estado cambiado a ${ESTADOS_WO[estado]?.label||estado}`;
+  const presupuesto = document.getElementById('statusBudget').value ? parseFloat(document.getElementById('statusBudget').value) : undefined;
+  const diagnostico = document.getElementById('statusDiagnostico').value || undefined;
+  
+  try {
+    const body = { estado, descripcion };
+    if (presupuesto !== undefined) body.presupuesto = presupuesto;
+    if (diagnostico) body.diagnostico = diagnostico;
+    
+    await fetch(`/api/work_orders/${id}/status`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    modalInstance.hide();
+    showToast('Estado actualizado correctamente');
+    await loadWorkOrders();
+    // Relink clients
+    await loadClients();
+  } catch(e) { showToast('Error al actualizar estado', 'danger'); }
+}
+
+// ── LEADS ────────────────────────────────────────────────────────────
+async function loadLeads() { leads = await fetchJSON('/api/leads'); renderLeads(); }
+
+function renderLeads() {
+  const q = (document.getElementById('leadSearch')?.value || '').toLowerCase();
+  const st = document.getElementById('leadStatusFilter')?.value || '';
+  const filtered = leads.filter(l => {
+    if (st && l.estado !== st) return false;
+    return (l.nombre || '').toLowerCase().includes(q) || (l.contacto || '').toLowerCase().includes(q) || (l.id || '').toLowerCase().includes(q);
+  });
+  document.getElementById('leadsBody').innerHTML = filtered.map(l => {
+    const es = ESTADOS_LEAD[l.estado] || {label:l.estado||'nuevo', class:'bg-secondary'};
+    const canConvert = l.estado !== 'cliente' && l.estado !== 'perdido';
+    return `<tr>
+      <td><strong>${l.id}</strong></td>
+      <td><strong>${l.nombre || '-'}</strong></td>
+      <td>${l.contacto || '-'}</td>
+      <td>${l.segmento || '-'}</td>
+      <td>${l.linea_interes || '-'}</td>
+      <td><span class="badge ${es.class}">${es.label}</span></td>
+      <td>${formatCurrency(l.valor_estimado)}</td>
+      <td><small>${formatDate(l.fecha_creacion)}</small></td>
+      <td>
+        <button class="action-btn primary" onclick="showModal('lead','${l.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
+        <button class="action-btn primary" onclick="showLeadDetail('${l.id}')" title="Ver"><i class="bi bi-eye"></i></button>
+        ${canConvert ? `<button class="action-btn" style="color:#ffc107;" onclick="convertLead('${l.id}')" title="Convertir a Cliente"><i class="bi bi-person-plus"></i></button>` : ''}
+        <button class="action-btn danger" onclick="deleteItem('leads','${l.id}','${l.nombre}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function showLeadDetail(id) {
+  const l = leads.find(x => x.id === id);
+  if (!l) return;
+  let html = `
+    <div class="row">
+      <div class="col-md-6">
+        <p><strong>ID:</strong> ${l.id}</p>
+        <p><strong>Nombre:</strong> ${l.nombre || '-'}</p>
+        <p><strong>Contacto:</strong> ${l.contacto || '-'}</p>
+        <p><strong>Segmento:</strong> ${l.segmento || '-'}</p>
+        <p><strong>Línea de Interés:</strong> ${l.linea_interes || '-'}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>Fuente:</strong> ${l.fuente || '-'}</p>
+        <p><strong>Estado:</strong> <span class="badge ${ESTADOS_LEAD[l.estado]?.class||'bg-secondary'}">${ESTADOS_LEAD[l.estado]?.label||l.estado}</span></p>
+        <p><strong>Valor Estimado:</strong> ${formatCurrency(l.valor_estimado)}</p>
+        <p><strong>Fecha Creación:</strong> ${formatDate(l.fecha_creacion)}</p>
+        <p><strong>Próximo Seguimiento:</strong> ${l.proximo_seguimiento ? formatDate(l.proximo_seguimiento) : 'No programado'}</p>
+      </div>
+    </div>`;
+  if (l.notas) html += `<hr><p><strong>Notas:</strong><br>${l.notas}</p>`;
+  setModal('Detalle: ' + (l.nombre || l.id), html, '');
+  modalInstance.show();
+}
+
+async function convertLead(id) {
+  if (!confirm('¿Convertir este lead en cliente?')) return;
+  try {
+    const res = await fetch(`/api/leads/${id}/convert`, { method:'POST' });
+    if (!res.ok) throw new Error();
+    showToast('Lead convertido a cliente exitosamente');
+    await loadLeads();
+    await loadClients();
+  } catch(e) { showToast('Error al convertir lead', 'danger'); }
+}
+
+// ── INTERACCIONES ──────────────────────────────────────────────────
+async function loadInteractions() { interactions = await fetchJSON('/api/interactions'); renderInteractions(); }
+
+function renderInteractions() {
+  document.getElementById('interactionsBody').innerHTML = interactions.slice().reverse().map(int => `
+    <tr>
+      <td><strong>${int.id}</strong></td>
+      <td>${int.lead_nombre || int.cliente?.nombre || '-'}</td>
+      <td><span class="badge ${int.direccion==='recibido'?'bg-info':'bg-success'}">${int.direccion||'-'}</span></td>
+      <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${int.resumen||''}">${int.resumen||'-'}</td>
+      <td><span class="badge bg-secondary">${int.estado||'-'}</span></td>
+      <td><small>${formatDateTime(int.fecha)}</small></td>
+      <td>
+        <button class="action-btn primary" onclick='showInteractionDetail(${JSON.stringify(int).replace(/'/g,"&#39;")})' title="Ver"><i class="bi bi-eye"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function showInteractionDetail(int) {
+  let html = `
+    <p><strong>ID:</strong> ${int.id}</p>
+    <p><strong>Lead/Cliente:</strong> ${int.lead_nombre || int.cliente?.nombre || '-'}</p>
+    <p><strong>Dirección:</strong> <span class="badge ${int.direccion==='recibido'?'bg-info':'bg-success'}">${int.direccion||'-'}</span></p>
+    <p><strong>Resumen:</strong> ${int.resumen || '-'}</p>
+    <p><strong>Detalle:</strong></p>
+    <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;white-space:pre-wrap;">${int.detalle || '-'}</div>
+    <p class="mt-2"><strong>Estado:</strong> <span class="badge bg-secondary">${int.estado||'-'}</span></p>
+    <p><strong>Próximo Paso:</strong> ${int.proximo_paso || '-'}</p>
+    <p><strong>Fecha:</strong> ${formatDateTime(int.fecha)}</p>
+  `;
+  setModal('Interacción: ' + int.id, html, '');
+  modalInstance.show();
+}
+
+// ── GENERIC MODAL ────────────────────────────────────────────────────
+function setModal(title, bodyHTML, footerHTML) {
+  document.getElementById('modalTitle').innerHTML = title;
+  document.getElementById('modalBody').innerHTML = bodyHTML;
+  document.getElementById('modalFooter').innerHTML = footerHTML;
+  if (!modalInstance) modalInstance = new bootstrap.Modal(document.getElementById('genericModal'));
+}
+
+// ── FORM MODALS ──────────────────────────────────────────────────────
+async function showModal(type, id) {
+  let title = '', fields = [], item = null;
+  
+  if (type === 'client') {
+    title = id ? 'Editar Cliente' : 'Nuevo Cliente';
+    if (id) item = clients.find(c => c.id === id);
+    fields = [
+      {label:'Nombre', key:'nombre', type:'text', required:true},
+      {label:'Teléfono', key:'telefono', type:'text', placeholder:'+573001234567'},
+      {label:'Fuente', key:'fuente', type:'select', options:['whatsapp','prospeccion','referido','web','otro']},
+      {label:'Estado', key:'estado', type:'select', options:['lead','contacto','cliente','inactivo']},
+      {label:'Segmento', key:'segmento', type:'select', options:['taller','fabrica','distribuidor','consumidor','B2B taller','B2B comercio','B2B industria','otro']},
+      {label:'Línea de Interés', key:'linea_interes', type:'select', options:['automatizacion','iot','mantenimiento','cargadores','varios']},
+      {label:'Notas', key:'notas', type:'textarea'}
+    ];
+  } else if (type === 'workorder') {
+    title = id ? 'Editar Orden de Trabajo' : 'Nueva Orden de Trabajo';
+    if (id) item = workOrders.find(o => o.id === id);
+    const clientOpts = clients.map(c => `<option value="${c.nombre}|${c.telefono}">${c.nombre} (${c.telefono||'sin tel'})</option>`).join('');
+    const clientSelect = id ? '' : `<div class="mb-3"><label class="form-label">Cliente existente (opcional)</label>
+      <select class="form-select" id="f_existingClient" onchange="fillClientData()">
+        <option value="">— Seleccionar existente —</option>
+        ${clientOpts}
+      </select></div>`;
+    fields = [
+      {label:'Nombre del Cliente', key:'cliente_nombre', type:'text', required:true},
+      {label:'Teléfono del Cliente', key:'cliente_telefono', type:'text', placeholder:'+573001234567'},
+      {label:'Tipo de Equipo', key:'equipo_tipo', type:'select', options:['aire_acondicionado','lavadora','refrigerador','plc','variador','fuente','electrodomestico','cargador','otro']},
+      {label:'Marca', key:'equipo_marca', type:'text'},
+      {label:'Modelo', key:'equipo_modelo', type:'text'},
+      {label:'Falla Reportada', key:'falla_reportada', type:'textarea'},
+      {label:'Presupuesto (COP)', key:'presupuesto', type:'number', placeholder:'Ej: 250000'},
+      {label:'Notas Internas', key:'notas_internas', type:'textarea'}
+    ];
+    // Build dynamic form
+    let formHTML = clientSelect;
+    fields.forEach(f => {
+      let val = '';
+      if (item) {
+        if (f.key.startsWith('cliente_')) {
+          val = item.cliente?.[f.key.replace('cliente_','')] || '';
+        } else if (f.key.startsWith('equipo_')) {
+          val = item.equipo?.[f.key.replace('equipo_','')] || '';
+        } else {
+          val = item[f.key] || '';
+        }
+      }
+      formHTML += formField(f, val);
+    });
+    setModal(title, formHTML, 
+      `<button class="btn btn-htk" onclick="saveModal('${type}','${id||''}')"><i class="bi bi-check-lg"></i> Guardar</button>`
+    );
+    modalInstance.show();
+    return;
+  } else if (type === 'lead') {
+    title = id ? 'Editar Prospecto' : 'Nuevo Prospecto';
+    if (id) item = leads.find(l => l.id === id);
+    fields = [
+      {label:'Nombre / Empresa', key:'nombre', type:'text', required:true},
+      {label:'Contacto', key:'contacto', type:'text', placeholder:'Teléfono, email o red social'},
+      {label:'Segmento', key:'segmento', type:'select', options:['B2B taller','B2B comercio','B2B industria','B2C consumidor','distribuidor','otro']},
+      {label:'Línea de Interés', key:'linea_interes', type:'select', options:['automatizacion','iot','mantenimiento','cargadores','varios']},
+      {label:'Estado', key:'estado', type:'select', options:['nuevo','contactado','cotizado','negociacion','ganado','perdido']},
+      {label:'Fuente', key:'fuente', type:'select', options:['Facebook','web','referido','llamada','feria','alianza','directorio','otro']},
+      {label:'Valor Estimado (COP)', key:'valor_estimado', type:'number'},
+      {label:'Próximo Seguimiento', key:'proximo_seguimiento', type:'date'},
+      {label:'Notas', key:'notas', type:'textarea'}
+    ];
+  }
+  
+  let formHTML = fields.map(f => {
+    let val = item ? (item[f.key] || '') : '';
+    return formField(f, val);
+  }).join('');
+  
+  setModal(title, formHTML,
+    `<button class="btn btn-htk" onclick="saveModal('${type}','${id||''}')"><i class="bi bi-check-lg"></i> Guardar</button>`
+  );
+  modalInstance.show();
+}
+
+function formField(f, val) {
+  if (f.type === 'textarea') {
+    return `<div class="mb-3">
+      <label class="form-label">${f.label}${f.required?' <span class="text-danger">*</span>':''}</label>
+      <textarea class="form-control" id="f_${f.key}" rows="3" ${f.required?'required':''} placeholder="${f.placeholder||''}">${val}</textarea>
+    </div>`;
+  }
+  if (f.type === 'select') {
+    const opts = f.options.map(o => `<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('');
+    return `<div class="mb-3">
+      <label class="form-label">${f.label}</label>
+      <select class="form-select" id="f_${f.key}">${opts}</select>
+    </div>`;
+  }
+  return `<div class="mb-3">
+    <label class="form-label">${f.label}${f.required?' <span class="text-danger">*</span>':''}</label>
+    <input class="form-control" id="f_${f.key}" type="${f.type}" value="${val}" ${f.required?'required':''} placeholder="${f.placeholder||''}">
+  </div>`;
+}
+
+function fillClientData() {
+  const sel = document.getElementById('f_existingClient');
+  if (!sel.value) return;
+  const [name, phone] = sel.value.split('|');
+  document.getElementById('f_cliente_nombre').value = name;
+  document.getElementById('f_cliente_telefono').value = phone;
+}
+
+async function saveModal(type, id) {
+  const isEdit = !!id;
+  
+  // Collect form data
+  let data = {};
+  if (type === 'client') {
+    data = {
+      nombre: document.getElementById('f_nombre')?.value,
+      telefono: document.getElementById('f_telefono')?.value,
+      fuente: document.getElementById('f_fuente')?.value,
+      estado: document.getElementById('f_estado')?.value,
+      segmento: document.getElementById('f_segmento')?.value,
+      linea_interes: document.getElementById('f_linea_interes')?.value,
+      notas: document.getElementById('f_notas')?.value
+    };
+    if (!data.nombre) { showToast('El nombre es requerido', 'danger'); return; }
+    
+    try {
+      if (isEdit) {
+        await fetch(`/api/clients/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      } else {
+        await fetch('/api/clients', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      }
+      modalInstance.hide();
+      showToast(isEdit ? 'Cliente actualizado' : 'Cliente creado');
+      await loadClients();
+    } catch(e) { showToast('Error al guardar cliente', 'danger'); }
+    
+  } else if (type === 'workorder') {
+    const clienteNombre = document.getElementById('f_cliente_nombre')?.value;
+    if (!clienteNombre) { showToast('El nombre del cliente es requerido', 'danger'); return; }
+    
+    data = {
+      cliente: {
+        nombre: clienteNombre,
+        telefono: document.getElementById('f_cliente_telefono')?.value || ''
+      },
+      equipo: {
+        tipo: document.getElementById('f_equipo_tipo')?.value || 'otro',
+        marca: document.getElementById('f_equipo_marca')?.value || '',
+        modelo: document.getElementById('f_equipo_modelo')?.value || ''
+      },
+      falla_reportada: document.getElementById('f_falla_reportada')?.value || '',
+      presupuesto: document.getElementById('f_presupuesto')?.value ? parseFloat(document.getElementById('f_presupuesto').value) : null,
+      notas_internas: document.getElementById('f_notas_internas')?.value || ''
+    };
+    
+    try {
+      if (isEdit) {
+        await fetch(`/api/work_orders/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      } else {
+        await fetch('/api/work_orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      }
+      modalInstance.hide();
+      showToast(isEdit ? 'Orden actualizada' : 'Orden creada');
+      await loadWorkOrders();
+      await loadClients(); // refresh client links
+      await loadDashboard();
+    } catch(e) { showToast('Error al guardar orden', 'danger'); }
+    
+  } else if (type === 'lead') {
+    data = {
+      nombre: document.getElementById('f_nombre')?.value,
+      contacto: document.getElementById('f_contacto')?.value,
+      segmento: document.getElementById('f_segmento')?.value,
+      linea_interes: document.getElementById('f_linea_interes')?.value,
+      estado: document.getElementById('f_estado')?.value,
+      fuente: document.getElementById('f_fuente')?.value,
+      valor_estimado: document.getElementById('f_valor_estimado')?.value ? parseFloat(document.getElementById('f_valor_estimado').value) : null,
+      proximo_seguimiento: document.getElementById('f_proximo_seguimiento')?.value || null,
+      notas: document.getElementById('f_notas')?.value
+    };
+    if (!data.nombre) { showToast('El nombre es requerido', 'danger'); return; }
+    
+    try {
+      if (isEdit) {
+        await fetch(`/api/leads/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      } else {
+        await fetch('/api/leads', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      }
+      modalInstance.hide();
+      showToast(isEdit ? 'Prospecto actualizado' : 'Prospecto creado');
+      await loadLeads();
+    } catch(e) { showToast('Error al guardar prospecto', 'danger'); }
+  }
+}
+
+// ── DELETE ───────────────────────────────────────────────────────────
+async function deleteItem(endpoint, id, name) {
+  if (!confirm(`¿Eliminar ${endpoint==='work_orders'?'orden':endpoint==='leads'?'prospecto':'cliente'} "${name||id}"?`)) return;
+  try {
+    await fetch(`/api/${endpoint}/${id}`, { method:'DELETE' });
+    showToast(`${name||id} eliminado correctamente`);
+    if (endpoint === 'clients') await loadClients();
+    else if (endpoint === 'work_orders') await loadWorkOrders();
+    else if (endpoint === 'leads') await loadLeads();
+    await loadDashboard();
+  } catch(e) { showToast('Error al eliminar', 'danger'); }
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async function() {
+  loadDashboard();
+  loadClients();
+  loadWorkOrders();
+  loadLeads();
+  loadInteractions();
+});
+</script>
+</body>
+</html>

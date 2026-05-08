@@ -1,0 +1,300 @@
+[
+  {
+    "nombre": "Acricol Ltda",
+    "web": "acricol.com",
+    "segmento": "B2B fábrica",
+    "linea": "automatizacion",
+    "notas": "Productos acrílicos y plásticos en general. Barranquilla.",
+    "url": "acricol.com",
+    "status": 200,
+    "telefonos": [
+      "+570573353862",
+      "+570573402954",
+      "+573185886946",
+      "+573534370151",
+      "+573939608796",
+      "+573999633789",
+      "+576053405175"
+    ],
+    "whatsapp": [],
+    "emails": [
+      "acricol@acricol.com"
+    ]
+  },
+  {
+    "nombre": "Colorplastic SAS",
+    "web": "colorplasticcolombia.com",
+    "segmento": "B2B fábrica",
+    "linea": "automatizacion",
+    "notas": "33 años de trayectoria. Inyección de plásticos, productos para el hogar. Barranquilla.",
+    "url": "colorplasticcolombia.com",
+    "status": 200,
+    "telefonos": [
+      "+573053914031",
+      "+573095458623",
+      "+573132012250",
+      "+573333333333",
+      "+573584081019",
+      "+573825637102"
+    ],
+    "whatsapp": [],
+    "emails": [
+      "atencionalcliente@colorplasticcolombia.com"
+    ]
+  },
+  {
+    "nombre": "Plásticos Mallol SAS",
+    "web": "plasticosmallol.com",
+    "segmento": "B2B fábrica",
+    "linea": "automatizacion",
+    "notas": "Fabricación de productos plásticos. Barranquilla.",
+    "url": "plasticosmallol.com",
+    "status": 200,
+    "telefonos": [
+      "+573126810336",
+      "+573137254902",
+      "+573529411764",
+      "+573529411765",
+      "+573921568627",
+      "+576053264795"
+    ],
+    "whatsapp": [],
+    "emails": []
+  },
+  {
+    "nombre": "Plasmar",
+    "web": "plasmar.com.co",
+    "segmento": "B2B fábrica",
+    "linea": "automatizacion",
+    "notas": "Recuperación posindustrial de plásticos. Barranquilla.",
+    "url": "plasmar.com.co",
+    "status": 200,
+    "telefonos": [
+      "+573104637480",
+      "+573638242856",
+      "+573919791905"
+    ],
+    "whatsapp": [
+      "wa.me/573104637480"
+    ],
+    "emails": [
+      "contacto@plasmar.com.co",
+      "intl-segmenter@11.7.10",
+      "react-dom@18.3.1",
+      "react@18.3.1",
+      "rspack@1.6.6"
+    ]
+  },
+  {
+    "nombre": "Fayco Plásticos SAS",
+    "web": "plasticosfayco.com",
+    "segmento": "B2B fábrica",
+    "linea": "automatizacion",
+    "notas": "Extrusión, impresión flexográfica, empaques plásticos. Barranquilla.",
+    "url": "plasticosfayco.com",
+    "status": 200,
+    "telefonos": [
+      "+570057318516",
+      "+570573853200",
+      "+573185162157",
+      "+573404913877",
+      "+575753853200"
+    ],
+    "whatsapp": [],
+    "emails": [
+      "Info@plasticosfayco.com",
+      "atencionalcliente@plasticosfayco.com",
+      "hello@divibikerepair.com",
+      "info@plasticosfayco.com"
+    ]
+  },
+  {
+    "nombre": "Solenergy Soluciones",
+    "web": "solenergysoluciones.com",
+    "segmento": "energía solar",
+    "linea": "energia solar",
+    "notas": "Instalación de paneles solares. Barranquilla y Colombia.",
+    "url": "solenergysoluciones.com",
+    "status": 200,
+    "telefonos": [
+      "+573106179849",
+      "+573524425992",
+      "+573663173498",
+      "+573897612418"
+    ],
+    "whatsapp": [],
+    "emails": [
+      "Comercial@solenergysoluciones.com",
+      "comercial@solenergysoluciones.com",
+      "wght@100..900",
+      "wght@200..700"
+    ]
+  },
+  {
+    "nombre": "Grupo ENER",
+    "web": "grupoener.com",
+    "segmento": "energía solar",
+    "linea": "energia solar",
+    "notas": "Comercialización e instalación de paneles solares. Barranquilla.",
+    "url": "grupoener.com",
+    "status": 200,
+    "telefonos": [
+      "+573022084831",
+      "+573023084831",
+      "+573026247242",
+      "+573117815117",
+      "+573173651372",
+      "+573191538414",
+      "+573319381985",
+      "+573333333333",
+      "+573372578893",
+      "+573537389287",
+      "+573725490196",
+      "+573852077816",
+      "+573919791905"
+    ],
+    "whatsapp": [
+      "wa.me/573023084831"
+    ],
+    "emails": [
+      "info@grupoener.com",
+      "intl-segmenter@11.7.10",
+      "react-dom@18.3.1",
+      "react@18.3.1",
+      "rspack@1.6.6"
+    ]
+  },
+  {
+    "nombre": "Solair Plus SAS",
+    "web": "solair.com.co",
+    "segmento": "energía solar",
+    "linea": "energia solar",
+    "notas": "Paneles solares, ingeniería, monitoreo remoto. Barranquilla.",
+    "url": "solair.com.co",
+    "status": 200,
+    "telefonos": [
+      "+573015117559",
+      "+573097865384",
+      "+573164678111",
+      "+573261715575",
+      "+573789910944",
+      "+573919791905",
+      "+573983348521"
+    ],
+    "whatsapp": [],
+    "emails": [
+      "comercial@solair.com.co",
+      "info@misitio.com",
+      "intl-segmenter@11.7.10",
+      "react-dom@18.3.1",
+      "react@18.3.1",
+      "rspack@1.6.6"
+    ]
+  },
+  {
+    "nombre": "CleanEnergying",
+    "web": "cleanenergying.com",
+    "segmento": "energía solar",
+    "linea": "energia solar",
+    "notas": "Diseño, suministro, instalación y operación de sistemas fotovoltaicos. Barranquilla.",
+    "url": "cleanenergying.com",
+    "status": 200,
+    "telefonos": [
+      "+573045462597"
+    ],
+    "whatsapp": [
+      "wa.me/573045462597"
+    ],
+    "emails": []
+  },
+  {
+    "nombre": "Solar Costa",
+    "web": "solarcosta.com.co",
+    "segmento": "energía solar",
+    "linea": "energia solar",
+    "notas": "Soluciones solares residenciales, comerciales e industriales. Costa Caribe.",
+    "url": "solarcosta.com.co",
+    "status": 200,
+    "telefonos": [
+      "+573024038614",
+      "+573046717507"
+    ],
+    "whatsapp": [
+      "wa.me/573046717507"
+    ],
+    "emails": [
+      "comercial@solarcosta.com.co",
+      "solarcostasas@hotmail.com"
+    ]
+  },
+  {
+    "nombre": "Erco Energy",
+    "web": "erco.energy",
+    "segmento": "energía solar",
+    "linea": "energia solar",
+    "notas": "Más de 2.100 proyectos de paneles solares ejecutados. Nacional.",
+    "url": "erco.energy",
+    "status": 200,
+    "telefonos": [],
+    "whatsapp": [],
+    "emails": [
+      "notificacionesjudiciales@erco.energy",
+      "offboarding@mail.neu.com.co",
+      "soporte@erco.energy",
+      "wguzman@erco.energy"
+    ]
+  },
+  {
+    "nombre": "CER Renovables",
+    "web": "cerenovables.com",
+    "segmento": "energía solar",
+    "linea": "energia solar",
+    "notas": "Venta e instalación de paneles solares. Barranquilla.",
+    "url": "cerenovables.com",
+    "status": 200,
+    "telefonos": [
+      "+573053914031",
+      "+573095458623",
+      "+573113735299",
+      "+573242377479",
+      "+573825637102"
+    ],
+    "whatsapp": [
+      "wa.me/573113735299",
+      "wa.me/573242377479"
+    ],
+    "emails": [
+      "cer@cerenovables.com"
+    ]
+  },
+  {
+    "nombre": "Instala Solar",
+    "web": "instalasolar.co",
+    "segmento": "energía solar",
+    "linea": "energia solar",
+    "notas": "Paneles solares para hogar y negocio. Barranquilla.",
+    "url": "instalasolar.co",
+    "status": 200,
+    "telefonos": [
+      "+573204604012"
+    ],
+    "whatsapp": [],
+    "emails": [
+      "info@instalasolar.co"
+    ]
+  },
+  {
+    "nombre": "Paneles Solares Barranquilla",
+    "web": "panelessolaresbarranquilla.com",
+    "segmento": "energía solar",
+    "linea": "energia solar",
+    "notas": "Instalación de paneles solares. Barranquilla.",
+    "url": "panelessolaresbarranquilla.com",
+    "status": 200,
+    "telefonos": [
+      "+573006895774"
+    ],
+    "whatsapp": [],
+    "emails": []
+  }
+]
