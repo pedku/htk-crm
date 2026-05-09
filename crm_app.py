@@ -1097,9 +1097,11 @@ if __name__ == '__main__':
     @app.route('/api/bot/global-off', methods=['POST'])
     @login_required
     def api_bot_global_off():
-        import urllib.request
+        import json, urllib.request
         try:
-            req = urllib.request.Request('http://localhost:18802/global-off', method='POST')
+            payload = json.dumps({}).encode()
+            req = urllib.request.Request('http://localhost:18802/global-off', data=payload,
+                headers={'Content-Type': 'application/json'}, method='POST')
             with urllib.request.urlopen(req, timeout=10) as resp:
                 result = json.loads(resp.read())
             return jsonify(result)
@@ -1110,9 +1112,11 @@ if __name__ == '__main__':
     @app.route('/api/bot/global-on', methods=['POST'])
     @login_required
     def api_bot_global_on():
-        import urllib.request
+        import json, urllib.request
         try:
-            req = urllib.request.Request('http://localhost:18802/global-on', method='POST')
+            payload = json.dumps({}).encode()
+            req = urllib.request.Request('http://localhost:18802/global-on', data=payload,
+                headers={'Content-Type': 'application/json'}, method='POST')
             with urllib.request.urlopen(req, timeout=10) as resp:
                 result = json.loads(resp.read())
             return jsonify(result)
