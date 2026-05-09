@@ -1022,5 +1022,45 @@ if __name__ == '__main__':
     if not os.path.exists(DB_PATH) or os.path.getsize(DB_PATH) == 0:
         print("⚠️  DB no encontrada. Ejecuta migrate_to_sqlite.py primero.")
     
+    # ── API Enviar WhatsApp (proxy al bot API) ──
+    @app.route('/api/send-message', methods=['POST'])
+    @login_required
+    def api_send_message():
+        import json, re, urllib.request
+        data = request.get_json()
+        numero = data.get('numero')
+        mensaje = data.get('mensaje')
+        lead_id = data.get('lead_id')
+        
+        if not numero or not mensaje:
+            return jsonify({'ok': False, 'error': 'numero y mensaje requeridos'}), 400
+        
+        # Limpiar número
+        numero_limpio = re.sub(r'[^0-9]', '', numero)
+        
+        try:
+            payload = json.dumps({'to': numero_limpio, 'message': mensaje}).encode()
+            req = urllib.request.Request(
+                'http://localhost:18802/send',
+                data=payload,
+                headers={'Content-Type': 'application/json'},
+                method='POST'
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                result = json.loads(resp.read())
+                
+            # Registrar actividad en CRM
+            if lead_id and result.get('ok'):
+                actividad_crear(
+                    lead_id,
+                    'whatsapp',
+                    '📤 WhatsApp enviado',
+                    mensaje[:150]
+                )
+            
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)}), 500
+    
     print("⚡ CRM HTK INGENIERIA v2 (SQLite) corriendo en http://localhost:5000")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='127.0.0.1', port=5000, debug=True)
