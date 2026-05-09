@@ -300,28 +300,37 @@
      ========================================================== */
 
   function initParticles() {
+    var hero = document.getElementById('hero');
     var canvas = document.getElementById('particlesCanvas');
-    if (!canvas) return;
+    if (!canvas || !hero) return;
 
     var ctx = canvas.getContext('2d');
     var particles = [];
-    var maxParticles = 60;
+    var maxParticles = 100;
     var animationId;
+    var w, h;
 
     function resizeCanvas() {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      // Usar dimensiones del hero, no del canvas (más confiable)
+      var rect = hero.getBoundingClientRect();
+      w = rect.width;
+      h = rect.height;
+      canvas.width = w;
+      canvas.height = h;
     }
 
     function createParticle() {
       return {
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        radius: Math.random() * 1.8 + 0.4,
-        alpha: Math.random() * 0.4 + 0.1,
-        alphaSpeed: (Math.random() - 0.5) * 0.008
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
+        radius: Math.random() * 2.5 + 1.0,
+        alpha: Math.random() * 0.45 + 0.15,
+        alphaSpeed: (Math.random() - 0.5) * 0.01,
+        // Brand colors: white to light blue
+        hue: Math.random() < 0.3 ? 200 : 0,  // 30% blue-tinged
+        sat: Math.random() < 0.3 ? '60%' : '0%'
       };
     }
 
@@ -333,12 +342,12 @@
     }
 
     function drawParticles() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, w, h);
 
       particles.forEach(function (p) {
         // Update alpha
         p.alpha += p.alphaSpeed;
-        if (p.alpha <= 0.05 || p.alpha >= 0.5) {
+        if (p.alpha <= 0.08 || p.alpha >= 0.6) {
           p.alphaSpeed *= -1;
         }
 
@@ -346,16 +355,26 @@
         p.x += p.vx;
         p.y += p.vy;
 
-        // Wrap around
-        if (p.x < 0) p.x = canvas.width;
-        if (p.x > canvas.width) p.x = 0;
-        if (p.y < 0) p.y = canvas.height;
-        if (p.y > canvas.height) p.y = 0;
+        // Wrap around using full hero dimensions
+        if (p.x < -20) p.x = w + 20;
+        if (p.x > w + 20) p.x = -20;
+        if (p.y < -20) p.y = h + 20;
+        if (p.y > h + 20) p.y = -20;
 
-        // Draw
+        // Draw with glow effect
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, ' + p.alpha + ')';
+        
+        // Outer glow
+        var gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 2.5);
+        var color = p.hue === 200 
+          ? 'hsla(200, 80%, 70%, ' + (p.alpha * 0.4) + ')'
+          : 'rgba(255, 255, 255, ' + (p.alpha * 0.3) + ')';
+        gradient.addColorStop(0, p.hue === 200
+          ? 'hsla(200, 80%, 75%, ' + p.alpha + ')'
+          : 'rgba(255, 255, 255, ' + p.alpha + ')');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = gradient;
         ctx.fill();
       });
 
@@ -365,13 +384,15 @@
           var dx = particles[i].x - particles[j].x;
           var dy = particles[i].y - particles[j].y;
           var dist = Math.sqrt(dx * dx + dy * dy);
+          var maxDist = 200;
 
-          if (dist < 140) {
+          if (dist < maxDist) {
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = 'rgba(255, 255, 255, ' + (0.06 * (1 - dist / 140)) + ')';
-            ctx.lineWidth = 0.5;
+            var lineAlpha = 0.12 * (1 - dist / maxDist);
+            ctx.strokeStyle = 'rgba(255, 255, 255, ' + lineAlpha + ')';
+            ctx.lineWidth = 0.6;
             ctx.stroke();
           }
         }
@@ -403,6 +424,23 @@
         initParticlesArray();
       }, 250);
     });
+
+    // Re-init after all images/logo load (hero height may change)
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        resizeCanvas();
+        initParticlesArray();
+      }, 500);
+    });
+
+    // Also re-init when hero logo image loads
+    var heroLogo = document.querySelector('.hero-logo');
+    if (heroLogo) {
+      heroLogo.addEventListener('load', function () {
+        resizeCanvas();
+        initParticlesArray();
+      });
+    }
 
     document.addEventListener('visibilitychange', handleVisibility);
 

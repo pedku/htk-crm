@@ -146,13 +146,15 @@ img {
 }
 
 .nav-logo {
-  height: 38px;
+  height: 50px;
   width: auto;
   object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 #mainNav.navbar-scrolled .nav-logo {
-  height: 34px;
+  height: 42px;
 }
 
 .brand-accent {
@@ -221,8 +223,11 @@ img {
 #particlesCanvas {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  width: 100%;
+  height: 100%;
+  z-index: 4;
   pointer-events: none;
+  opacity: 0.5;
 }
 
 .hero-content {
@@ -230,6 +235,19 @@ img {
   z-index: 3;
   width: 100%;
   padding: 6rem 0 10rem;
+}
+
+.hero-logo {
+  display: block;
+  margin: 0 auto 2rem;
+  height: 60px;
+  width: auto;
+  filter: drop-shadow(0 4px 20px rgba(0,168,228,0.3));
+  transition: filter 0.3s ease;
+}
+
+.hero-logo:hover {
+  filter: drop-shadow(0 6px 28px rgba(0,168,228,0.5));
 }
 
 .hero-tag {
@@ -609,6 +627,25 @@ img {
   font-size: 0.85rem;
   font-weight: 500;
   line-height: 1.3;
+}
+
+.about-legal-logo {
+  height: 50px;
+  width: auto;
+  opacity: 0.7;
+  margin-bottom: 0.5rem;
+  transition: opacity 0.3s ease;
+}
+
+.about-legal-logo:hover {
+  opacity: 1;
+}
+
+.about-legal-text {
+  font-size: 0.8rem;
+  color: #999;
+  letter-spacing: 1px;
+  margin: 0;
 }
 
 .about-text {
@@ -1030,6 +1067,17 @@ img {
   font-weight: 800;
 }
 
+.footer-logo-img {
+  height: 45px;
+  width: auto;
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+.footer-logo-img:hover {
+  opacity: 1;
+}
+
 .footer-desc {
   font-size: 0.92rem;
   color: rgba(255,255,255,0.55);
@@ -1202,6 +1250,10 @@ img {
     font-size: 0.95rem;
   }
 
+  .hero-logo {
+    height: 45px;
+  }
+
   .hero-cta {
     flex-direction: column;
     align-items: center;
@@ -1244,6 +1296,10 @@ img {
 
   .hero-tag {
     font-size: 1rem;
+  }
+
+  .hero-logo {
+    height: 35px;
   }
 
   .section-badge {

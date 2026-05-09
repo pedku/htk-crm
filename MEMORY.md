@@ -1,6 +1,6 @@
 # MEMORY.md — HTK INGENIERIA (HOUSETRONIK S.A.S.)
 
-> Last updated: 2026-05-08
+> Last updated: 2026-05-08 (noche)
 
 ---
 
@@ -43,15 +43,37 @@
 ## 💻 CRM Web Integrado (2026-05-08)
 - `crm/crm_app.py` — Flask backend corriendo en `localhost:5000`
 - `crm/templates/index.html` — Interfaz web single-page (dark mode)
+- `crm/templates/login.html` — Pantalla de login
 - **Service:** systemd user `htk-crm.service` (auto-arranque)
-- **Pestañas:** Dashboard | Clientes | Órdenes Trabajo | Prospectos | Interacciones
-- **CRUD completo:** Clientes, Órdenes, Leads — crear, editar, eliminar
-- **Workflow OT:** Cambio de estados con presupuesto + diagnóstico + historial
-- **Conversión:** Leads → Cliente con 1 clic
-- **Auto-link:** Órdenes se vinculan automáticamente al cliente por nombre/tel
+- **Pestañas:** Dashboard | Kanban | Clientes | Órdenes Trabajo | Prospectos | Interacciones | **Automatización**
+- **Login requerido:** admin / htk2026 (via HTK_ADMIN_USER/PASS)
+- **Kitchen sink:** Perfiles lead/cliente c/ timeline, notas editables, Kanban drag-drop, pitches multichannel, search global (Ctrl+K), próximos seguimientos en dashboard, notifications badge
+- **Git:** 3 commits (v2 base → v3 features → toolkit)
 
 ## 🤖 WhatsApp Bot
 Workspace propio: `/home/peku/.openclaw/workspaces/whatsapp-bot`
 Modelo: DeepSeek Flash | Responde solo menú predefinido
+
+---
+## 🛠️ Automation Toolkit (2026-05-08)
+Scripts autónomos en `scripts/` — sin IA:
+- `auto_enrich.py` — Scrapea websites de leads, extrae teléfonos/emails/nombres
+- `auto_score.py` — Puntúa leads 0-100 por datos + segmento
+- `auto_schedule.py` — Asigna `proximo_seguimiento` en horario laboral (Lun-Vie 8-18, Sáb 8-13)
+- `auto_campaign.py` — Genera mensajes personalizados desde pitches.json
+- `backup_db.sh` — Backup comprimido con retención 14d
+
+Todos accesibles desde CRM → pestaña Automatización.
+Backup automático cada 12h via crontab (6am/6pm).
+
+### 📊 Estado leads (May 8)
+- 48 leads total, **47/48 con datos de contacto**
+- 42 leads nuevos, todos con seguimiento programado desde Sáb 9/05
+- Segmentos: B2B fábrica(13), cargadores(9), energía solar(9), taller(7=1cliente), hoteles(5), restaurantes(2), comercio(1)
+- Prioridad: cargadores > taller > fábrica > solar > hoteles > restaurantes
+- Solo falta Los Kioscos (contacto encontrado pero necesita scraping fino)
+
+### 🎯 Próximo paso
+- Sáb 9/05 8am: contactar distribuidores cargadores (6 con tel + email)
 
 ---
