@@ -203,6 +203,17 @@ def logout():
     return redirect('/login')
 
 
+# ─── PÁGINA: Perfil de Lead ────────────────────────
+@app.route('/leads/<int:lid>')
+@login_required
+def page_lead(lid):
+    lead = lead_obtener(lid)
+    if not lead:
+        return 'Lead no encontrado', 404
+    actividades = actividad_listar(lid)
+    return render_template('lead_detail.html', lead=lead, actividades=actividades)
+
+
 # ── Routes HTML ──────────────────────────────────────────────────────
 
 @app.route('/')

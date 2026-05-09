@@ -432,7 +432,7 @@
       
       .table-container { padding: 12px !important; overflow-x: auto !important; }
       .table { font-size: 0.8em !important; }
-      .table td, .table th { white-space: nowrap !important; padding: 6px 8px !important; }
+      .table td, .table th { white-space: nowrap !important; padding: 6px 8px !important; max-width: 200px !important; overflow: hidden !important; text-overflow: ellipsis !important; }
       
       .kanban-board { overflow-x: auto !important; flex-wrap: nowrap !important; }
       .kanban-column { min-width: 220px !important; max-width: 260px !important; }
@@ -696,6 +696,13 @@
     [data-bs-theme="light"] .view-toggle { background: rgba(0,0,0,0.04); }
     [data-bs-theme="light"] .view-toggle .btn { color: rgba(0,0,0,0.4); }
     [data-bs-theme="light"] .view-toggle .btn:hover:not(.active) { color: #000; background: rgba(0,0,0,0.04); }
+    [data-bs-theme="light"] .sidebar .nav-link:hover { color: #000; background: rgba(0,0,0,0.04); }
+    [data-bs-theme="light"] .brand-text { color: #1a1a2e; }
+    [data-bs-theme="light"] .badge-estado { color: #1a1a2e !important; }
+    [data-bs-theme="light"] .card-header, [data-bs-theme="light"] .card-title { color: #1a1a2e; }
+    [data-bs-theme="light"] .tab-link { color: rgba(0,0,0,0.5); }
+    [data-bs-theme="light"] .tab-link.active { color: var(--htk-primary); }
+    [data-bs-theme="light"] .mobile-nav-link i { color: rgba(0,0,0,0.4); }
   </style>
 </head>
 <body>
@@ -2309,7 +2316,7 @@ async function showLeadDetail(id) {
       </div>
     </div>`;
 
-  setModal('Detalle: ' + (l.nombre || l.id), html, '');
+  setModal('Detalle: ' + (l.nombre || l.id), html, '<a href="/leads/'+id+'" class="btn btn-sm btn-htk"><i class="bi bi-box-arrow-up-right"></i> Ver perfil completo</a>');
   modalInstance.show();
   
   // Load interactions after modal is shown
