@@ -1035,7 +1035,6 @@ if __name__ == '__main__':
         if not numero or not mensaje:
             return jsonify({'ok': False, 'error': 'numero y mensaje requeridos'}), 400
         
-        # Limpiar número
         numero_limpio = re.sub(r'[^0-9]', '', numero)
         
         try:
@@ -1048,16 +1047,74 @@ if __name__ == '__main__':
             )
             with urllib.request.urlopen(req, timeout=30) as resp:
                 result = json.loads(resp.read())
-                
-            # Registrar actividad en CRM
             if lead_id and result.get('ok'):
-                actividad_crear(
-                    lead_id,
-                    'whatsapp',
-                    '📤 WhatsApp enviado',
-                    mensaje[:150]
-                )
-            
+                actividad_crear(lead_id, 'whatsapp', '📤 WhatsApp enviado', mensaje[:150])
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)}), 500
+    
+    # ── POST /api/bot/silence — silencia un lead ──
+    @app.route('/api/bot/silence', methods=['POST'])
+    @login_required
+    def api_bot_silence():
+        import json, re, urllib.request
+        data = request.get_json()
+        numero = data.get('numero')
+        if not numero:
+            return jsonify({'ok': False, 'error': 'numero requerido'}), 400
+        numero_limpio = re.sub(r'[^0-9]', '', numero)
+        try:
+            payload = json.dumps({'numero': numero_limpio}).encode()
+            req = urllib.request.Request('http://localhost:18802/silence', data=payload,
+                headers={'Content-Type': 'application/json'}, method='POST')
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                result = json.loads(resp.read())
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)}), 500
+    
+    # ── POST /api/bot/unsilence — desilencia un lead ──
+    @app.route('/api/bot/unsilence', methods=['POST'])
+    @login_required
+    def api_bot_unsilence():
+        import json, re, urllib.request
+        data = request.get_json()
+        numero = data.get('numero')
+        if not numero:
+            return jsonify({'ok': False, 'error': 'numero requerido'}), 400
+        numero_limpio = re.sub(r'[^0-9]', '', numero)
+        try:
+            payload = json.dumps({'numero': numero_limpio}).encode()
+            req = urllib.request.Request('http://localhost:18802/unsilence', data=payload,
+                headers={'Content-Type': 'application/json'}, method='POST')
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                result = json.loads(resp.read())
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)}), 500
+    
+    # ── POST /api/bot/global-off — apagar bot ──
+    @app.route('/api/bot/global-off', methods=['POST'])
+    @login_required
+    def api_bot_global_off():
+        import urllib.request
+        try:
+            req = urllib.request.Request('http://localhost:18802/global-off', method='POST')
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                result = json.loads(resp.read())
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)}), 500
+    
+    # ── POST /api/bot/global-on — encender bot ──
+    @app.route('/api/bot/global-on', methods=['POST'])
+    @login_required
+    def api_bot_global_on():
+        import urllib.request
+        try:
+            req = urllib.request.Request('http://localhost:18802/global-on', method='POST')
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                result = json.loads(resp.read())
             return jsonify(result)
         except Exception as e:
             return jsonify({'ok': False, 'error': str(e)}), 500
