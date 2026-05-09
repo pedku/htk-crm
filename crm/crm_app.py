@@ -6,10 +6,16 @@ Flask backend + SQLite storage | v2
 import os
 import sqlite3
 import uuid
+import functools
 from datetime import datetime, timezone, timedelta
-from flask import Flask, jsonify, request, render_template, send_from_directory
+from flask import Flask, jsonify, request, render_template, send_from_directory, session, redirect, url_for
 
 app = Flask(__name__)
+app.secret_key = 'htk-crm-secret-key-2026-cambiame'
+
+# Para cambiar credenciales, usar variables de entorno:
+# export HTK_ADMIN_USER=pedro
+# export HTK_ADMIN_PASS=tucontraseña
 BASE_DIR = os.path.join(os.path.dirname(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'htk_crm.db')
 
@@ -63,7 +69,7 @@ def save_json(filename, data):
     pass
 
 def export_work_orders_full(conn):
-    """Export work orders with nested cliente/equipo/historial/fechas."""
+    """Export work orders with nested cliente/equipo/historial/fechas and proper types."""
     orders = conn.execute("SELECT * FROM work_orders ORDER BY id").fetchall()
     result = []
     for o in orders:
@@ -85,12 +91,20 @@ def export_work_orders_full(conn):
             'completado': wo.pop('fecha_completado', None),
             'entregado': wo.pop('fecha_entregado', None)
         }
-        # Load history
+        # Type conversions for JSON compatibility
+        wo['activo'] = bool(wo.get('activo', 0))
+        if wo.get('presupuesto') is not None:
+            wo['presupuesto'] = float(wo['presupuesto'])
+        # Load history with bool conversion
         hist_rows = conn.execute(
             "SELECT fecha, estado, descripcion, notificado FROM work_order_history WHERE wo_id = ? ORDER BY id",
             (wo['id'],)
         ).fetchall()
-        wo['historial'] = [dict(h) for h in hist_rows]
+        wo['historial'] = []
+        for h in hist_rows:
+            entry = dict(h)
+            entry['notificado'] = bool(entry.get('notificado', 0))
+            wo['historial'].append(entry)
         result.append(wo)
     return result
 
@@ -148,13 +162,56 @@ def link_wo_to_client(wo_id, cliente_nombre, cliente_telefono):
         conn.close()
 
 
+# ── Auth Decorator ──────────────────────────────────────────────────
+
+def login_required(f):
+    @functools.wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user' not in session:
+            return redirect(url_for('login_page', next=request.path))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+# ── Auth Routes ─────────────────────────────────────────────────────
+
+@app.route('/login', methods=['GET', 'POST'])
+def login_page():
+    if request.method == 'GET':
+        if 'user' in session:
+            return redirect('/')
+        return render_template('login.html')
+    
+    # POST
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
+    
+    admin_user = os.environ.get('HTK_ADMIN_USER', 'admin')
+    admin_pass = os.environ.get('HTK_ADMIN_PASS', 'htk2026')
+    
+    if username == admin_user and password == admin_pass:
+        session['user'] = username
+        session['login_time'] = datetime.now(COL_TZ).isoformat()
+        next_page = request.args.get('next', '/')
+        return redirect(next_page)
+    
+    return render_template('login.html', error='Usuario o contraseña incorrectos')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/login')
+
+
 # ── Routes HTML ──────────────────────────────────────────────────────
 
 @app.route('/')
+@login_required
 def index():
     return render_template('index.html')
 
 @app.route('/api/stats')
+@login_required
 def api_stats():
     conn = get_db()
     try:
@@ -196,6 +253,7 @@ def client_to_dict(row):
     return d
 
 @app.route('/api/clients', methods=['GET', 'POST'])
+@login_required
 def api_clients():
     if request.method == 'GET':
         conn = get_db()
@@ -240,6 +298,7 @@ def api_clients():
         conn.close()
 
 @app.route('/api/clients/<client_id>', methods=['GET', 'PUT', 'DELETE'])
+@login_required
 def api_client(client_id):
     conn = get_db()
     try:
@@ -249,16 +308,13 @@ def api_client(client_id):
         
         if request.method == 'GET':
             result = client_to_dict(row)
-            # Load work order details
+            # Load work order details using wo_to_dict for proper types
             wo_ids = result.get('ordenes', [])
             result['ordenes_detalle'] = []
             for wo_id in wo_ids:
-                wo_row = conn.execute("SELECT * FROM work_orders WHERE id = ?", (wo_id,)).fetchone()
-                if wo_row:
-                    wo = dict(wo_row)
-                    wo['cliente'] = {'nombre': wo.pop('cliente_nombre', ''), 'telefono': wo.pop('cliente_telefono', '')}
-                    wo['equipo'] = {'tipo': wo.pop('equipo_tipo', 'otro'), 'marca': wo.pop('equipo_marca', ''), 'modelo': wo.pop('equipo_modelo', '')}
-                    result['ordenes_detalle'].append(wo)
+                wo_detail = wo_to_dict(conn, wo_id)
+                if wo_detail:
+                    result['ordenes_detalle'].append(wo_detail)
             return jsonify(result)
         
         if request.method == 'DELETE':
@@ -304,6 +360,7 @@ def api_client(client_id):
 # ── API Leads ────────────────────────────────────────────────────────
 
 @app.route('/api/leads', methods=['GET', 'POST'])
+@login_required
 def api_leads():
     if request.method == 'GET':
         conn = get_db()
@@ -345,6 +402,7 @@ def api_leads():
         conn.close()
 
 @app.route('/api/leads/<lead_id>', methods=['GET', 'PUT', 'DELETE'])
+@login_required
 def api_lead(lead_id):
     conn = get_db()
     try:
@@ -382,6 +440,7 @@ def api_lead(lead_id):
         conn.close()
 
 @app.route('/api/leads/<lead_id>/convert', methods=['POST'])
+@login_required
 def api_convert_lead(lead_id):
     """Convert a lead to a client"""
     conn = get_db()
@@ -425,7 +484,7 @@ def api_convert_lead(lead_id):
 # ── API Órdenes de Trabajo ──────────────────────────────────────────
 
 def wo_to_dict(conn, wo_id):
-    """Convert work order DB row to full nested format."""
+    """Convert work order DB row to full nested format with proper types."""
     row = conn.execute("SELECT * FROM work_orders WHERE id = ?", (wo_id,)).fetchone()
     if not row:
         return None
@@ -439,14 +498,24 @@ def wo_to_dict(conn, wo_id):
         'completado': wo.pop('fecha_completado', None),
         'entregado': wo.pop('fecha_entregado', None)
     }
+    # Type conversions for JSON compatibility
+    wo['activo'] = bool(wo.get('activo', 0))
+    if wo.get('presupuesto') is not None:
+        wo['presupuesto'] = float(wo['presupuesto']) if isinstance(wo['presupuesto'], int) else float(wo['presupuesto'])
+    # Load history with bool conversion
     hist_rows = conn.execute(
         "SELECT fecha, estado, descripcion, notificado FROM work_order_history WHERE wo_id = ? ORDER BY id",
         (wo['id'],)
     ).fetchall()
-    wo['historial'] = [dict(h) for h in hist_rows]
+    wo['historial'] = []
+    for h in hist_rows:
+        entry = dict(h)
+        entry['notificado'] = bool(entry.get('notificado', 0))
+        wo['historial'].append(entry)
     return wo
 
 @app.route('/api/work_orders', methods=['GET', 'POST'])
+@login_required
 def api_work_orders():
     conn = get_db()
     try:
@@ -506,6 +575,7 @@ def api_work_orders():
         conn.close()
 
 @app.route('/api/work_orders/<wo_id>', methods=['GET', 'PUT', 'DELETE'])
+@login_required
 def api_work_order(wo_id):
     conn = get_db()
     try:
@@ -564,6 +634,7 @@ def api_work_order(wo_id):
 VALID_WO_STATUSES = ('recibido', 'diagnosticando', 'presupuestado', 'aprobado', 'reparando', 'esperando_repuestos', 'completado', 'entregado', 'cancelado')
 
 @app.route('/api/work_orders/<wo_id>/status', methods=['PUT'])
+@login_required
 def api_wo_status(wo_id):
     conn = get_db()
     try:
@@ -624,6 +695,7 @@ def api_wo_status(wo_id):
 # ── API Interacciones ────────────────────────────────────────────────
 
 @app.route('/api/interactions', methods=['GET', 'POST'])
+@login_required
 def api_interactions():
     if request.method == 'GET':
         conn = get_db()
@@ -664,9 +736,97 @@ def api_interactions():
         conn.close()
 
 
+# ── Interacciones por Lead ──────────────────────────────────────────
+
+@app.route('/api/leads/<lead_id>/interactions', methods=['GET'])
+@login_required
+def api_lead_interactions(lead_id):
+    conn = get_db()
+    try:
+        rows = conn.execute("SELECT * FROM interactions WHERE lead_id = ? ORDER BY fecha DESC", (lead_id,)).fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
+@app.route('/api/leads/<lead_id>/interactions', methods=['POST'])
+@login_required
+def api_create_lead_interaction(lead_id):
+    data = request.get_json()
+    conn = get_db()
+    try:
+        lead = conn.execute("SELECT * FROM leads WHERE id = ?", (lead_id,)).fetchone()
+        if not lead:
+            return jsonify({'error': 'Lead no encontrado'}), 404
+        import uuid
+        now = now_iso()
+        short_id = str(uuid.uuid4()).split('-')[0]
+        new_id = f"INT-{now_col().strftime('%Y%m%d-%H%M%S')}-{short_id}"
+        conn.execute("""
+            INSERT INTO interactions (id, lead_id, lead_nombre, tipo, direccion, resumen, detalle, fecha, proximo_paso, estado)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            new_id, lead_id, lead['nombre'],
+            data.get('tipo', 'manual'),
+            data.get('direccion', 'saliente'),
+            data.get('resumen', ''),
+            data.get('detalle', ''),
+            now,
+            data.get('proximo_paso'),
+            data.get('estado', 'pendiente')
+        ))
+        conn.commit()
+        row = conn.execute("SELECT * FROM interactions WHERE id = ?", (new_id,)).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+# ── Notas Editables ─────────────────────────────────────────────────
+
+@app.route('/api/leads/<lead_id>/notes', methods=['PUT'])
+@login_required
+def api_update_lead_notes(lead_id):
+    conn = get_db()
+    try:
+        row = conn.execute("SELECT * FROM leads WHERE id = ?", (lead_id,)).fetchone()
+        if not row:
+            return jsonify({'error': 'Lead no encontrado'}), 404
+        data = request.get_json()
+        conn.execute("UPDATE leads SET notas = ? WHERE id = ?", (data.get('notas', ''), lead_id))
+        conn.commit()
+        row = conn.execute("SELECT * FROM leads WHERE id = ?", (lead_id,)).fetchone()
+        return jsonify(dict(row))
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/clients/<client_id>/notes', methods=['PUT'])
+@login_required
+def api_update_client_notes(client_id):
+    conn = get_db()
+    try:
+        row = conn.execute("SELECT * FROM clients WHERE id = ?", (client_id,)).fetchone()
+        if not row:
+            return jsonify({'error': 'Cliente no encontrado'}), 404
+        data = request.get_json()
+        conn.execute("UPDATE clients SET notas = ? WHERE id = ?", (data.get('notas', ''), client_id))
+        conn.commit()
+        row = conn.execute("SELECT * FROM clients WHERE id = ?", (client_id,)).fetchone()
+        return jsonify(dict(row))
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
 # ── Debug route ──────────────────────────────────────────────────────
 
 @app.route('/api/debug')
+@login_required
 def api_debug():
     """Debug endpoint to verify data integrity."""
     conn = get_db()
@@ -679,6 +839,68 @@ def api_debug():
     finally:
         conn.close()
 
+
+# ── API Pitches ──────────────────────────────────────────────────────
+
+PITCHES_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'pitches.json')
+
+@app.route('/api/pitches', methods=['GET', 'PUT'])
+@login_required
+def api_pitches():
+    import json
+
+    if request.method == 'GET':
+        if os.path.exists(PITCHES_PATH):
+            with open(PITCHES_PATH) as f:
+                return jsonify(json.load(f))
+        return jsonify({'canales': {}, 'plantillas_cuerpo': []})
+
+    # PUT – save edited template
+    if request.method == 'PUT':
+        data = request.get_json()
+        template_id = data.get('id')
+        canal = data.get('canal')
+        texto = data.get('texto', '')
+
+        if not template_id or not canal:
+            return jsonify({'error': 'Faltan id o canal'}), 400
+
+        if os.path.exists(PITCHES_PATH):
+            with open(PITCHES_PATH) as f:
+                pitches = json.load(f)
+        else:
+            pitches = {'canales': {}, 'plantillas_cuerpo': []}
+
+        found = False
+        for t in pitches.get('plantillas_cuerpo', []):
+            if t.get('id') == template_id:
+                t[canal] = texto
+                found = True
+                break
+
+        if not found:
+            return jsonify({'error': 'Plantilla no encontrada'}), 404
+
+        pt = os.path.dirname(PITCHES_PATH)
+        if not os.path.exists(pt):
+            os.makedirs(pt, exist_ok=True)
+        with open(PITCHES_PATH, 'w') as f:
+            json.dump(pitches, f, indent=2, ensure_ascii=False)
+
+        return jsonify({'ok': True})
+
+
+@app.route('/api/pitches/by-segment/<segment>', methods=['GET'])
+@login_required
+def api_pitches_by_segment(segment):
+    import json
+    if not os.path.exists(PITCHES_PATH):
+        return jsonify([])
+    with open(PITCHES_PATH) as f:
+        pitches = json.load(f)
+    templates = pitches.get('plantillas_cuerpo', [])
+    matched = [t for t in templates if segment in t.get('segmentos', [])]
+    return jsonify(matched)
 
 # ── Main ─────────────────────────────────────────────────────────────
 
