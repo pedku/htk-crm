@@ -204,13 +204,16 @@ def logout():
 
 
 # ─── PÁGINA: Perfil de Lead ────────────────────────
-@app.route('/leads/<int:lid>')
+@app.route('/leads/<path:lid>')
 @login_required
 def page_lead(lid):
-    lead = lead_obtener(lid)
-    if not lead:
+    db = get_db()
+    row = db.execute("SELECT * FROM leads WHERE id = ?", (lid,)).fetchone()
+    db.close()
+    if not row:
         return 'Lead no encontrado', 404
-    actividades = actividad_listar(lid)
+    lead = dict(row)
+    actividades = []
     return render_template('lead_detail.html', lead=lead, actividades=actividades)
 
 
