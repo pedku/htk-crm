@@ -209,11 +209,13 @@ def logout():
 def page_lead(lid):
     db = get_db()
     row = db.execute("SELECT * FROM leads WHERE id = ?", (lid,)).fetchone()
-    db.close()
     if not row:
+        db.close()
         return 'Lead no encontrado', 404
     lead = dict(row)
-    actividades = []
+    interactions = db.execute("SELECT * FROM interactions WHERE lead_id = ? ORDER BY fecha DESC LIMIT 20", (lid,)).fetchall()
+    db.close()
+    actividades = [dict(i) for i in interactions]
     return render_template('lead_detail.html', lead=lead, actividades=actividades)
 
 

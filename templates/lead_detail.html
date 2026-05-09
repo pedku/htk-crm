@@ -3,152 +3,289 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lead #{{ lead.id }} — HTK CRM</title>
+  <title>{{ lead.nombre or 'Lead' }} — HTK CRM</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <style>
-    :root { --htk-primary: #00d4aa; --htk-dark: #111827; --htk-card: #1a2332; --htk-sidebar: #0f1724; }
-    body { background: var(--htk-dark); color: rgba(255,255,255,0.85); font-family: 'Segoe UI', system-ui, sans-serif; }
-    .topbar { background: var(--htk-card); padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 12px; }
-    .topbar h4 { margin: 0; font-weight: 600; }
-    .topbar .back-btn { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.2em; }
-    .topbar .back-btn:hover { color: var(--htk-primary); }
-    .card-crm { background: var(--htk-card); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 24px; }
-    .label { color: rgba(255,255,255,0.4); font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .value { font-size: 1em; color: rgba(255,255,255,0.9); }
-    .section-title { font-size: 1em; font-weight: 600; color: var(--htk-primary); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .timeline-item { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
-    .timeline-item:last-child { border: none; }
-    .timeline-time { font-size: 0.75em; color: rgba(255,255,255,0.3); }
-    .badge-edit { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); border-radius: 8px; padding: 4px 10px; font-size: 0.75em; cursor: pointer; transition: all 0.2s; }
-    .badge-edit:hover { background: var(--htk-primary); color: #000; border-color: var(--htk-primary); }
-    .action-icon { width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.5); text-decoration: none; transition: all 0.2s; }
-    .action-icon:hover { background: var(--htk-primary); color: #000; }
-    .notes-area { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; min-height: 100px; color: rgba(255,255,255,0.7); }
-    .notes-area:focus { border-color: var(--htk-primary); outline: none; background: rgba(255,255,255,0.05); }
+    :root { --htk-primary: #00d4aa; --htk-dark: #111827; --htk-card: #1a2332; --htk-bg: #0d1b2a; }
+    body { background: var(--htk-bg); color: rgba(255,255,255,0.85); font-family: 'Segoe UI', system-ui, sans-serif; }
+    .topbar { background: var(--htk-card); padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+    .topbar a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.1em; }
+    .topbar a:hover { color: var(--htk-primary); }
+    .topbar h4 { margin: 0; font-weight: 600; font-size: 1.1em; }
+    .card-crm { background: var(--htk-card); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+    .section-title { font-size: 0.95em; font-weight: 600; color: var(--htk-primary); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 8px; }
+    .avatar-circle { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--htk-primary), #008866); display: flex; align-items: center; justify-content: center; font-size: 1.6em; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .badge-htk { padding: 5px 14px; border-radius: 20px; font-size: 0.78em; font-weight: 600; }
+    .badge-htk.nuevo { background: rgba(13,202,240,0.15); color: #0dcaf0; }
+    .badge-htk.contactado { background: rgba(255,193,7,0.15); color: #ffc107; }
+    .badge-htk.cotizado { background: rgba(111,66,193,0.15); color: #b886f0; }
+    .badge-htk.negociacion { background: rgba(0,168,228,0.15); color: #00a8e4; }
+    .badge-htk.ganado, .badge-htk.cliente { background: rgba(25,135,84,0.15); color: #198754; }
+    .badge-htk.perdido { background: rgba(220,53,69,0.15); color: #dc3545; }
+    .data-row { display: flex; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .data-label { width: 160px; flex-shrink: 0; color: rgba(255,255,255,0.4); font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.5px; }
+    .data-value { color: rgba(255,255,255,0.9); font-size: 0.9em; word-break: break-word; }
+    .notes-area { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; min-height: 80px; color: rgba(255,255,255,0.75); font-size: 0.9em; }
+    .notes-area:focus { border-color: var(--htk-primary); outline: none; }
+    .timeline-item { padding: 10px 14px; border-left: 2px solid rgba(255,255,255,0.08); margin-left: 8px; }
+    .timeline-item:hover { border-left-color: var(--htk-primary); }
+    .timeline-time { font-size: 0.72em; color: rgba(255,255,255,0.3); }
+    .btn-htk { background: var(--htk-primary); color: #000; border: none; font-weight: 600; border-radius: 8px; padding: 6px 14px; font-size: 0.82em; cursor: pointer; transition: all 0.2s; }
+    .btn-htk:hover { background: #00bf9a; color: #000; }
+    .btn-htk-outline { background: transparent; color: var(--htk-primary); border: 1px solid rgba(0,212,170,0.3); font-weight: 600; border-radius: 8px; padding: 6px 14px; font-size: 0.82em; cursor: pointer; transition: all 0.2s; }
+    .btn-htk-outline:hover { background: var(--htk-primary); color: #000; }
+    .progress { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; }
+    .progress-bar-htk { background: var(--htk-primary); border-radius: 3px; }
+    .empty-state { text-align: center; padding: 32px; color: rgba(255,255,255,0.25); }
+    .empty-state i { font-size: 2em; margin-bottom: 10px; display: block; }
     [data-bs-theme="light"] body { background: #f5f7fa; color: #1a1a2e; }
     [data-bs-theme="light"] .topbar { background: #fff; border-bottom-color: rgba(0,0,0,0.06); }
+    [data-bs-theme="light"] .topbar a { color: rgba(0,0,0,0.4); }
+    [data-bs-theme="light"] .topbar a:hover { color: var(--htk-primary); }
     [data-bs-theme="light"] .card-crm { background: #fff; border-color: rgba(0,0,0,0.06); }
-    [data-bs-theme="light"] .label { color: rgba(0,0,0,0.4); }
-    [data-bs-theme="light"] .value { color: #1a1a2e; }
     [data-bs-theme="light"] .section-title { border-bottom-color: rgba(0,0,0,0.06); }
-    [data-bs-theme="light"] .timeline-item { border-bottom-color: rgba(0,0,0,0.04); }
+    [data-bs-theme="light"] .data-row { border-bottom-color: rgba(0,0,0,0.04); }
+    [data-bs-theme="light"] .data-label { color: rgba(0,0,0,0.4); }
+    [data-bs-theme="light"] .data-value { color: #1a1a2e; }
+    [data-bs-theme="light"] .notes-area { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.08); color: #1a1a2e; }
+    [data-bs-theme="light"] .timeline-item { border-left-color: rgba(0,0,0,0.06); }
     [data-bs-theme="light"] .timeline-time { color: rgba(0,0,0,0.3); }
-    [data-bs-theme="light"] .badge-edit { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.08); color: rgba(0,0,0,0.5); }
-    [data-bs-theme="light"] .badge-edit:hover { background: var(--htk-primary); color: #000; }
-    [data-bs-theme="light"] .action-icon { background: rgba(0,0,0,0.03); color: rgba(0,0,0,0.4); }
-    [data-bs-theme="light"] .action-icon:hover { background: var(--htk-primary); color: #000; }
-    [data-bs-theme="light"] .notes-area { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.06); color: #1a1a2e; }
-    @media (max-width: 768px) { .topbar { padding: 12px 16px; } .card-crm { padding: 16px; } }
+    [data-bs-theme="light"] .empty-state { color: rgba(0,0,0,0.2); }
+    [data-bs-theme="light"] .btn-htk-outline { border-color: rgba(0,212,170,0.3); color: var(--htk-primary); }
+    @media (max-width: 768px) { .data-label { width: 120px; } .topbar { padding: 10px 14px; } .card-crm { padding: 16px; } }
   </style>
 </head>
 <body>
   <div class="topbar">
-    <a href="/" class="back-btn"><i class="bi bi-arrow-left"></i></a>
-    <i class="bi bi-person-badge" style="color:var(--htk-primary);font-size:1.4em;"></i>
+    <a href="/" title="Volver al CRM"><i class="bi bi-arrow-left"></i></a>
+    <i class="bi bi-person-badge" style="color:var(--htk-primary);"></i>
     <h4>{{ lead.nombre or 'Lead #' + lead.id|string }}</h4>
-    <span class="badge bg-{{ 'success' if lead.etapa == 'cliente' else 'warning' if lead.etapa == 'cotizando' else 'info' }}" style="margin-left:auto;">
-      {{ lead.etapa or 'nuevo' }}
-    </span>
+    <span class="badge-htk {{ lead.estado or 'nuevo' }}" style="margin-left:auto;">{{ lead.estado or 'nuevo' }}</span>
   </div>
-  <div class="container-fluid p-4">
+
+  {% set contacto_raw = lead.contacto or '' %}
+  {% set phone = '' %}{% set email = '' %}{% set web = '' %}{% set fb = '' %}
+  {% if contacto_raw %}
+    {# 1. Phone: starts with + or is mostly digits #}
+    {% set contacto_clean = contacto_raw|replace(' ','')|replace('-','')|replace('.','') %}
+    {% if contacto_clean|first in '0123456789+' %}
+      {% set phone = contacto_clean %}
+    {# 2. Facebook: contains facebook keyword #}
+    {% elif 'facebook' in contacto_raw|lower %}
+      {% set fb = contacto_raw|replace('Facebook:','')|replace('facebook:','')|replace('@','')|trim %}
+    {# 3. Website: contains http/www/.com #}
+    {% elif 'http' in contacto_raw or 'www.' in contacto_raw or '.com' in contacto_raw %}
+      {% set web = contacto_raw|replace('Web:','')|replace('web:','')|trim %}
+      {% if not web.startswith('http') %}{% set web = 'https://' + web %}{% endif %}
+    {# 4. Email: contains @ but NOT @ as facebook prefix #}
+    {% elif '@' in contacto_raw and 'facebook' not in contacto_raw|lower %}
+      {% set email = contacto_raw %}
+    {% endif %}
+  {% endif %}
+
+  <div class="container-fluid p-3 p-md-4">
+    <!-- STAGE PROGRESS -->
+    <div class="card-crm py-3">
+      {% set stages = ['nuevo','contactado','cotizado','negociacion','ganado','perdido','cliente'] %}
+      {% set current_idx = stages.index(lead.estado) if lead.estado in stages else 0 %}
+      {% set pct = (current_idx / (stages|length - 1) * 100)|int %}
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span class="data-label">Etapa actual</span>
+        <span class="badge-htk {{ lead.estado or 'nuevo' }}" style="font-size:0.9em;">{{ lead.estado or 'nuevo' }}</span>
+        <span class="data-label" style="width:auto;">Progreso</span>
+      </div>
+      <div class="progress mt-2">
+        <div class="progress-bar progress-bar-htk" style="width:{{ pct }}%"></div>
+      </div>
+    </div>
+
     <div class="row g-4">
+      <!-- COLUMNA IZQUIERDA -->
       <div class="col-lg-4">
+        <!-- Perfil -->
+        <div class="card-crm text-center">
+          {% set initials = (lead.nombre or '?').split(' ')[:2]|map('first')|join('')|upper %}
+          <div class="avatar-circle mx-auto mb-3">{{ initials }}</div>
+          <h5 style="color:#fff;margin:0 0 4px 0;">{{ lead.nombre or '-' }}</h5>
+          <p style="color:rgba(255,255,255,0.4);font-size:0.82em;">{{ lead.id }}</p>
+        </div>
+
+        <!-- Contacto -->
         <div class="card-crm">
-          <div class="section-title"><i class="bi bi-info-circle"></i> Datos del Contacto</div>
-          <div class="mb-3"><div class="label">Nombre</div><div class="value">{{ lead.nombre or '—' }}</div></div>
-          <div class="mb-3"><div class="label">Teléfono</div>
-            <div class="value">
-              {% if lead.telefono or lead.numero %}
-                <a href="https://wa.me/{{ (lead.telefono or lead.numero)|replace('+','')|replace('@c.us','') }}" target="_blank" style="color:var(--htk-primary);text-decoration:none;">
-                  {{ lead.telefono or lead.numero|replace('@c.us','') }} <i class="bi bi-whatsapp" style="font-size:0.8em;"></i>
-                </a>
-              {% else %}—{% endif %}
+          <div class="section-title"><i class="bi bi-person-lines-fill"></i> Contacto</div>
+          {% if phone %}
+          <div class="data-row">
+            <div class="data-label">Teléfono</div>
+            <div class="data-value">
+              <a href="https://wa.me/{{ phone }}" target="_blank" style="color:var(--htk-primary);text-decoration:none;">{{ phone }} <i class="bi bi-whatsapp"></i></a>
+              <button class="btn-htk-outline ms-2" onclick="navigator.clipboard.writeText('{{ phone }}');alert('Copiado')" title="Copiar" style="font-size:0.7em;padding:2px 8px;"><i class="bi bi-copy"></i></button>
             </div>
           </div>
-          <div class="mb-3"><div class="label">Email</div><div class="value">{{ lead.email or '—' }}</div></div>
-          <div class="mb-3"><div class="label">Fuente</div><div class="value">{{ lead.fuente or lead.canal or '—' }}</div></div>
-          <div class="mb-3"><div class="label">Interés</div><div class="value">{{ lead.opcion or '—' }}</div></div>
-          <div class="mb-0"><div class="label">Creado</div><div class="value" style="font-size:0.85em;color:rgba(255,255,255,0.5);">{{ lead.fecha_creacion or lead.fecha or '—' }}</div></div>
+          {% endif %}
+          {% if email %}
+          <div class="data-row">
+            <div class="data-label">Email</div>
+            <div class="data-value"><a href="mailto:{{ email }}" style="color:var(--htk-primary);">{{ email }}</a></div>
+          </div>
+          {% endif %}
+          {% if web %}
+          <div class="data-row">
+            <div class="data-label">Web</div>
+            <div class="data-value"><a href="{{ web }}" target="_blank" style="color:var(--htk-primary);">{{ web|replace('https://','')|replace('http://','')|truncate(40) }}</a></div>
+          </div>
+          {% endif %}
+          {% if fb %}
+          <div class="data-row">
+            <div class="data-label">Facebook</div>
+            <div class="data-value"><a href="https://facebook.com/{{ fb }}" target="_blank" style="color:#1877F2;">{{ fb }}</a></div>
+          </div>
+          {% endif %}
+          {% if not phone and not email and not web and not fb %}
+          <div class="empty-state"><i class="bi bi-person-slash"></i>Sin datos de contacto</div>
+          {% endif %}
         </div>
-        <div class="card-crm mt-4">
-          <div class="section-title"><i class="bi bi-robot"></i> Acciones</div>
-          <div class="d-flex gap-2 flex-wrap">
-            {% if lead.telefono or lead.numero %}
-            <button class="badge-edit" onclick="window.open('https://wa.me/{{ (lead.telefono or lead.numero)|replace('+','')|replace('@c.us','') }}','_blank')">
-              <i class="bi bi-whatsapp"></i> WhatsApp
-            </button>
-            <button class="badge-edit" onclick="enviarDesdeCRM({{ lead.id }},'{{ (lead.telefono or lead.numero)|replace('@c.us','') }}')">
-              <i class="bi bi-send"></i> Enviar vía Bot
-            </button>
-            <button class="badge-edit" onclick="silenciarLead({{ lead.id }},'{{ (lead.telefono or lead.numero)|replace('@c.us','') }}')">
-              <i class="bi bi-volume-mute"></i> Silenciar
-            </button>
+
+        <!-- Acciones -->
+        <div class="card-crm">
+          <div class="section-title"><i class="bi bi-lightning-charge"></i> Acciones</div>
+          <div class="d-grid gap-2">
+            {% if phone %}
+            <button class="btn-htk" onclick="enviarMensaje()"><i class="bi bi-send"></i> Enviar vía Bot</button>
+            <button class="btn-htk-outline" onclick="silenciarLead()"><i class="bi bi-volume-mute"></i> Silenciar Lead</button>
             {% endif %}
+            <a href="/" class="btn-htk-outline text-center" style="text-decoration:none;"><i class="bi bi-arrow-return-left"></i> Volver al CRM</a>
           </div>
         </div>
       </div>
+
+      <!-- COLUMNA DERECHA -->
       <div class="col-lg-8">
+        <!-- Datos completos -->
         <div class="card-crm">
-          <div class="section-title"><i class="bi bi-journal-text"></i> Detalle</div>
-          <div class="mb-3"><div class="label">Descripción</div>
-            <div class="notes-area" contenteditable="true" id="leadDetail" data-lead-id="{{ lead.id }}">{{ lead.detalle or lead.notas or lead.descripcion or 'Sin descripción' }}</div>
-          </div>
-          <div class="d-flex justify-content-end">
-            <button class="badge-edit" onclick="guardarDetalle({{ lead.id }})"><i class="bi bi-check-lg"></i> Guardar</button>
+          <div class="section-title"><i class="bi bi-info-circle"></i> Información del Lead</div>
+          {% set fields = [
+            ('ID', lead.id),
+            ('Nombre', lead.nombre),
+            ('Nombre Contacto', lead.contacto_nombre),
+            ('Contacto', lead.contacto),
+            ('Segmento', lead.segmento),
+            ('Línea de Interés', lead.linea_interes),
+            ('Fuente', lead.fuente),
+            ('Valor Estimado', lead.valor_estimado),
+            ('Fecha Creación', lead.fecha_creacion),
+            ('Próximo Seguimiento', lead.proximo_seguimiento),
+          ] %}
+          <div class="row">
+            {% for label, value in fields %}
+            {% if value %}
+            <div class="col-md-6">
+              <div class="data-row">
+                <div class="data-label">{{ label }}</div>
+                <div class="data-value">
+                  {% if label == 'Valor Estimado' %}${{ '{:,.0f}'.format(value|float) if value else '-' }}
+                  {% else %}{{ value }}
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endif %}
+            {% endfor %}
           </div>
         </div>
-        <div class="card-crm mt-4">
-          <div class="section-title"><i class="bi bi-clock-history"></i> Actividad Reciente</div>
-          {% if actividades %}
-            {% for a in actividades[:10] %}
-            <div class="timeline-item">
-              <div class="timeline-time">{{ a.fecha_creacion or a.created_at or '' }}</div>
-              <div style="color:rgba(255,255,255,0.8);font-size:0.9em;">{{ a.descripcion or a.actividad or a.texto }}</div>
+
+        <!-- Notas editables -->
+        <div class="card-crm">
+          <div class="section-title justify-content-between">
+            <span><i class="bi bi-sticky"></i> Notas</span>
+            <button class="btn-htk-outline" onclick="toggleNotas()" id="editNotasBtn" style="font-size:0.75em;"><i class="bi bi-pencil"></i> Editar</button>
+          </div>
+          <div id="notasDisplay" class="notes-area" style="white-space:pre-wrap;">{{ lead.notas or 'Sin notas' }}</div>
+          <div id="notasEditor" style="display:none;">
+            <textarea id="notasText" class="notes-area" rows="4" style="width:100%;">{{ lead.notas or '' }}</textarea>
+            <div class="d-flex gap-2 mt-2 justify-content-end">
+              <button class="btn-htk" onclick="guardarNotas()"><i class="bi bi-check-lg"></i> Guardar</button>
+              <button class="btn-htk-outline" onclick="toggleNotas()">Cancelar</button>
             </div>
-            {% endfor %}
-          {% else %}
-            <div style="color:rgba(255,255,255,0.3);text-align:center;padding:40px 0;">
-              <i class="bi bi-inbox" style="font-size:2em;display:block;margin-bottom:12px;"></i>
-              Sin actividad registrada
-            </div>
-          {% endif %}
+          </div>
         </div>
       </div>
     </div>
   </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const theme = localStorage.getItem('htk-theme') || 'dark';
     document.documentElement.setAttribute('data-bs-theme', theme);
-    document.querySelector('.back-btn')?.addEventListener('click', (e) => { e.preventDefault(); window.history.back(); });
+    const LEAD = { id: '{{ lead.id }}', phone: '{{ phone }}', nombre: '{{ lead.nombre }}' };
 
-    async function enviarDesdeCRM(leadId, telefono) {
-      const msg = prompt('Mensaje para el lead:');
+    function toggleNotas() {
+      const disp = document.getElementById('notasDisplay');
+      const edit = document.getElementById('notasEditor');
+      const btn = document.getElementById('editNotasBtn');
+      if (edit.style.display === 'none') {
+        disp.style.display = 'none'; edit.style.display = ''; btn.innerHTML = '<i class="bi bi-x-lg"></i> Cancelar';
+      } else {
+        disp.style.display = ''; edit.style.display = 'none'; btn.innerHTML = '<i class="bi bi-pencil"></i> Editar';
+      }
+    }
+
+    async function guardarNotas() {
+      const texto = document.getElementById('notasText').value;
+      try {
+        const r = await fetch('/api/leads/' + LEAD.id + '/notes', {
+          method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({notas: texto})
+        });
+        const d = await r.json();
+        if (d.ok) {
+          document.getElementById('notasDisplay').innerText = texto;
+          toggleNotas();
+        } else { alert('Error al guardar'); }
+      } catch(e) { alert('Error: ' + e.message); }
+    }
+
+    async function enviarMensaje() {
+      const msg = prompt('✏️ Mensaje para ' + (LEAD.nombre || LEAD.id) + ':');
       if (!msg) return;
       try {
-        const r = await fetch('/api/send-message', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({numero:telefono, mensaje:msg, lead_id:leadId}) });
+        const r = await fetch('/api/send-message', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({numero: LEAD.phone, mensaje: msg, lead_id: LEAD.id})
+        });
         const d = await r.json();
-        alert(d.ok ? '✅ Mensaje enviado y lead silenciado' : '❌ ' + (d.error||'error'));
+        alert(d.ok ? '✅ Enviado y lead silenciado' : '❌ ' + (d.error||'error'));
       } catch(e) { alert('❌ ' + e.message); }
     }
-    async function silenciarLead(leadId, telefono) {
+
+    async function silenciarLead() {
       if (!confirm('¿Silenciar este lead? El bot no responderá sus mensajes.')) return;
       try {
-        const r = await fetch('/api/bot/silence', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({numero:telefono}) });
+        const r = await fetch('/api/bot/silence', {
+          method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({numero: LEAD.phone})
+        });
         const d = await r.json();
-        alert(d.ok ? '🔇 Lead silenciado' : '❌ '+(d.error||'error'));
+        alert(d.ok ? '🔇 Silenciado' : '❌ '+(d.error||'error'));
       } catch(e) { alert('❌ '+e.message); }
     }
-    async function guardarDetalle(leadId) {
-      const texto = document.getElementById('leadDetail').innerText;
-      try {
-        const r = await fetch('/api/leads/'+leadId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({detalle:texto}) });
-        const d = await r.json();
-        if (d.ok) alert('✅ Guardado');
-        else alert('❌ Error');
-      } catch(e) { alert('❌ '+e.message); }
-    }
+
+
   </script>
+
+  <!-- Interactions timeline -->
+  <div class="container-fluid px-3 px-md-4 pb-4">
+    <div class="card-crm">
+      <div class="section-title"><i class="bi bi-chat-dots"></i> Interacciones</div>
+      {% if actividades %}
+        {% for a in actividades %}
+        <div class="timeline-item">
+          <div class="timeline-time">{{ a.fecha or a.created_at or '' }}</div>
+          <div style="color:rgba(255,255,255,0.8);font-size:0.88em;">{{ a.descripcion or a.tipo or '' }}</div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty-state"><i class="bi bi-inbox"></i>Sin interacciones registradas</div>
+      {% endif %}
+    </div>
+  </div>
 </body>
 </html>
