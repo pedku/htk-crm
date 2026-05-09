@@ -107,11 +107,7 @@
 
         e.preventDefault();
 
-        var navHeight = document.getElementById('mainNav')
-          ? document.getElementById('mainNav').offsetHeight
-          : 70;
-
-        var targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
+        var targetPosition = target.getBoundingClientRect().top + window.pageYOffset - 90;
 
         window.scrollTo({
           top: targetPosition,

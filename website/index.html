@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="HTK INGENIERIA — Soluciones inteligentes para infraestructura eléctrica. Automatización Industrial, IoT, Mantenimiento Electrónico y Cargadores EV en Barranquilla, Colombia.">
+  <meta name="description" content="HTK INGENIERIA (HOUSETRONIK S.A.S.) — Soluciones inteligentes para infraestructura eléctrica. Automatización Industrial, IoT, Mantenimiento Electrónico, Cargadores EV y fabricación de Estabilizadores en Barranquilla, Colombia.">
   <meta name="keywords" content="automatización industrial, IoT, mantenimiento electrónico, cargadores eléctricos, PLC, SCADA, Barranquilla, Colombia, HTK Ingenieria, HOUSETRONIK">
   <meta name="author" content="HTK INGENIERIA">
   <meta name="robots" content="index, follow">
 
   <!-- Open Graph -->
   <meta property="og:title" content="HTK INGENIERIA — Infraestructura Eléctrica Inteligente">
-  <meta property="og:description" content="Automatización Industrial · IoT · Mantenimiento Electrónico · Cargadores EV. Soluciones técnicas a la medida en Barranquilla.">
+  <meta property="og:description" content="Automatización Industrial · IoT · Mantenimiento Electrónico · Cargadores EV · Estabilizadores. Soluciones técnicas a la medida en Barranquilla.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://htkingenieria.com">
   <meta property="og:locale" content="es_CO">
@@ -22,7 +22,7 @@
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": "HTK INGENIERIA",
-    "legalName": "HOUSETRONIK S.A.S.",
+    "legalName": "HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S",
     "description": "Soluciones inteligentes para infraestructura eléctrica: automatización industrial, IoT, mantenimiento electrónico e instalación de cargadores EV.",
     "url": "https://htkingenieria.com",
     "telephone": "+573156032940",
@@ -39,7 +39,8 @@
       { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Automatización Industrial" } },
       { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Internet de las Cosas (IoT)" } },
       { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Mantenimiento Electrónico" } },
-      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Instalación de Cargadores Eléctricos" } }
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Instalación de Cargadores Eléctricos" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Fabricación de Estabilizadores de Voltaje" } }
     ]
   }
   </script>
@@ -62,7 +63,7 @@
   <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=1">
 </head>
 <body>
 
@@ -70,8 +71,7 @@
   <nav class="navbar navbar-expand-lg fixed-top" id="mainNav">
     <div class="container">
       <a class="navbar-brand" href="#">
-        <span class="brand-icon">⚡</span>
-        <span class="brand-text">HTK <span class="brand-accent">INGENIERIA</span></span>
+        <img src="img/logo.png" alt="HTK INGENIERIA" class="nav-logo">
       </a>
       <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Menú">
         <span class="navbar-toggler-icon"></span>
@@ -97,7 +97,7 @@
           <div class="col-lg-8" data-aos="fade-up" data-aos-duration="1000">
             <p class="hero-tag">Soluciones Inteligentes para tu</p>
             <h1 class="hero-title"><span class="text-accent">Infraestructura Eléctrica</span></h1>
-            <p class="hero-subtitle">Automatización Industrial · IoT · Mantenimiento Electrónico · Cargadores EV</p>
+            <p class="hero-subtitle">Automatización Industrial · IoT · Mantenimiento Electrónico · Cargadores EV · Estabilizadores</p>
             <div class="hero-cta">
               <a href="#contacto" class="btn btn-primary btn-lg">Contáctanos</a>
               <a href="#servicios" class="btn btn-outline-light btn-lg">Nuestros Servicios</a>
@@ -133,7 +133,7 @@
             <div class="service-icon"><i class="bi bi-cpu"></i></div>
             <h3 class="service-title">Automatización Industrial</h3>
             <p class="service-desc">Diseño e implementación de sistemas con PLCs, variadores de frecuencia, HMI y tableros de control. De la lógica al gabinete.</p>
-            <a href="#contacto" class="service-link">Leer más <i class="bi bi-arrow-right"></i></a>
+            <a href="javascript:void(0)" class="service-link" onclick="showServiceDetail(0)">Ver detalle <i class="bi bi-arrow-right"></i></a>
           </div>
         </div>
         <!-- Card 2: IoT -->
@@ -146,20 +146,20 @@
             <div class="service-icon"><i class="bi bi-wifi"></i></div>
             <h3 class="service-title">Internet de las Cosas</h3>
             <p class="service-desc">Monitoreo remoto de variables críticas, sensores industriales, dashboards SCADA y alertas en tiempo real. Datos donde los necesitás.</p>
-            <a href="#contacto" class="service-link">Leer más <i class="bi bi-arrow-right"></i></a>
+            <a href="javascript:void(0)" class="service-link" onclick="showServiceDetail(1)">Ver detalle <i class="bi bi-arrow-right"></i></a>
           </div>
         </div>
         <!-- Card 3: Mantenimiento -->
         <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
           <div class="service-card">
             <div class="service-img">
-              <img src="https://images.unsplash.com/photo-1581092335871-4c7b80f83b6c?w=600&q=80&auto=format" alt="Mantenimiento Electrónico" loading="lazy">
+              <img src="https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=600&q=80&auto=format" alt="Mantenimiento Electrónico" loading="lazy">
               <div class="service-img-overlay"></div>
             </div>
             <div class="service-icon"><i class="bi bi-tools"></i></div>
             <h3 class="service-title">Mantenimiento Electrónico</h3>
             <p class="service-desc">Reparación de tarjetas electrónicas, inversores, fuentes de poder y equipos especializados. Diagnóstico a nivel componente, no a nivel módulo.</p>
-            <a href="#contacto" class="service-link">Leer más <i class="bi bi-arrow-right"></i></a>
+            <a href="javascript:void(0)" class="service-link" onclick="showServiceDetail(2)">Ver detalle <i class="bi bi-arrow-right"></i></a>
           </div>
         </div>
         <!-- Card 4: Cargadores -->
@@ -172,12 +172,33 @@
             <div class="service-icon"><i class="bi bi-ev-station"></i></div>
             <h3 class="service-title">Cargadores Eléctricos</h3>
             <p class="service-desc">Instalación certificada de cargadores EV residenciales, comerciales y flotas. Asesoría, suministro y puesta en marcha con alianzas de distribución.</p>
-            <a href="#contacto" class="service-link">Leer más <i class="bi bi-arrow-right"></i></a>
+            <a href="javascript:void(0)" class="service-link" onclick="showServiceDetail(3)">Ver detalle <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+        <!-- Card 5: Estabilizadores -->
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="500">
+          <div class="service-card">
+            <div class="service-img">
+              <img src="https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=600&q=80&auto=format" alt="Estabilizadores de Voltaje" loading="lazy">
+              <div class="service-img-overlay"></div>
+            </div>
+            <div class="service-icon"><i class="bi bi-lightning-fill"></i></div>
+            <h3 class="service-title">Estabilizadores de Voltaje</h3>
+            <p class="service-desc">Fabricación propia de elevadores estabilizadores desde 3kW hasta 8KVA con panel LCD, entrada 80V-115V, salida 115V ±4%, protección automática y breaker. ¡Fabricantes!</p>
+            <a href="javascript:void(0)" class="service-link" onclick="showServiceDetail(4)">Ver detalle <i class="bi bi-arrow-right"></i></a>
           </div>
         </div>
       </div>
     </div>
   </section>
+
+  <style>
+  @media (min-width: 992px) {
+    #servicios .row {
+      justify-content: center;
+    }
+  }
+  </style>
 
   <!-- ==================== PROCESO ==================== -->
   <section class="process" id="proceso">
@@ -255,7 +276,7 @@
         <div class="col-lg-6" data-aos="fade-left">
           <span class="section-badge">Quiénes somos</span>
           <h2 class="section-title">Ingeniería que <span class="text-accent">resuelve</span>, no que complica</h2>
-          <p class="about-text">Somos HOUSETRONIK S.A.S., una empresa barranquillera que nació del taller. Empezamos reparando tarjetas electrónicas en una mesa de trabajo y hoy integramos sistemas de automatización para plantas completas.</p>
+          <p class="about-text">Somos HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S, una empresa barranquillera que nació del taller. Empezamos reparando tarjetas electrónicas en una mesa de trabajo y hoy integramos sistemas de automatización para plantas completas.</p>
           <p class="about-text">No somos una multinacional con 50 vendedores. Somos ingenieros que entienden de verdad lo que hacen — y eso se nota cuando respondemos en minutos, no en semanas.</p>
           <div class="values-grid">
             <div class="value-item">
@@ -363,7 +384,7 @@
       <div class="row g-4">
         <div class="col-lg-6" data-aos="fade-up" data-aos-delay="0">
           <div class="project-card">
-            <img src="https://images.unsplash.com/photo-1581092335871-4c7b80f83b6c?w=700&q=80&auto=format" alt="Automatización línea producción" loading="lazy">
+            <img src="https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=700&q=80&auto=format" alt="Automatización línea producción" loading="lazy">
             <div class="project-overlay">
               <div class="project-info">
                 <span class="project-tag">Automatización</span>
@@ -446,7 +467,7 @@
             </div>
             <div class="contact-info-item">
               <i class="bi bi-envelope"></i>
-              <span>contacto@htkingenieria.com</span>
+              <span>info@htk-ingenieria.com</span>
             </div>
           </div>
         </div>
@@ -491,7 +512,174 @@
     </div>
   </section>
 
-  <!-- ==================== MAPA ==================== -->
+  
+<!-- ==================== SERVICE DETAIL MODAL ==================== -->
+<div class="modal fade" id="serviceModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="serviceModalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" id="serviceModalBody"></div>
+      <div class="modal-footer">
+        <a href="#contacto" class="btn btn-primary" onclick="closeModal('#serviceModal')">Solicitar Cotización</a>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+#serviceModal .modal-content {
+  background: #fff;
+  border: none;
+  border-radius: 16px;
+}
+#serviceModal .modal-header {
+  border-bottom: 1px solid #eef2f6;
+  padding: 1.5rem 2rem;
+}
+#serviceModal .modal-title {
+  font-weight: 700;
+  color: var(--color-text);
+  font-size: 1.3rem;
+}
+#serviceModal .modal-body {
+  padding: 2rem;
+  color: var(--color-text);
+  line-height: 1.7;
+}
+#serviceModal .modal-footer {
+  border-top: 1px solid #eef2f6;
+  padding: 1rem 2rem;
+}
+#serviceModal .btn-close-white {
+  filter: invert(0.6);
+}
+#serviceModal .service-detail-icon {
+  font-size: 2.5rem;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+}
+#serviceModal .service-detail-features {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+}
+#serviceModal .service-detail-features li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eef2f6;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+#serviceModal .service-detail-features li i {
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+</style>
+
+<script>
+function showServiceDetail(index) {
+  var services = [
+    {
+      title: "Automatización Industrial",
+      icon: "bi-cpu",
+      description: "Diseñamos e implementamos sistemas de control para plantas industriales, líneas de producción y procesos críticos. Trabajamos con las principales marcas del mercado y ofrecemos soluciones personalizadas.",
+      features: [
+        "Programación de PLCs (Siemens, Allen Bradley, Delta, Mitsubishi)",
+        "Desarrollo de HMI y SCADA para supervisión en tiempo real",
+        "Variadores de frecuencia y arrancadores suaves",
+        "Tableros de control eléctricos y de instrumentación",
+        "Integración de robots colaborativos y sistemas de visión",
+        "Puesta en marcha y comisionamiento en sitio"
+      ]
+    },
+    {
+      title: "Internet de las Cosas (IoT)",
+      icon: "bi-wifi",
+      description: "Transformamos sus procesos en datos accionables. Implementamos sensores inteligentes, gateways de comunicación y plataformas en la nube para monitorear variables críticas desde cualquier lugar.",
+      features: [
+        "Monitoreo remoto de temperatura, humedad, presión y vibración",
+        "Dashboards en tiempo real con alertas configurables",
+        "Plataformas IoT (AWS IoT, ThingsBoard, Ubidots)",
+        "Sensores inalámbricos de bajo consumo (LoRaWAN, WiFi)",
+        "Sistemas de medición de energía y eficiencia",
+        "Integración con sistemas SCADA existentes"
+      ]
+    },
+    {
+      title: "Mantenimiento Electrónico",
+      icon: "bi-tools",
+      description: "Reparamos equipos electrónicos a nivel componente, lo que nos permite recuperar tarjetas que otros dan por perdidas. Servicio para el hogar, la oficina y la industria con diagnóstico sin costo.",
+      features: [
+        "Reparación de tarjetas electrónicas de inversores y variadores",
+        "Diagnóstico de fuentes de poder industriales y conmutadas",
+        "Mantenimiento de equipos de climatización (aires, refrigeración)",
+        "Reparación de electrodomésticos y equipos de oficina",
+        "Recuperación de PLCs, variadores y controladores",
+        "Diagnóstico a nivel componente, no a nivel módulo"
+      ]
+    },
+    {
+      title: "Cargadores Eléctricos",
+      icon: "bi-ev-station",
+      description: "Instalamos estaciones de carga para vehículos eléctricos en hogares, empresas y flotas comerciales. Trabajamos en alianza con los principales distribuidores del país.",
+      features: [
+        "Instalación de cargadores Nivel 1 y Nivel 2 residenciales",
+        "Estaciones de carga comerciales y para flotas",
+        "Balanceo de carga y gestión energética",
+        "Asesoría técnica y estudio de viabilidad",
+        "Puesta en marcha y certificación de instalación",
+        "Soporte técnico post-instalación"
+      ]
+    },
+    {
+      title: "Estabilizadores de Voltaje",
+      icon: "bi-lightning-fill",
+      description: "Fabricamos elevadores estabilizadores de voltaje de última generación para proteger sus equipos electrónicos. Contamos con experiencia como fabricantes y ofrecemos una gama completa desde 3kW hasta 8KVA.",
+      features: [
+        "Panel LCD con monitoreo de voltaje de entrada y salida en tiempo real",
+        "Computación de estado sólido para alta durabilidad",
+        "Entrada mínima de 80V para funcionar en condiciones de baja tensión",
+        "Salida de 115V ±4% para protección estable de sus equipos",
+        "Corriente máxima de 35A con protección automática",
+        "Breaker de protección y ventilador de refrigeración"
+      ]
+    }
+  ];
+
+  var s = services[index];
+  if (!s) return;
+
+  document.getElementById('serviceModalTitle').innerHTML = '<i class="bi ' + s.icon + ' me-2" style="color:var(--color-primary)"></i>' + s.title;
+
+  var body = '<div class="service-detail-icon text-center"><i class="bi ' + s.icon + '"></i></div>';
+  body += '<p>' + s.description + '</p>';
+  body += '<h6 class="fw-bold mt-4 mb-3" style="color:var(--color-primary)">Qué incluye:</h6>';
+  body += '<ul class="service-detail-features">';
+  for (var i = 0; i < s.features.length; i++) {
+    body += '<li><i class="bi bi-check-circle-fill"></i> ' + s.features[i] + '</li>';
+  }
+  body += '</ul>';
+
+  document.getElementById('serviceModalBody').innerHTML = body;
+
+  var modal = new bootstrap.Modal(document.getElementById('serviceModal'));
+  modal.show();
+}
+
+function closeModal(id) {
+  var el = document.querySelector(id);
+  if (el) {
+    var modal = bootstrap.Modal.getInstance(el);
+    if (modal) modal.hide();
+  }
+}
+</script>
+
+<!-- ==================== MAPA ==================== -->
   <section class="map-section">
     <div class="map-wrapper">
       <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d62661.22804726455!2d-74.82873698432679!3d10.968539839372044!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8ef42d5a4b8c8e2f%3A0x2a5e8c5c4b5c5c5c!2sBarranquilla%2C%20Atl%C3%A1ntico!5e0!3m2!1ses!2sco!4v1700000000000" width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Ubicación HTK INGENIERIA"></iframe>
@@ -507,8 +695,9 @@
             <span class="brand-icon">⚡</span>
             <span class="brand-text text-white">HTK <span class="brand-accent">INGENIERIA</span></span>
           </div>
-          <p class="footer-desc">Soluciones inteligentes para infraestructura eléctrica. Automatización, IoT, mantenimiento y cargadores EV en Barranquilla, Colombia.</p>
-          <p class="footer-tagline">HOUSETRONIK S.A.S. — Ingeniería que resuelve.</p>
+          <p class="footer-desc">Soluciones inteligentes para infraestructura eléctrica. Automatización, IoT, mantenimiento, estabilizadores de voltaje y cargadores EV en Barranquilla, Colombia.</p>
+          <p class="footer-tagline">HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S</p>
+          <p class="footer-address mt-2"><i class="bi bi-geo-alt"></i> CRA 7B # 46-108, Barranquilla</p>
         </div>
         <div class="col-lg-2 col-md-6">
           <h5 class="footer-heading">Servicios</h5>
@@ -517,29 +706,30 @@
             <li><a href="#servicios">IoT</a></li>
             <li><a href="#servicios">Mantenimiento</a></li>
             <li><a href="#servicios">Cargadores EV</a></li>
+            <li><a href="#servicios">Estabilizadores</a></li>
           </ul>
         </div>
         <div class="col-lg-3 col-md-6">
           <h5 class="footer-heading">Contacto</h5>
           <ul class="footer-links">
-            <li><i class="bi bi-geo-alt me-2"></i>Barranquilla, Colombia</li>
+            <li><i class="bi bi-geo-alt me-2"></i>CRA 7B # 46-108, Barranquilla</li>
             <li><a href="tel:+573156032940"><i class="bi bi-telephone me-2"></i>+57 315 603 2940</a></li>
-            <li><a href="mailto:contacto@htkingenieria.com"><i class="bi bi-envelope me-2"></i>contacto@htkingenieria.com</a></li>
+            <li><a href="mailto:info@htk-ingenieria.com"><i class="bi bi-envelope me-2"></i>info@htk-ingenieria.com</a></li>
             <li><i class="bi bi-clock me-2"></i>Lun–Vie 8-6 · Sáb 8-1</li>
           </ul>
         </div>
         <div class="col-lg-3 col-md-6">
           <h5 class="footer-heading">Síguenos</h5>
           <div class="footer-social">
-            <a href="#" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
-            <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
-            <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
-            <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+            <a href="https://wa.me/573156032940" aria-label="WhatsApp" target="_blank"><i class="bi bi-whatsapp"></i></a>
+            <a href="https://instagram.com/housetronik/" aria-label="Instagram" target="_blank"><i class="bi bi-instagram"></i></a>
+            <a href="https://facebook.com/HouseTronic" aria-label="Facebook" target="_blank"><i class="bi bi-facebook"></i></a>
+            <a href="https://wa.me/573156032940" aria-label="WhatsApp" target="_blank"><i class="bi bi-whatsapp"></i></a>
           </div>
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; <span id="year"></span> HTK INGENIERIA — HOUSETRONIK S.A.S. Todos los derechos reservados.</p>
+        <p>&copy; <span id="year"></span> HTK INGENIERIA S.A.S — HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S · Todos los derechos reservados.</p>
       </div>
     </div>
   </footer>
@@ -562,6 +752,6 @@
   <!-- AOS JS -->
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
   <!-- Custom JS -->
-  <script src="js/main.js"></script>
+  <script src="js/main.js?v=1"></script>
 </body>
 </html>
