@@ -902,6 +902,118 @@ def api_pitches_by_segment(segment):
     matched = [t for t in templates if segment in t.get('segmentos', [])]
     return jsonify(matched)
 
+
+# ── Automation Endpoints ─────────────────────────────────────────────
+
+def run_script(script_name, args=None):
+    """Run a Python script from scripts/ dir and capture output."""
+    import subprocess
+    script_path = os.path.join(os.path.dirname(BASE_DIR), 'scripts', script_name)
+    if not os.path.exists(script_path):
+        return {'ok': False, 'error': 'Script no encontrado: ' + script_path}
+    cmd = ['python3', script_path]
+    if args:
+        cmd.extend(args)
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        return {'ok': result.returncode == 0, 'output': result.stdout, 'error': result.stderr}
+    except subprocess.TimeoutExpired:
+        return {'ok': False, 'error': 'Timeout (300s)'}
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}
+
+
+@app.route('/api/auto/enrich', methods=['POST'])
+@login_required
+def api_auto_enrich():
+    data = request.get_json(silent=True) or {}
+    args = []
+    if data.get('segmento'):
+        args.extend(['--segmento', data['segmento']])
+    if data.get('lead'):
+        args.extend(['--lead', data['lead']])
+    if data.get('force'):
+        args.append('--force')
+    result = run_script('auto_enrich.py', args)
+    return jsonify(result)
+
+
+@app.route('/api/auto/score', methods=['GET'])
+@login_required
+def api_auto_score():
+    seg = request.args.get('segmento')
+    top = request.args.get('top', '0')
+    args = ['--top', top]
+    if seg:
+        args.extend(['--segmento', seg])
+    result = run_script('auto_score.py', args)
+    return jsonify(result)
+
+
+@app.route('/api/auto/schedule', methods=['POST'])
+@login_required
+def api_auto_schedule():
+    data = request.get_json(silent=True) or {}
+    args = []
+    if data.get('segmento'):
+        args.extend(['--segmento', data['segmento']])
+    if data.get('start'):
+        args.extend(['--start', data['start']])
+    if data.get('dry_run'):
+        args.append('--dry-run')
+    result = run_script('auto_schedule.py', args)
+    return jsonify(result)
+
+
+@app.route('/api/auto/campaign', methods=['POST'])
+@login_required
+def api_auto_campaign():
+    data = request.get_json(silent=True) or {}
+    args = []
+    if data.get('segmento'):
+        args.extend(['--segmento', data['segmento']])
+    if data.get('lead'):
+        args.extend(['--lead', data['lead']])
+    if data.get('channel'):
+        args.extend(['--channel', data['channel']])
+    else:
+        args.extend(['--channel', 'whatsapp'])
+    if data.get('save'):
+        args.append('--save')
+    result = run_script('auto_campaign.py', args)
+    return jsonify(result)
+
+
+@app.route('/api/auto/backup', methods=['POST'])
+@login_required
+def api_auto_backup():
+    import subprocess
+    script_path = os.path.join(BASE_DIR, 'backup_db.sh')
+    if not os.path.exists(script_path):
+        return jsonify({'ok': False, 'error': 'backup_db.sh no encontrado'})
+    try:
+        result = subprocess.run(['bash', script_path], capture_output=True, text=True, timeout=30)
+        # List backups
+        backup_dir = os.path.join(BASE_DIR, 'backups')
+        backups = []
+        if os.path.exists(backup_dir):
+            import glob
+            for f in sorted(glob.glob(os.path.join(backup_dir, '*.backup*')), reverse=True)[:10]:
+                fname = os.path.basename(f)
+                fsize = os.path.getsize(f)
+                backups.append({'name': fname, 'size': fsize})
+        return jsonify({
+            'ok': result.returncode == 0,
+            'output': result.stdout,
+            'error': result.stderr,
+            'backups': backups
+        })
+    except subprocess.TimeoutExpired:
+        return jsonify({'ok': False, 'error': 'Timeout'})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)})
+
+
 # ── Main ─────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':

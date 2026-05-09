@@ -737,6 +737,9 @@
       <a class="nav-link mobile-nav-link" href="#" data-tab="interactions" onclick="toggleMobileMenu()">
         <i class="bi bi-chat-dots"></i> Interacciones
       </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="automation" onclick="toggleMobileMenu()">
+        <i class="bi bi-gear-wide-connected"></i> Automatización
+      </a>
       <hr style="border-color:rgba(255,255,255,0.06);">
       <a class="nav-link mobile-nav-link" href="#" onclick="toggleTheme();toggleMobileMenu();">
         <i class="bi bi-palette"></i> Cambiar tema
@@ -786,6 +789,7 @@
         <a class="nav-link" href="#" data-tab="workorders"><i class="bi bi-tools"></i> Órdenes Trabajo</a>
         <a class="nav-link" href="#" data-tab="leads"><i class="bi bi-graph-up-arrow"></i> Prospectos</a>
         <a class="nav-link" href="#" data-tab="interactions"><i class="bi bi-chat-dots"></i> Interacciones</a>
+        <a class="nav-link" href="#" data-tab="automation"><i class="bi bi-gear-wide-connected"></i> Automatización</a>
       </nav>
       <div class="px-3 mt-auto">
         <button class="logout-btn" onclick="handleLogout()" title="Cerrar sesión">
@@ -1122,6 +1126,146 @@
         </div>
       </div>
 
+      <!-- ── Tab: Automatización ────────────────────── -->
+      <div id="tab-automation" class="tab-content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="page-title mb-0"><i class="bi bi-gear-wide-connected"></i> Automatización</h3>
+          <small style="color:rgba(255,255,255,0.4);">Scripts autónomos — sin IA</small>
+        </div>
+
+        <div id="autoStatus" style="display:none;" class="alert alert-info mb-3"></div>
+
+        <div class="row g-3">
+          <!-- Enriquecer -->
+          <div class="col-md-4">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-search-heart"></i> Enriquecer Leads</h5>
+                <p class="card-text small text-muted">Scrapea sitios web de leads nuevos para extraer teléfonos, emails y WhatsApp.</p>
+                <div class="d-flex gap-2 mb-2">
+                  <button class="btn btn-sm btn-outline-htk" onclick="runAuto('enrich',{force:true})">
+                    <i class="bi bi-arrow-repeat"></i> Todos
+                  </button>
+                  <button class="btn btn-sm btn-outline-htk" onclick="runAuto('enrich',{segmento:'hoteles'})">
+                    <i class="bi bi-building"></i> Hoteles
+                  </button>
+                </div>
+                <div id="autoEnrichResult" class="small" style="max-height:200px;overflow-y:auto;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Puntuar -->
+          <div class="col-md-4">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-trophy"></i> Puntuar Leads</h5>
+                <p class="card-text small text-muted">Clasifica leads por prioridad según datos de contacto, segmento y antigüedad.</p>
+                <div class="d-flex gap-2 mb-2">
+                  <button class="btn btn-sm btn-outline-htk" onclick="runAuto('score',{top:10})">
+                    <i class="bi bi-list-ol"></i> Top 10
+                  </button>
+                  <button class="btn btn-sm btn-outline-htk" onclick="runAuto('score',{top:20})">
+                    <i class="bi bi-list"></i> Top 20
+                  </button>
+                </div>
+                <div id="autoScoreResult" class="small" style="max-height:200px;overflow-y:auto;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Programar -->
+          <div class="col-md-4">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-calendar-check"></i> Programar Seguimientos</h5>
+                <p class="card-text small text-muted">Asigna fechas de contacto en horario laboral, agrupado por segmento.</p>
+                <div class="d-flex gap-2 mb-2">
+                  <button class="btn btn-sm btn-outline-htk" onclick="runAuto('schedule',{dry_run:true})">
+                    <i class="bi bi-eye"></i> Vista previa
+                  </button>
+                  <button class="btn btn-sm btn-outline-htk" onclick="if(confirm('¿Programar seguimientos para todos los leads?'))runAuto('schedule',{})">
+                    <i class="bi bi-play-fill"></i> Ejecutar
+                  </button>
+                </div>
+                <div id="autoScheduleResult" class="small" style="max-height:200px;overflow-y:auto;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Campaña -->
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-send"></i> Campaña de Mensajes</h5>
+                <p class="card-text small text-muted">Genera mensajes personalizados desde las plantillas de pitch para un segmento.</p>
+                <div class="row g-2 mb-2">
+                  <div class="col-4">
+                    <select class="form-select form-select-sm" id="campaignSegment">
+                      <option value="distribuidor cargadores">🔌 Cargadores</option>
+                      <option value="B2B taller">🔧 Talleres</option>
+                      <option value="B2B fabrica">🏭 Fábricas</option>
+                      <option value="energia solar">☀️ Solar</option>
+                      <option value="hoteles">🏨 Hoteles</option>
+                      <option value="restaurantes">🍽️ Restaurantes</option>
+                    </select>
+                  </div>
+                  <div class="col-3">
+                    <select class="form-select form-select-sm" id="campaignChannel">
+                      <option value="whatsapp">💬 WhatsApp</option>
+                      <option value="email">✉️ Email</option>
+                    </select>
+                  </div>
+                  <div class="col-5 d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-htk" onclick="runAuto('campaign',{segmento:getVal('campaignSegment'),channel:getVal('campaignChannel')})">
+                      <i class="bi bi-eye"></i> Vista previa
+                    </button>
+                    <button class="btn btn-sm btn-htk" onclick="if(confirm('¿Guardar como interacciones pendientes?'))runAuto('campaign',{segmento:getVal('campaignSegment'),channel:getVal('campaignChannel'),save:true})">
+                      <i class="bi bi-save"></i> Generar y guardar
+                    </button>
+                  </div>
+                </div>
+                <div id="autoCampaignResult" class="small" style="max-height:300px;overflow-y:auto;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Backup -->
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-shield-check"></i> Respaldo BD</h5>
+                <p class="card-text small text-muted">Genera un backup comprimido de la base de datos. Los backups se conservan 14 días.</p>
+                <div class="d-flex gap-2 mb-2">
+                  <button class="btn btn-sm btn-outline-htk" onclick="runAuto('backup',{})">
+                    <i class="bi bi-cloud-arrow-up"></i> Backup ahora
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="showBackupList()">
+                    <i class="bi bi-archive"></i> Ver backups
+                  </button>
+                </div>
+                <div id="autoBackupResult" class="small"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Output detail -->
+        <div id="autoOutput" style="display:none;" class="mt-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h6><i class="bi bi-terminal"></i> Salida detallada</h6>
+            <button class="btn btn-sm btn-link" onclick="document.getElementById('autoOutput').style.display='none'">Cerrar</button>
+          </div>
+          <pre id="autoOutputPre" style="background:rgba(0,0,0,0.3);border-radius:8px;padding:12px;max-height:400px;overflow:auto;font-size:0.8em;"></pre>
+        </div>
+
+        <hr class="my-3">
+        <div class="text-center" style="color:rgba(255,255,255,0.3);font-size:0.75em;">
+          <i class="bi bi-cpu"></i> Procesamiento 100% local — Sin consumo de tokens AI
+          &nbsp;·&nbsp; Backups automáticos cada 12h (6am/6pm)
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1389,6 +1533,108 @@ function updateNotifications() {
 
 // ── Data Loading ────────────────────────────────────────────────────
 async function fetchJSON(url) { const r = await fetch(url); return r.json(); }
+function getVal(id) { return document.getElementById(id).value; }
+
+// ── Automation Tools ────────────────────────────────────────────────
+async function runAuto(action, params) {
+  const resultDiv = document.getElementById('auto' + action.charAt(0).toUpperCase() + action.slice(1) + 'Result');
+  const status = document.getElementById('autoStatus');
+  const output = document.getElementById('autoOutput');
+  const pre = document.getElementById('autoOutputPre');
+  
+  if (resultDiv) resultDiv.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
+  if (status) { status.style.display = 'block'; status.innerHTML = '<i class="bi bi-arrow-repeat spinner"></i> Ejecutando ' + action + '...'; status.className = 'alert alert-info mb-3'; }
+  
+  try {
+    let resp;
+    if (action === 'score') {
+      const qs = new URLSearchParams(params).toString();
+      resp = await fetch('/api/auto/score?' + qs);
+    } else {
+      resp = await fetch('/api/auto/' + action, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(params)
+      });
+    }
+    const data = await resp.json();
+    
+    if (status) {
+      if (data.ok) {
+        status.innerHTML = '<i class="bi bi-check-circle-fill"></i> Completo';
+        status.className = 'alert alert-success mb-3';
+      } else {
+        status.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Error: ' + (data.error || 'desconocido');
+        status.className = 'alert alert-danger mb-3';
+      }
+    }
+    
+    // Show output
+    if (resultDiv) {
+      if (data.output) {
+        // Parse output - highlight key metrics
+        const lines = data.output.split('\n').filter(l => l.trim());
+        let html = '<div class="mt-1">';
+        let count = 0;
+        for (const line of lines) {
+          if (line.includes('OK') || line.includes('✅')) {
+            html += '<div style="color:var(--htk-primary)">' + escapeHtml(line) + '</div>';
+            count++;
+          } else if (line.includes('X ') || line.includes('❌') || line.includes('Error')) {
+            html += '<div style="color:#ff6b6b">' + escapeHtml(line) + '</div>';
+            count++;
+          } else if (line.includes('Resumen') || line.includes('Completo') || line.includes('Total') || line.includes('Leads')) {
+            html += '<div style="color:rgba(255,255,255,0.7)"><strong>' + escapeHtml(line) + '</strong></div>';
+            count++;
+          } else if (count < 30) {
+            html += '<div style="color:rgba(255,255,255,0.5)">' + escapeHtml(line) + '</div>';
+            count++;
+          }
+        }
+        html += '</div>';
+        resultDiv.innerHTML = html;
+        
+        // Also show full output
+        pre.textContent = data.output;
+        output.style.display = 'block';
+      } else if (data.error) {
+        resultDiv.innerHTML = '<div style="color:#ff6b6b">Error: ' + escapeHtml(data.error) + '</div>';
+      } else {
+        resultDiv.innerHTML = '<div style="color:var(--htk-primary)">Completado sin salida</div>';
+      }
+    }
+    
+    showToast(action + ' completado', data.ok ? 'success' : 'danger');
+  } catch(e) {
+    if (resultDiv) resultDiv.innerHTML = '<div style="color:#ff6b6b">Error de conexión: ' + e.message + '</div>';
+    if (status) { status.innerHTML = '<i class="bi bi-x-circle-fill"></i> Error de conexión'; status.className = 'alert alert-danger mb-3'; }
+    showToast('Error: ' + e.message, 'danger');
+  }
+}
+
+async function showBackupList() {
+  try {
+    const resp = await fetch('/api/auto/backup', {method:'POST'});
+    const data = await resp.json();
+    const pre = document.getElementById('autoOutputPre');
+    const output = document.getElementById('autoOutput');
+    if (data.output) {
+      pre.textContent = data.output;
+      output.style.display = 'block';
+    } else if (data.error) {
+      pre.textContent = 'Error: ' + data.error;
+      output.style.display = 'block';
+    }
+  } catch(e) {
+    showToast('Error: ' + e.message, 'danger');
+  }
+}
+
+function escapeHtml(text) {
+  const d = document.createElement('div');
+  d.textContent = text;
+  return d.innerHTML;
+}
 
 async function loadDashboard() {
   showLoading('dashboardLoading','dashboardContent');
