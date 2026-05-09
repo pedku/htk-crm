@@ -59,11 +59,17 @@ def find_pitch(pitches, segmento, linea_interes=''):
 
 
 def personalize(text, lead_name, lead_contact='', contact_person=''):
-    """Replace [Contacto], [Empresa], [Nombre] with actual data."""
-    default_greeting = contact_person or lead_name.split()[0] if lead_name else 'señor'
+    """Replace [Contacto], [Empresa], [Nombre] with actual data.
+    Si no hay nombre de persona, usa un saludo generico por segmento inferido."""
+    # Si tenemos nombre de persona, usarlo
+    if contact_person and contact_person != lead_name:
+        greeting = contact_person
+    else:
+        # Saludo generico segun tipo de negocio
+        greeting = 'señor/a'
     replacements = {
-        '[Contacto]': default_greeting,
-        '[contacto]': default_greeting.lower(),
+        '[Contacto]': greeting,
+        '[contacto]': greeting.lower(),
         '[Empresa]': lead_name or 'su empresa',
         '[empresa]': (lead_name or 'su empresa').lower(),
         '[Nombre]': contact_person or lead_name or 'cliente',
