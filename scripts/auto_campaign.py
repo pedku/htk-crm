@@ -58,15 +58,16 @@ def find_pitch(pitches, segmento, linea_interes=''):
     return best
 
 
-def personalize(text, lead_name, lead_contact=''):
+def personalize(text, lead_name, lead_contact='', contact_person=''):
     """Replace [Contacto], [Empresa], [Nombre] with actual data."""
+    default_greeting = contact_person or lead_name.split()[0] if lead_name else 'señor'
     replacements = {
-        '[Contacto]': lead_name.split()[0] if lead_name else 'señor',
-        '[contacto]': lead_name.split()[0].lower() if lead_name else 'señor',
+        '[Contacto]': default_greeting,
+        '[contacto]': default_greeting.lower(),
         '[Empresa]': lead_name or 'su empresa',
         '[empresa]': (lead_name or 'su empresa').lower(),
-        '[Nombre]': lead_name or 'cliente',
-        '[nombre]': (lead_name or 'cliente').lower(),
+        '[Nombre]': contact_person or lead_name or 'cliente',
+        '[nombre]': (contact_person or lead_name or 'cliente').lower(),
     }
     for old, new in replacements.items():
         text = text.replace(old, new)
@@ -77,14 +78,14 @@ def get_leads_for_campaign(segment=None, lead_id=None, only_due_today=False):
     db = get_db()
     
     if lead_id:
-        cur = db.execute('SELECT id, nombre, segmento, linea_interes, contacto FROM leads WHERE id=?', (lead_id,))
+        cur = db.execute('SELECT id, nombre, segmento, linea_interes, contacto, contacto_nombre FROM leads WHERE id=?', (lead_id,))
     elif segment:
-        cur = db.execute("SELECT id, nombre, segmento, linea_interes, contacto FROM leads WHERE segmento=? AND estado='nuevo'", (segment,))
+        cur = db.execute("SELECT id, nombre, segmento, linea_interes, contacto, contacto_nombre FROM leads WHERE segmento=? AND estado='nuevo'", (segment,))
     elif only_due_today:
         today = datetime.now().strftime('%Y-%m-%d')
-        cur = db.execute("SELECT id, nombre, segmento, linea_interes, contacto FROM leads WHERE estado='nuevo' AND proximo_seguimiento LIKE ? || '%'", (today,))
+        cur = db.execute("SELECT id, nombre, segmento, linea_interes, contacto, contacto_nombre FROM leads WHERE estado='nuevo' AND proximo_seguimiento LIKE ? || '%'", (today,))
     else:
-        cur = db.execute("SELECT id, nombre, segmento, linea_interes, contacto FROM leads WHERE estado='nuevo' AND segmento!='' ORDER BY segmento")
+        cur = db.execute("SELECT id, nombre, segmento, linea_interes, contacto, contacto_nombre FROM leads WHERE estado='nuevo' AND segmento!='' ORDER BY segmento")
     
     return cur.fetchall()
 
@@ -151,7 +152,8 @@ if __name__ == '__main__':
     generated = []
     
     for lead in leads:
-        lid, nombre, segmento, linea, contacto = lead
+        lid, nombre, segmento, linea, contacto = lead[:5]
+        contact_person = lead[5] if len(lead) > 5 else ''
         template = find_pitch(pitches, segmento, linea)
         
         if not template:
@@ -164,7 +166,7 @@ if __name__ == '__main__':
             continue
         
         # Personalize
-        msg = personalize(body, nombre, contacto)
+        msg = personalize(body, nombre, contacto, contact_person)
         
         # Truncate if needed
         if len(msg) > max_chars:

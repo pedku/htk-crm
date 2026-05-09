@@ -421,7 +421,7 @@ def api_lead(lead_id):
         data = request.get_json()
         updates = []
         params = []
-        for key in ['nombre', 'contacto', 'segmento', 'linea_interes', 'estado', 'fuente', 'notas', 'valor_estimado', 'proximo_seguimiento']:
+        for key in ['nombre', 'contacto', 'contacto_nombre', 'segmento', 'linea_interes', 'estado', 'fuente', 'notas', 'valor_estimado', 'proximo_seguimiento']:
             if key in data:
                 updates.append(f"{key} = ?")
                 params.append(data[key])

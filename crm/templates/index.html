@@ -2251,6 +2251,9 @@ async function showLeadDetail(id) {
     <div class="row">
       <div class="col-md-6">
         <p><strong>ID:</strong> ${l.id}</p>
+        <p><strong>Nombre Contacto:</strong> <span id="leadContactPerson_${id}">${escHtml(l.contacto_nombre || '-')}</span>
+          <button class="btn btn-sm btn-link p-0 ms-1" onclick="editContactPerson('lead','${id}')" title="Editar nombre de contacto" style="font-size:0.75em;color:var(--htk-primary);"><i class="bi bi-pencil"></i></button>
+        </p>
         <p><strong>Contacto:</strong> ${escHtml(l.contacto || '-')}</p>
         <p><strong>Segmento:</strong> ${escHtml(l.segmento || '-')}</p>
         <p><strong>Línea de Interés:</strong> ${escHtml(l.linea_interes || '-')}</p>
@@ -2462,6 +2465,7 @@ async function showModal(type, id) {
     if (id) item = leads.find(l => l.id === id);
     fields = [
       {label:'Nombre / Empresa', key:'nombre', type:'text', required:true},
+      {label:'Nombre Contacto (persona)', key:'contacto_nombre', type:'text', placeholder:'Ej: Juan Pérez'},
       {label:'Contacto', key:'contacto', type:'text', placeholder:'Teléfono, email o red social'},
       {label:'Segmento', key:'segmento', type:'select', options:['B2B taller','B2B comercio','B2B industria','B2C consumidor','distribuidor','otro']},
       {label:'Línea de Interés', key:'linea_interes', type:'select', options:['automatizacion','iot','mantenimiento','cargadores','varios']},
@@ -2576,6 +2580,7 @@ async function saveModal(type, id) {
   } else if (type === 'lead') {
     data = {
       nombre: document.getElementById('f_nombre')?.value,
+      contacto_nombre: document.getElementById('f_contacto_nombre')?.value || '',
       contacto: document.getElementById('f_contacto')?.value,
       segmento: document.getElementById('f_segmento')?.value,
       linea_interes: document.getElementById('f_linea_interes')?.value,
@@ -3150,6 +3155,25 @@ async function saveInteraction(leadId) {
     showToast('Interacción registrada ✅');
     loadLeadInteractions(leadId);
   } catch(e) { showToast('Error al guardar', 'danger'); }
+}
+
+// ── Contact Person In-Place ──────────────────────────────────────────
+function editContactPerson(type, id) {
+  const span = document.getElementById('leadContactPerson_' + id);
+  const current = span.textContent === '-' ? '' : span.textContent;
+  const name = prompt('Nombre de la persona contacto:', current);
+  if (name === null) return;
+  const cleanName = name.trim();
+  if (cleanName === '' || cleanName === current) {
+    if (cleanName === '') {
+      fetchJSON('/api/leads/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({contacto_nombre:''})});
+      span.textContent = '-';
+    }
+    return;
+  }
+  fetchJSON('/api/leads/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({contacto_nombre:cleanName})})
+    .then(d => { span.textContent = cleanName; showToast('Nombre de contacto actualizado'); })
+    .catch(e => showToast('Error: ' + e.message, 'danger'));
 }
 
 // ── Notes In-Place ──────────────────────────────────────────────────

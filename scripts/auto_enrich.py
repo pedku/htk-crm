@@ -83,9 +83,25 @@ def scrape_url(url):
                 if wm:
                     whatsapps.add(wm.group(1))
 
+        # Extract contact person names
+        contact_names = set()
+        name_patterns = [
+            r'(?:Gerente|Director|Due[ñn]o|Administrador|Contacto|Representante)[\s:]+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+)',
+            r'(?:Hablar con|Contactar con|A la att|Att|Attn)[.:\s]+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+)',
+            r'(?:presidente|CEO|fundador|manager|encargado)[\s:]+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+)',
+        ]
+        soup = BeautifulSoup(html, 'html.parser')
+        text_content = soup.get_text(separator=' ', strip=True)
+        for pat in name_patterns:
+            for m in re.finditer(pat, text_content, re.I):
+                name = m.group(1).strip()
+                if len(name) > 5 and len(name) < 60 and not any(x in name.lower() for x in ['ejemplo', 'test', 'prueba', 'user', 'usuario']):
+                    contact_names.add(name)
+
         result['phones'] = sorted(phones)
         result['emails'] = sorted(emails)
         result['whatsapps'] = sorted(whatsapps)
+        result['contact_names'] = sorted(contact_names)
 
     except Exception as e:
         result['error'] = str(e)[:120]
@@ -114,6 +130,19 @@ def update_lead(lid, data):
         if w not in current:
             additions.append('WA: ' + w)
 
+    # Save contact name if found
+    contact_names = data.get('contact_names', [])
+    existing_name = None
+    cur2 = db.execute('SELECT contacto_nombre FROM leads WHERE id=?', (lid,))
+    existing_row = cur2.fetchone()
+    if existing_row:
+        existing_name = existing_row[0]
+    
+    if contact_names and not existing_name:
+        best_name = contact_names[0]
+        db.execute('UPDATE leads SET contacto_nombre=? WHERE id=?', (best_name, lid))
+        additions.append('Contacto: ' + best_name)
+    
     if additions:
         sep = ' | ' if current else ''
         new_contact = current + sep + ' | '.join(additions)
