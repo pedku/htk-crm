@@ -2130,7 +2130,7 @@ function renderLeads() {
     }
     return `<tr>
       <td><strong>${l.id}</strong></td>
-      <td><strong>${escHtml(l.nombre || '-')}</strong></td>
+      <td><strong><a href="/leads/${l.id}" style="color:var(--htk-primary);text-decoration:none;">${escHtml(l.nombre || '-')}</a></strong></td>
       <td>${escHtml(l.contacto || '-')}</td>
       <td>${escHtml(l.segmento || '-')}</td>
       <td>${escHtml(l.linea_interes || '-')}</td>
@@ -2828,7 +2828,7 @@ function kanbanLeadCard(l) {
     <div class="kanban-card" draggable="true" data-id="${l.id}" data-status="${l.estado}"
          onclick="showLeadDetail('${l.id}')" title="Ver detalle de ${l.nombre||l.id}">
       <div class="kc-id">${l.id}</div>
-      <div class="kc-client">${escHtml(l.nombre||'Sin nombre')}</div>
+      <div class="kc-client"><a href="/leads/${l.id}" style="color:inherit;text-decoration:none;">${escHtml(l.nombre||'Sin nombre')}</a></div>
       <div class="kc-meta">${escHtml(l.contacto||'-')}</div>
       ${budget}
     </div>
@@ -2853,7 +2853,7 @@ function renderKanbanLeadsTable() {
     const es = ESTADOS_LEAD[l.estado] || {label:l.estado||'nuevo', class:'bg-secondary'};
     return `<tr>
       <td><strong>${l.id}</strong></td>
-      <td><strong>${escHtml(l.nombre || '-')}</strong></td>
+      <td><strong><a href="/leads/${l.id}" style="color:var(--htk-primary);text-decoration:none;">${escHtml(l.nombre || '-')}</a></strong></td>
       <td>${escHtml(l.contacto || '-')}</td>
       <td>${escHtml(l.segmento || '-')}</td>
       <td>${escHtml(l.linea_interes || '-')}</td>
