@@ -430,9 +430,9 @@
       .stat-card { padding: 14px 16px !important; }
       .stat-card .number { font-size: 1.3em !important; }
       
-      .table-container { padding: 12px !important; overflow-x: auto !important; }
+      .table-container { padding: 12px !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
       .table { font-size: 0.8em !important; }
-      .table td, .table th { white-space: nowrap !important; padding: 6px 8px !important; max-width: 200px !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+      .table td, .table th { white-space: nowrap !important; padding: 6px 8px !important; }
       
       .kanban-board { overflow-x: auto !important; flex-wrap: nowrap !important; }
       .kanban-column { min-width: 220px !important; max-width: 260px !important; }
@@ -696,13 +696,6 @@
     [data-bs-theme="light"] .view-toggle { background: rgba(0,0,0,0.04); }
     [data-bs-theme="light"] .view-toggle .btn { color: rgba(0,0,0,0.4); }
     [data-bs-theme="light"] .view-toggle .btn:hover:not(.active) { color: #000; background: rgba(0,0,0,0.04); }
-    [data-bs-theme="light"] .sidebar .nav-link:hover { color: #000; background: rgba(0,0,0,0.04); }
-    [data-bs-theme="light"] .brand-text { color: #1a1a2e; }
-    [data-bs-theme="light"] .badge-estado { color: #1a1a2e !important; }
-    [data-bs-theme="light"] .card-header, [data-bs-theme="light"] .card-title { color: #1a1a2e; }
-    [data-bs-theme="light"] .tab-link { color: rgba(0,0,0,0.5); }
-    [data-bs-theme="light"] .tab-link.active { color: var(--htk-primary); }
-    [data-bs-theme="light"] .mobile-nav-link i { color: rgba(0,0,0,0.4); }
   </style>
 </head>
 <body>
@@ -1829,11 +1822,6 @@ async function showClientDetail(id) {
         <a class="contact-action-btn" href="https://wa.me/${phoneClean.replace(/\+/g,'')}?text=Hola%20${encodeURIComponent(c.nombre||'')}%2C%20te%20escribimos%20de%20HTK%20INGENIERIA" target="_blank" title="Abrir chat de WhatsApp">
           <i class="bi bi-whatsapp" style="color:#25D366;"></i> WhatsApp
         </a>
-      </div>
-      <div class="col-md-6">
-        <button class="contact-action-btn" onclick="enviarViaBot(${id},'${phoneClean}','${(c.nombre||'').replace(/'/g,"\\'")}')" title="Enviar mensaje desde el bot">
-          <i class="bi bi-robot" style="color:var(--htk-primary);"></i> Enviar vía Bot
-        </button>
       </div>`;
   }
   if (hasEmail) {
@@ -2316,7 +2304,7 @@ async function showLeadDetail(id) {
       </div>
     </div>`;
 
-  setModal('Detalle: ' + (l.nombre || l.id), html, '<a href="/leads/'+id+'" class="btn btn-sm btn-htk"><i class="bi bi-box-arrow-up-right"></i> Ver perfil completo</a>');
+  setModal('Detalle: ' + (l.nombre || l.id), html, '<a href="/leads/'+id+'" class="btn btn-sm btn-htk"><i class="bi bi-box-arrow-up-right"></i> Ver perfil</a>');
   modalInstance.show();
   
   // Load interactions after modal is shown
@@ -3571,67 +3559,10 @@ function toggleMobileMenu() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  🤖 ENVÍO VÍA BOT — WhatsApp desde el CRM
+//  🌙 THEME TOGGLE — Dark/Light mode with localStorage
 // ═══════════════════════════════════════════════════════════════════
 
-let botSendLeadId = null;
-let botSendPhone = null;
-let botSendName = null;
-
-function enviarViaBot(leadId, phone, name) {
-  botSendLeadId = leadId;
-  botSendPhone = phone.replace(/[^0-9]/g, '');
-  botSendName = name || 'Lead';
-  $('#botMessageModal').modal('show');
-}
-
-async function confirmarEnvioBot() {
-  const mensaje = document.getElementById('botMessageText').value.trim();
-  if (!mensaje) return alert('Escribe un mensaje');
-  
-  const btn = document.getElementById('botSendBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...';
-  
-  try {
-    const res = await fetch('/api/send-message', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({numero: botSendPhone, mensaje, lead_id: botSendLeadId}),
-    });
-    const data = await res.json();
-    
-    if (data.ok) {
-      // Limpiar y cerrar
-      document.getElementById('botMessageText').value = '';
-      $('#botMessageModal').modal('hide');
-      mostrarToast('✅ Mensaje enviado a ' + (botSendName || botSendPhone), 'success');
-    } else {
-      mostrarToast('❌ Error: ' + (data.error || 'desconocido'), 'danger');
-    }
-  } catch (e) {
-    mostrarToast('❌ Error de conexión: ' + e.message, 'danger');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-send"></i> Enviar';
-  }
-}
-
-function mostrarToast(texto, tipo) {
-  const c = document.getElementById('toastContainer') || (() => {
-    const el = document.createElement('div');
-    el.id = 'toastContainer';
-    el.style = 'position:fixed;top:80px;right:20px;z-index:99999';
-    document.body.appendChild(el);
-    return el;
-  })();
-  const t = document.createElement('div');
-  t.className = 'toast align-items-center text-bg-' + tipo + ' border-0 show';
-  t.role = 'alert';
-  t.innerHTML = '<div class="d-flex"><div class="toast-body">' + texto + '</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>';
-  c.appendChild(t);
-  setTimeout(() => { t.remove(); }, 4000);
-}
+function getTheme() {
   return localStorage.getItem('htk-theme') || 'dark';
 }
 
@@ -3675,29 +3606,5 @@ function handleLogout() {
   window.location.href = '/logout';
 }
 </script>
-
-<!-- 🤖 Modal: Enviar vía Bot -->
-<div class="modal fade" id="botMessageModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title"><i class="bi bi-robot"></i> Enviar vía Bot</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p class="text-muted small">El mensaje se enviará desde el bot de WhatsApp. El lead quedará <strong>silenciado</strong> automáticamente.</p>
-        <div class="mb-3">
-          <label class="form-label">Mensaje</label>
-          <textarea id="botMessageText" class="form-control" rows="6" placeholder="Escribe el mensaje para el lead..." style="font-size:0.9rem;"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button id="botSendBtn" class="btn btn-primary" onclick="confirmarEnvioBot()"><i class="bi bi-send"></i> Enviar</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
