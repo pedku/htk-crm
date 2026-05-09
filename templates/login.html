@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTK CRM — Iniciar Sesión</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    body {
+      background: #0d1b2a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    .login-card {
+      background: #1b2838;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .login-card .brand {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .login-card .brand h2 {
+      color: #00d4aa;
+      font-weight: 700;
+      margin: 0;
+    }
+    .login-card .brand p {
+      color: rgba(255,255,255,0.4);
+      margin: 4px 0 0;
+      font-size: 0.85em;
+    }
+    .login-card .brand i {
+      font-size: 3em;
+      color: #00d4aa;
+      margin-bottom: 12px;
+    }
+    .form-control {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 12px;
+    }
+    .form-control:focus {
+      border-color: #00d4aa;
+      box-shadow: 0 0 0 0.2rem rgba(0,212,170,0.15);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+    .form-label {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.85em;
+      font-weight: 500;
+    }
+    .btn-login {
+      background: #00d4aa;
+      color: #000;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      width: 100%;
+      font-size: 1em;
+      transition: all 0.2s;
+    }
+    .btn-login:hover { background: #00bf9a; color: #000; }
+    .alert { border-radius: 12px; }
+    .footer-text {
+      text-align: center;
+      color: rgba(255,255,255,0.25);
+      font-size: 0.75em;
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="brand">
+      <i class="bi bi-lightning-fill"></i>
+      <h2>HTK CRM</h2>
+      <p>Gestión integrada</p>
+    </div>
+    
+    {% if error %}
+    <div class="alert alert-danger py-2" role="alert">
+      <i class="bi bi-exclamation-triangle"></i> {{ error }}
+    </div>
+    {% endif %}
+    
+    <form method="POST" action="/login">
+      <div class="mb-3">
+        <label class="form-label"><i class="bi bi-person"></i> Usuario</label>
+        <input class="form-control" type="text" name="username" placeholder="Ingresa tu usuario" required autofocus>
+      </div>
+      <div class="mb-3">
+        <label class="form-label"><i class="bi bi-lock"></i> Contraseña</label>
+        <input class="form-control" type="password" name="password" placeholder="Ingresa tu contraseña" required>
+      </div>
+      <button type="submit" class="btn-login"><i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión</button>
+    </form>
+    
+    <div class="footer-text">
+      HTK INGENIERIA ⚡ v3.0
+    </div>
+  </div>
+</body>
+</html>
