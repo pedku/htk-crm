@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="HTK INGENIERIA — Soluciones inteligentes para infraestructura eléctrica. Automatización Industrial, IoT, Mantenimiento Electrónico y Cargadores EV en Barranquilla, Colombia.">
+  <meta name="keywords" content="automatización industrial, IoT, mantenimiento electrónico, cargadores eléctricos, PLC, SCADA, Barranquilla, Colombia, HTK Ingenieria, HOUSETRONIK">
+  <meta name="author" content="HTK INGENIERIA">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="HTK INGENIERIA — Infraestructura Eléctrica Inteligente">
+  <meta property="og:description" content="Automatización Industrial · IoT · Mantenimiento Electrónico · Cargadores EV. Soluciones técnicas a la medida en Barranquilla.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://htkingenieria.com">
+  <meta property="og:locale" content="es_CO">
+  <meta property="og:site_name" content="HTK INGENIERIA">
+
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "HTK INGENIERIA",
+    "legalName": "HOUSETRONIK S.A.S.",
+    "description": "Soluciones inteligentes para infraestructura eléctrica: automatización industrial, IoT, mantenimiento electrónico e instalación de cargadores EV.",
+    "url": "https://htkingenieria.com",
+    "telephone": "+573156032940",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Barranquilla",
+      "addressCountry": "CO"
+    },
+    "openingHoursSpecification": [
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "08:00", "closes": "18:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "08:00", "closes": "13:00" }
+    ],
+    "makesOffer": [
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Automatización Industrial" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Internet de las Cosas (IoT)" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Mantenimiento Electrónico" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Instalación de Cargadores Eléctricos" } }
+    ]
+  }
+  </script>
+
+  <title>HTK INGENIERIA — Soluciones Inteligentes para Infraestructura Eléctrica</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2300a8e4'/><text x='16' y='23' text-anchor='middle' font-size='20' fill='white'>⚡</text></svg>">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- AOS -->
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ==================== NAVBAR ==================== -->
+  <nav class="navbar navbar-expand-lg fixed-top" id="mainNav">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-text">HTK <span class="brand-accent">INGENIERIA</span></span>
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Menú">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-1">
+          <li class="nav-item"><a class="nav-link" href="#servicios">Servicios</a></li>
+          <li class="nav-item"><a class="nav-link" href="#proceso">Proceso</a></li>
+          <li class="nav-item"><a class="nav-link" href="#nosotros">Nosotros</a></li>
+          <li class="nav-item"><a class="nav-link" href="#proyectos">Proyectos</a></li>
+          <li class="nav-item"><a class="nav-link btn-contacto" href="#contacto">Contacto</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== HERO ==================== -->
+  <section class="hero" id="hero">
+    <canvas id="particlesCanvas"></canvas>
+    <div class="hero-content">
+      <div class="container">
+        <div class="row justify-content-center text-center">
+          <div class="col-lg-8" data-aos="fade-up" data-aos-duration="1000">
+            <p class="hero-tag">Soluciones Inteligentes para tu</p>
+            <h1 class="hero-title"><span class="text-accent">Infraestructura Eléctrica</span></h1>
+            <p class="hero-subtitle">Automatización Industrial · IoT · Mantenimiento Electrónico · Cargadores EV</p>
+            <div class="hero-cta">
+              <a href="#contacto" class="btn btn-primary btn-lg">Contáctanos</a>
+              <a href="#servicios" class="btn btn-outline-light btn-lg">Nuestros Servicios</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Waves SVG -->
+    <div class="hero-waves">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" preserveAspectRatio="none">
+        <path fill="#ffffff" fill-opacity="1" d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,69.3C960,85,1056,107,1152,101.3C1248,96,1344,64,1392,48L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ==================== SERVICIOS ==================== -->
+  <section class="services" id="servicios">
+    <div class="container">
+      <div class="section-header text-center" data-aos="fade-up">
+        <span class="section-badge">Lo que hacemos</span>
+        <h2 class="section-title">Nuestros <span class="text-accent">Servicios</span></h2>
+        <p class="section-subtitle">Soluciones técnicas especializadas para la industria. No hacemos de todo: hacemos lo que sabemos, y lo hacemos bien.</p>
+      </div>
+      <div class="row g-4">
+        <!-- Card 1: Automatización -->
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+          <div class="service-card">
+            <div class="service-img">
+              <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600&q=80&auto=format" alt="Automatización Industrial" loading="lazy">
+              <div class="service-img-overlay"></div>
+            </div>
+            <div class="service-icon"><i class="bi bi-cpu"></i></div>
+            <h3 class="service-title">Automatización Industrial</h3>
+            <p class="service-desc">Diseño e implementación de sistemas con PLCs, variadores de frecuencia, HMI y tableros de control. De la lógica al gabinete.</p>
+            <a href="#contacto" class="service-link">Leer más <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+        <!-- Card 2: IoT -->
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+          <div class="service-card">
+            <div class="service-img">
+              <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&q=80&auto=format" alt="IoT y Monitoreo" loading="lazy">
+              <div class="service-img-overlay"></div>
+            </div>
+            <div class="service-icon"><i class="bi bi-wifi"></i></div>
+            <h3 class="service-title">Internet de las Cosas</h3>
+            <p class="service-desc">Monitoreo remoto de variables críticas, sensores industriales, dashboards SCADA y alertas en tiempo real. Datos donde los necesitás.</p>
+            <a href="#contacto" class="service-link">Leer más <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+        <!-- Card 3: Mantenimiento -->
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+          <div class="service-card">
+            <div class="service-img">
+              <img src="https://images.unsplash.com/photo-1581092335871-4c7b80f83b6c?w=600&q=80&auto=format" alt="Mantenimiento Electrónico" loading="lazy">
+              <div class="service-img-overlay"></div>
+            </div>
+            <div class="service-icon"><i class="bi bi-tools"></i></div>
+            <h3 class="service-title">Mantenimiento Electrónico</h3>
+            <p class="service-desc">Reparación de tarjetas electrónicas, inversores, fuentes de poder y equipos especializados. Diagnóstico a nivel componente, no a nivel módulo.</p>
+            <a href="#contacto" class="service-link">Leer más <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+        <!-- Card 4: Cargadores -->
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
+          <div class="service-card">
+            <div class="service-img">
+              <img src="https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=600&q=80&auto=format" alt="Cargadores Eléctricos" loading="lazy">
+              <div class="service-img-overlay"></div>
+            </div>
+            <div class="service-icon"><i class="bi bi-ev-station"></i></div>
+            <h3 class="service-title">Cargadores Eléctricos</h3>
+            <p class="service-desc">Instalación certificada de cargadores EV residenciales, comerciales y flotas. Asesoría, suministro y puesta en marcha con alianzas de distribución.</p>
+            <a href="#contacto" class="service-link">Leer más <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PROCESO ==================== -->
+  <section class="process" id="proceso">
+    <div class="process-bg">
+      <img src="https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1400&q=80&auto=format" alt="Proceso HTK" loading="lazy">
+    </div>
+    <div class="process-overlay"></div>
+    <div class="container">
+      <div class="section-header text-center mb-5" data-aos="fade-up">
+        <span class="section-badge section-badge-light">Cómo trabajamos</span>
+        <h2 class="section-title text-white">Proceso <span class="text-accent">Técnico</span></h2>
+        <p class="section-subtitle text-white-50">Metodología clara, sin vueltas. Cuatro pasos que garantizan resultados.</p>
+      </div>
+      <div class="timeline">
+        <div class="timeline-line"></div>
+        <div class="row g-4">
+          <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="0">
+            <div class="timeline-step">
+              <div class="timeline-icon"><i class="bi bi-search"></i></div>
+              <div class="timeline-content">
+                <span class="timeline-number">01</span>
+                <h4>Diagnóstico</h4>
+                <p>Visitamos tu planta u oficina, levantamos requerimientos y medimos variables en campo. No cotizamos a ciegas: entendemos primero.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="150">
+            <div class="timeline-step">
+              <div class="timeline-icon"><i class="bi bi-pencil-square"></i></div>
+              <div class="timeline-content">
+                <span class="timeline-number">02</span>
+                <h4>Diseño</h4>
+                <p>Elaboramos planos eléctricos, arquitectura de control y protocolo de comunicación. Todo documentado para que sepas exactamente qué vas a recibir.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+            <div class="timeline-step">
+              <div class="timeline-icon"><i class="bi bi-gear"></i></div>
+              <div class="timeline-content">
+                <span class="timeline-number">03</span>
+                <h4>Implementación</h4>
+                <p>Armado de tableros, programación de PLCs, instalación en sitio y pruebas de comisionamiento. Nos ensuciamos las manos.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="450">
+            <div class="timeline-step">
+              <div class="timeline-icon"><i class="bi bi-headset"></i></div>
+              <div class="timeline-content">
+                <span class="timeline-number">04</span>
+                <h4>Soporte</h4>
+                <p>Garantía real sobre nuestro trabajo. Soporte remoto y presencial. Si algo falla, respondemos — no desaparecemos después de entregar.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== NOSOTROS ==================== -->
+  <section class="about" id="nosotros">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6" data-aos="fade-right">
+          <div class="about-image-wrapper">
+            <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=700&q=80&auto=format" alt="Equipo HTK INGENIERIA" loading="lazy" class="about-img">
+            <div class="about-badge">
+              <span class="about-badge-number">5+</span>
+              <span class="about-badge-text">años de<br>experiencia</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6" data-aos="fade-left">
+          <span class="section-badge">Quiénes somos</span>
+          <h2 class="section-title">Ingeniería que <span class="text-accent">resuelve</span>, no que complica</h2>
+          <p class="about-text">Somos HOUSETRONIK S.A.S., una empresa barranquillera que nació del taller. Empezamos reparando tarjetas electrónicas en una mesa de trabajo y hoy integramos sistemas de automatización para plantas completas.</p>
+          <p class="about-text">No somos una multinacional con 50 vendedores. Somos ingenieros que entienden de verdad lo que hacen — y eso se nota cuando respondemos en minutos, no en semanas.</p>
+          <div class="values-grid">
+            <div class="value-item">
+              <i class="bi bi-bullseye"></i>
+              <div>
+                <h5>Precisión</h5>
+                <p>Tolerancias ajustadas, trabajo milimétrico. Cada conexión cuenta.</p>
+              </div>
+            </div>
+            <div class="value-item">
+              <i class="bi bi-lightning-charge"></i>
+              <div>
+                <h5>Agilidad</h5>
+                <p>Sin burocracia. Diagnóstico en horas, cotización en el mismo día.</p>
+              </div>
+            </div>
+            <div class="value-item">
+              <i class="bi bi-eye"></i>
+              <div>
+                <h5>Transparencia</h5>
+                <p>Presupuestos detallados, sin costos ocultos. Sabés cada peso invertido.</p>
+              </div>
+            </div>
+            <div class="value-item">
+              <i class="bi bi-shield-check"></i>
+              <div>
+                <h5>Soporte</h5>
+                <p>No abandonamos el proyecto después del pago. Garantía de verdad.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== POR QUÉ HTK ==================== -->
+  <section class="why-us" id="por-que-htk">
+    <div class="container">
+      <div class="section-header text-center" data-aos="fade-up">
+        <span class="section-badge">Diferenciadores</span>
+        <h2 class="section-title">¿Por qué <span class="text-accent">HTK</span>?</h2>
+        <p class="section-subtitle">En un mercado dominado por grandes integradoras, nosotros jugamos distinto.</p>
+      </div>
+      <div class="row g-4 mb-5">
+        <!-- Grandes Integradoras -->
+        <div class="col-lg-5 offset-lg-1" data-aos="fade-right">
+          <div class="compare-card compare-negative">
+            <h4 class="compare-title"><i class="bi bi-building"></i> Grandes Integradoras</h4>
+            <ul>
+              <li><i class="bi bi-x-circle"></i> Burocracia: semanas para una cotización</li>
+              <li><i class="bi bi-x-circle"></i> Proyectos pequeños no les interesan</li>
+              <li><i class="bi bi-x-circle"></i> Soporte genérico con call center</li>
+              <li><i class="bi bi-x-circle"></i> Costos inflados por estructura corporativa</li>
+            </ul>
+          </div>
+        </div>
+        <!-- HTK -->
+        <div class="col-lg-5" data-aos="fade-left">
+          <div class="compare-card compare-positive">
+            <h4 class="compare-title"><i class="bi bi-lightning-charge-fill"></i> HTK INGENIERIA</h4>
+            <ul>
+              <li><i class="bi bi-check-circle-fill"></i> Cotización en 24 horas o menos</li>
+              <li><i class="bi bi-check-circle-fill"></i> Cada proyecto importa, grande o pequeño</li>
+              <li><i class="bi bi-check-circle-fill"></i> Atención directa con el ingeniero a cargo</li>
+              <li><i class="bi bi-check-circle-fill"></i> Precios justos, sin sobrecostos ocultos</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- Contadores -->
+      <div class="counters" id="counters">
+        <div class="row g-4 text-center">
+          <div class="col-md-4" data-aos="zoom-in" data-aos-delay="0">
+            <div class="counter-item">
+              <span class="counter-number"><span class="counter" data-target="50">0</span>+</span>
+              <span class="counter-label">Proyectos ejecutados</span>
+            </div>
+          </div>
+          <div class="col-md-4" data-aos="zoom-in" data-aos-delay="150">
+            <div class="counter-item">
+              <span class="counter-number"><span class="counter" data-target="15">0</span>+</span>
+              <span class="counter-label">Clientes activos</span>
+            </div>
+          </div>
+          <div class="col-md-4" data-aos="zoom-in" data-aos-delay="300">
+            <div class="counter-item">
+              <span class="counter-number"><span class="counter" data-target="98">0</span>%</span>
+              <span class="counter-label">Satisfacción</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PROYECTOS ==================== -->
+  <section class="projects" id="proyectos">
+    <div class="container">
+      <div class="section-header text-center" data-aos="fade-up">
+        <span class="section-badge">Portafolio</span>
+        <h2 class="section-title">Proyectos <span class="text-accent">Recientes</span></h2>
+        <p class="section-subtitle">Una muestra del tipo de trabajos que hacemos. De la industria al comercio, siempre con el mismo estándar.</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-6" data-aos="fade-up" data-aos-delay="0">
+          <div class="project-card">
+            <img src="https://images.unsplash.com/photo-1581092335871-4c7b80f83b6c?w=700&q=80&auto=format" alt="Automatización línea producción" loading="lazy">
+            <div class="project-overlay">
+              <div class="project-info">
+                <span class="project-tag">Automatización</span>
+                <h4>Control Automatizado de Línea de Producción</h4>
+                <p>PLC + HMI + variadores para planta manufacturera en Barranquilla</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6" data-aos="fade-up" data-aos-delay="150">
+          <div class="project-card">
+            <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=700&q=80&auto=format" alt="Mantenimiento electrónico" loading="lazy">
+            <div class="project-overlay">
+              <div class="project-info">
+                <span class="project-tag">Mantenimiento</span>
+                <h4>Recuperación de Inversores y Fuentes de Alimentación</h4>
+                <p>Diagnóstico y reparación a nivel componente para equipos fuera de garantía</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6" data-aos="fade-up" data-aos-delay="300">
+          <div class="project-card">
+            <img src="https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=700&q=80&auto=format" alt="Instalación cargador EV" loading="lazy">
+            <div class="project-overlay">
+              <div class="project-info">
+                <span class="project-tag">Cargadores EV</span>
+                <h4>Instalación de Puntos de Carga para Flota Comercial</h4>
+                <p>6 cargadores nivel 2 con balanceo de carga y sistema de gestión</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6" data-aos="fade-up" data-aos-delay="450">
+          <div class="project-card">
+            <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=700&q=80&auto=format" alt="IoT monitoreo" loading="lazy">
+            <div class="project-overlay">
+              <div class="project-info">
+                <span class="project-tag">IoT</span>
+                <h4>Sistema de Monitoreo de Temperatura y Humedad</h4>
+                <p>Sensores IoT + dashboard web para bodega de almacenamiento refrigerado</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CONTACTO ==================== -->
+  <section class="contact" id="contacto">
+    <div class="container">
+      <div class="row g-5 align-items-center">
+        <div class="col-lg-5" data-aos="fade-right">
+          <span class="section-badge section-badge-light">Contacto</span>
+          <h2 class="section-title text-white">Hablemos de tu <span class="text-accent">proyecto</span></h2>
+          <p class="text-white-50 mb-4">Contanos qué necesitás y te respondemos con una propuesta clara, sin letra pequeña.</p>
+
+          <!-- WhatsApp CTA -->
+          <div class="whatsapp-cta">
+            <div class="whatsapp-cta-icon">
+              <i class="bi bi-whatsapp"></i>
+            </div>
+            <div class="whatsapp-cta-text">
+              <span class="whatsapp-cta-label">Preferís algo más directo?</span>
+              <a href="https://wa.me/573156032940?text=Hola%20HTK%20INGENIERIA,%20quisiera%20informaci%C3%B3n%20sobre..." target="_blank" rel="noopener noreferrer" class="whatsapp-cta-link">
+                Escribinos por WhatsApp <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+
+          <div class="contact-info mt-4">
+            <div class="contact-info-item">
+              <i class="bi bi-geo-alt"></i>
+              <span>Barranquilla, Colombia</span>
+            </div>
+            <div class="contact-info-item">
+              <i class="bi bi-telephone"></i>
+              <span>+57 315 603 2940</span>
+            </div>
+            <div class="contact-info-item">
+              <i class="bi bi-envelope"></i>
+              <span>contacto@htkingenieria.com</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7" data-aos="fade-left">
+          <div class="contact-form-card">
+            <h4 class="form-title">Enviá tu consulta</h4>
+            <form id="contactForm" novalidate>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="nombre" class="form-label">Nombre *</label>
+                  <input type="text" class="form-control" id="nombre" required placeholder="Tu nombre">
+                  <div class="invalid-feedback">Por favor ingresá tu nombre.</div>
+                </div>
+                <div class="col-md-6">
+                  <label for="email" class="form-label">Email *</label>
+                  <input type="email" class="form-control" id="email" required placeholder="tu@email.com">
+                  <div class="invalid-feedback">Ingresá un email válido.</div>
+                </div>
+                <div class="col-md-6">
+                  <label for="telefono" class="form-label">Teléfono</label>
+                  <input type="tel" class="form-control" id="telefono" placeholder="+57 300 000 0000">
+                </div>
+                <div class="col-md-6">
+                  <label for="empresa" class="form-label">Empresa</label>
+                  <input type="text" class="form-control" id="empresa" placeholder="Nombre de tu empresa">
+                </div>
+                <div class="col-12">
+                  <label for="mensaje" class="form-label">Mensaje *</label>
+                  <textarea class="form-control" id="mensaje" rows="4" required placeholder="Contanos sobre tu proyecto o necesidad..."></textarea>
+                  <div class="invalid-feedback">Escribí un mensaje para poder ayudarte.</div>
+                </div>
+                <div class="col-12">
+                  <button type="submit" class="btn btn-primary btn-lg w-100">
+                    <i class="bi bi-send me-2"></i>Enviar Consulta
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MAPA ==================== -->
+  <section class="map-section">
+    <div class="map-wrapper">
+      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d62661.22804726455!2d-74.82873698432679!3d10.968539839372044!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8ef42d5a4b8c8e2f%3A0x2a5e8c5c4b5c5c5c!2sBarranquilla%2C%20Atl%C3%A1ntico!5e0!3m2!1ses!2sco!4v1700000000000" width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Ubicación HTK INGENIERIA"></iframe>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4 col-md-6">
+          <div class="footer-brand">
+            <span class="brand-icon">⚡</span>
+            <span class="brand-text text-white">HTK <span class="brand-accent">INGENIERIA</span></span>
+          </div>
+          <p class="footer-desc">Soluciones inteligentes para infraestructura eléctrica. Automatización, IoT, mantenimiento y cargadores EV en Barranquilla, Colombia.</p>
+          <p class="footer-tagline">HOUSETRONIK S.A.S. — Ingeniería que resuelve.</p>
+        </div>
+        <div class="col-lg-2 col-md-6">
+          <h5 class="footer-heading">Servicios</h5>
+          <ul class="footer-links">
+            <li><a href="#servicios">Automatización</a></li>
+            <li><a href="#servicios">IoT</a></li>
+            <li><a href="#servicios">Mantenimiento</a></li>
+            <li><a href="#servicios">Cargadores EV</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <h5 class="footer-heading">Contacto</h5>
+          <ul class="footer-links">
+            <li><i class="bi bi-geo-alt me-2"></i>Barranquilla, Colombia</li>
+            <li><a href="tel:+573156032940"><i class="bi bi-telephone me-2"></i>+57 315 603 2940</a></li>
+            <li><a href="mailto:contacto@htkingenieria.com"><i class="bi bi-envelope me-2"></i>contacto@htkingenieria.com</a></li>
+            <li><i class="bi bi-clock me-2"></i>Lun–Vie 8-6 · Sáb 8-1</li>
+          </ul>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <h5 class="footer-heading">Síguenos</h5>
+          <div class="footer-social">
+            <a href="#" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+            <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+            <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+            <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; <span id="year"></span> HTK INGENIERIA — HOUSETRONIK S.A.S. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast de confirmación -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer">
+    <div class="toast align-items-center text-bg-success border-0" id="confirmationToast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          <i class="bi bi-check-circle-fill me-2"></i>
+          ¡Consulta enviada con éxito! Te contactaremos pronto.
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- AOS JS -->
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <!-- Custom JS -->
+  <script src="js/main.js"></script>
+</body>
+</html>
