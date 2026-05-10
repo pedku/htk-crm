@@ -203,6 +203,36 @@ def logout():
     return redirect('/login')
 
 
+# ─── PÁGINA: Perfil de Lead ────────────────────────
+@app.route('/leads/<path:lid>')
+@login_required
+def page_lead(lid):
+    db = get_db()
+    row = db.execute("SELECT * FROM leads WHERE id = ?", (lid,)).fetchone()
+    if not row:
+        db.close()
+        return 'Lead no encontrado', 404
+    lead = dict(row)
+    interactions = db.execute("SELECT * FROM interactions WHERE lead_id = ? ORDER BY fecha DESC LIMIT 20", (lid,)).fetchall()
+    db.close()
+    actividades = [dict(i) for i in interactions]
+    return render_template('lead_detail.html', lead=lead, actividades=actividades)
+
+
+def actividad_crear(lead_id, tipo, resumen, detalle=''):
+    """Log interaction helper."""
+    conn = get_db()
+    try:
+        conn.execute(
+            "INSERT INTO interactions (lead_id, tipo, direccion, resumen, detalle, fecha, estado) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (lead_id, tipo, 'saliente', resumen, detalle, now_iso(), 'completado')
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 # ── Routes HTML ──────────────────────────────────────────────────────
 
 @app.route('/')
@@ -1020,7 +1050,108 @@ if __name__ == '__main__':
     os.makedirs(os.path.join(BASE_DIR, 'templates'), exist_ok=True)
     # Ensure DB exists with schema on startup
     if not os.path.exists(DB_PATH) or os.path.getsize(DB_PATH) == 0:
-        print("⚠️  DB no encontrada. Ejecuta migrate_to_sqlite.py primero.")
+        print("--  DB no encontrada. Ejecuta migrate_to_sqlite.py primero.")
     
-    print("⚡ CRM HTK INGENIERIA v2 (SQLite) corriendo en http://localhost:5000")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # ── API Enviar WhatsApp (proxy al bot API) ──
+    @app.route('/api/send-message', methods=['POST'])
+    @login_required
+    def api_send_message():
+        import json, re, urllib.request
+        data = request.get_json()
+        numero = data.get('numero')
+        mensaje = data.get('mensaje')
+        lead_id = data.get('lead_id')
+        
+        if not numero or not mensaje:
+            return jsonify({'ok': False, 'error': 'numero y mensaje requeridos'}), 400
+        
+        numero_limpio = re.sub(r'[^0-9]', '', numero)
+        
+        try:
+            payload = json.dumps({'to': numero_limpio, 'message': mensaje}).encode()
+            req = urllib.request.Request(
+                'http://localhost:18802/send',
+                data=payload,
+                headers={'Content-Type': 'application/json'},
+                method='POST'
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                result = json.loads(resp.read())
+            if lead_id and result.get('ok'):
+                actividad_crear(lead_id, 'whatsapp', 'WhatsApp enviado', mensaje[:150])
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)}), 500
+    
+    # ── POST /api/bot/silence — silencia un lead ──
+    @app.route('/api/bot/silence', methods=['POST'])
+    @login_required
+    def api_bot_silence():
+        import json, re, urllib.request
+        data = request.get_json()
+        numero = data.get('numero')
+        if not numero:
+            return jsonify({'ok': False, 'error': 'numero requerido'}), 400
+        numero_limpio = re.sub(r'[^0-9]', '', numero)
+        try:
+            payload = json.dumps({'numero': numero_limpio}).encode()
+            req = urllib.request.Request('http://localhost:18802/silence', data=payload,
+                headers={'Content-Type': 'application/json'}, method='POST')
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                result = json.loads(resp.read())
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)}), 500
+    
+    # ── POST /api/bot/unsilence — desilencia un lead ──
+    @app.route('/api/bot/unsilence', methods=['POST'])
+    @login_required
+    def api_bot_unsilence():
+        import json, re, urllib.request
+        data = request.get_json()
+        numero = data.get('numero')
+        if not numero:
+            return jsonify({'ok': False, 'error': 'numero requerido'}), 400
+        numero_limpio = re.sub(r'[^0-9]', '', numero)
+        try:
+            payload = json.dumps({'numero': numero_limpio}).encode()
+            req = urllib.request.Request('http://localhost:18802/unsilence', data=payload,
+                headers={'Content-Type': 'application/json'}, method='POST')
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                result = json.loads(resp.read())
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)}), 500
+    
+    # ── POST /api/bot/global-off — apagar bot ──
+    @app.route('/api/bot/global-off', methods=['POST'])
+    @login_required
+    def api_bot_global_off():
+        import json, urllib.request
+        try:
+            payload = json.dumps({}).encode()
+            req = urllib.request.Request('http://localhost:18802/global-off', data=payload,
+                headers={'Content-Type': 'application/json'}, method='POST')
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                result = json.loads(resp.read())
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)}), 500
+    
+    # ── POST /api/bot/global-on — encender bot ──
+    @app.route('/api/bot/global-on', methods=['POST'])
+    @login_required
+    def api_bot_global_on():
+        import json, urllib.request
+        try:
+            payload = json.dumps({}).encode()
+            req = urllib.request.Request('http://localhost:18802/global-on', data=payload,
+                headers={'Content-Type': 'application/json'}, method='POST')
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                result = json.loads(resp.read())
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)}), 500
+    
+    print("CRM HTK INGENIERIA v2 (SQLite) corriendo en http://localhost:5000")
+    app.run(host='127.0.0.1', port=5000, debug=True)
