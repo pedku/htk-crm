@@ -35,10 +35,110 @@
     .btn-htk:hover { background: #00bf9a; color: #000; }
     .btn-htk-outline { background: transparent; color: var(--htk-primary); border: 1px solid rgba(0,212,170,0.3); font-weight: 600; border-radius: 8px; padding: 6px 14px; font-size: 0.82em; cursor: pointer; transition: all 0.2s; }
     .btn-htk-outline:hover { background: var(--htk-primary); color: #000; }
-    .progress { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; }
     .progress-bar-htk { background: var(--htk-primary); border-radius: 3px; }
     .empty-state { text-align: center; padding: 32px; color: rgba(255,255,255,0.25); }
     .empty-state i { font-size: 2em; margin-bottom: 10px; display: block; }
+
+    /* Contact Action Buttons */
+    .contact-action-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.7);
+      font-size: 0.85em;
+      transition: all 0.18s;
+      text-decoration: none;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+    }
+    .contact-action-btn:hover {
+      background: rgba(0,212,170,0.1);
+      border-color: var(--htk-primary);
+      color: #fff;
+    }
+    .contact-action-btn.copied {
+      background: rgba(25,135,84,0.2);
+      border-color: #198754;
+      color: #198754;
+    }
+
+    /* Pitch System */
+    .channel-selector { display: flex; gap: 6px; margin-bottom: 10px; }
+    .channel-btn {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.5);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.85em;
+      font-weight: 500;
+      text-align: center;
+    }
+    .channel-btn:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); }
+    .channel-btn.active { border-color: var(--htk-primary); background: rgba(0,212,170,0.1); color: var(--htk-primary); font-weight: 600; }
+    .channel-btn.whatsapp.active { border-color: #25D366; background: rgba(37,211,102,0.12); color: #25D366; }
+    .channel-btn.email.active { border-color: #0dcaf0; background: rgba(13,202,240,0.12); color: #0dcaf0; }
+    .pitch-textarea {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 14px;
+      min-height: 120px;
+      resize: vertical;
+      font-size: 0.85em;
+      color: rgba(255,255,255,0.8);
+      line-height: 1.55;
+      width: 100%;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    .pitch-textarea:focus {
+      border-color: var(--htk-primary);
+      outline: none;
+      background: rgba(255,255,255,0.06);
+    }
+    .pitch-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+    .pitch-actions .btn { font-size: 0.82em; padding: 6px 12px; border-radius: 8px; }
+    .pitch-var-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(0,212,170,0.12);
+      color: var(--htk-primary);
+      font-size: 0.78em;
+      font-weight: 500;
+      margin: 2px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .pitch-var-tag:hover { background: rgba(0,212,170,0.22); }
+    .template-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 8px; padding: 6px 10px; font-size: 0.82em; }
+    .template-select:focus { border-color: var(--htk-primary); outline: none; background: rgba(255,255,255,0.08); }
+    .template-select option { background: #1a2332; color: #fff; }
+    .pitch-detonante { background: rgba(255,193,7,0.1); border-radius: 8px; font-size: 0.8em; color: #ffc107; padding: 8px; }
+
+    /* Stage Navigation */
+    .stage-nav { display: flex; align-items: center; gap: 12px; }
+    .stage-nav .btn { font-size: 0.82em; padding: 6px 14px; }
+
+    /* Toast */
+    .toast-container { z-index: 9999; }
+    .save-flash {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--htk-primary); color: #000; font-weight: 700;
+      padding: 10px 24px; border-radius: 30px; z-index: 9999;
+      opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none;
+    }
+    .save-flash.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Light Mode */
     [data-bs-theme="light"] body { background: #f5f7fa; color: #1a1a2e; }
     [data-bs-theme="light"] .topbar { background: #fff; border-bottom-color: rgba(0,0,0,0.06); }
     [data-bs-theme="light"] .topbar a { color: rgba(0,0,0,0.4); }
@@ -50,60 +150,54 @@
     [data-bs-theme="light"] .data-value { color: #1a1a2e; }
     [data-bs-theme="light"] .notes-area { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.08); color: #1a1a2e; }
     [data-bs-theme="light"] .timeline-item { border-left-color: rgba(0,0,0,0.06); }
-    [data-bs-theme="light"] .timeline-time { color: rgba(0,0,0,0.3); }
     [data-bs-theme="light"] .empty-state { color: rgba(0,0,0,0.2); }
+    [data-bs-theme="light"] .contact-action-btn { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.08); color: rgba(0,0,0,0.55); }
+    [data-bs-theme="light"] .contact-action-btn:hover { background: rgba(0,168,132,0.08); border-color: var(--htk-primary); color: #1a1a2e; }
+    [data-bs-theme="light"] .channel-btn { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.08); color: rgba(0,0,0,0.4); }
+    [data-bs-theme="light"] .channel-btn:hover { background: rgba(0,0,0,0.04); color: rgba(0,0,0,0.7); }
+    [data-bs-theme="light"] .channel-btn.active { background: rgba(0,168,132,0.08); color: var(--htk-primary); }
+    [data-bs-theme="light"] .channel-btn.whatsapp.active { background: rgba(37,211,102,0.08); }
+    [data-bs-theme="light"] .channel-btn.email.active { background: rgba(13,202,240,0.08); }
+    [data-bs-theme="light"] .pitch-textarea { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.06); color: rgba(0,0,0,0.7); }
+    [data-bs-theme="light"] .template-select { background: #fff; border-color: rgba(0,0,0,0.1); color: #1a1a2e; }
+    [data-bs-theme="light"] .template-select option { background: #fff; color: #1a1a2e; }
     [data-bs-theme="light"] .btn-htk-outline { border-color: rgba(0,212,170,0.3); color: var(--htk-primary); }
-    @media (max-width: 768px) { .data-label { width: 120px; } .topbar { padding: 10px 14px; } .card-crm { padding: 16px; } }
+
+    @media (max-width: 768px) {
+      .data-label { width: 120px; } .topbar { padding: 10px 14px; } .card-crm { padding: 16px; }
+    }
   </style>
 </head>
 <body>
   <div class="topbar">
-    <a href="/" title="Volver al CRM"><i class="bi bi-arrow-left"></i></a>
+    <a href="#" id="backLink" title="Volver"><i class="bi bi-arrow-left"></i></a>
     <i class="bi bi-person-badge" style="color:var(--htk-primary);"></i>
     <h4>{{ lead.nombre or 'Lead #' + lead.id|string }}</h4>
     <span class="badge-htk {{ lead.estado or 'nuevo' }}" style="margin-left:auto;">{{ lead.estado or 'nuevo' }}</span>
   </div>
 
-  {% set contacto_raw = lead.contacto or '' %}
-  {% set phone = '' %}{% set email = '' %}{% set web = '' %}{% set fb = '' %}
-  {% if contacto_raw %}
-    {# 1. Phone: starts with + or is mostly digits #}
-    {% set contacto_clean = contacto_raw|replace(' ','')|replace('-','')|replace('.','') %}
-    {% if contacto_clean|first in '0123456789+' %}
-      {% set phone = contacto_clean %}
-    {# 2. Facebook: contains facebook keyword #}
-    {% elif 'facebook' in contacto_raw|lower %}
-      {% set fb = contacto_raw|replace('Facebook:','')|replace('facebook:','')|replace('@','')|trim %}
-    {# 3. Website: contains http/www/.com #}
-    {% elif 'http' in contacto_raw or 'www.' in contacto_raw or '.com' in contacto_raw %}
-      {% set web = contacto_raw|replace('Web:','')|replace('web:','')|trim %}
-      {% if not web.startswith('http') %}{% set web = 'https://' + web %}{% endif %}
-    {# 4. Email: contains @ but NOT @ as facebook prefix #}
-    {% elif '@' in contacto_raw and 'facebook' not in contacto_raw|lower %}
-      {% set email = contacto_raw %}
-    {% endif %}
-  {% endif %}
+  <!-- Toast & Save Flash -->
+  <div class="save-flash" id="saveFlash">Guardado</div>
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toastMsg" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <i class="bi bi-check-circle-fill text-success me-2"></i>
+        <strong class="me-auto">HTK CRM</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+      </div>
+      <div class="toast-body" id="toastBody"></div>
+    </div>
+  </div>
 
   <div class="container-fluid p-3 p-md-4">
-    <!-- STAGE PROGRESS -->
-    <div class="card-crm py-3">
-      {% set stages = ['nuevo','contactado','cotizado','negociacion','ganado','perdido','cliente'] %}
-      {% set current_idx = stages.index(lead.estado) if lead.estado in stages else 0 %}
-      {% set pct = (current_idx / (stages|length - 1) * 100)|int %}
-      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <span class="data-label">Etapa actual</span>
-        <span class="badge-htk {{ lead.estado or 'nuevo' }}" style="font-size:0.9em;">{{ lead.estado or 'nuevo' }}</span>
-        <span class="data-label" style="width:auto;">Progreso</span>
-      </div>
-      <div class="progress mt-2">
-        <div class="progress-bar progress-bar-htk" style="width:{{ pct }}%"></div>
-      </div>
-    </div>
+    {% set stages = ['nuevo','contactado','cotizado','negociacion','ganado','perdido','cliente'] %}
+    {% set current_idx = stages.index(lead.estado) if lead.estado in stages else 0 %}
+    {% set pct = (current_idx / (stages|length - 1) * 100)|int %}
 
     <div class="row g-4">
-      <!-- COLUMNA IZQUIERDA -->
+      <!-- LEFT COLUMN -->
       <div class="col-lg-4">
-        <!-- Perfil -->
+        <!-- Profile -->
         <div class="card-crm text-center">
           {% set initials = (lead.nombre or '?').split(' ')[:2]|map('first')|join('')|upper %}
           <div class="avatar-circle mx-auto mb-3">{{ initials }}</div>
@@ -111,70 +205,62 @@
           <p style="color:rgba(255,255,255,0.4);font-size:0.82em;">{{ lead.id }}</p>
         </div>
 
-        <!-- Contacto -->
-        <div class="card-crm">
+        <!-- Contact (rendered by JS) -->
+        <div class="card-crm" id="contactCard">
           <div class="section-title"><i class="bi bi-person-lines-fill"></i> Contacto</div>
-          {% if phone %}
-          <div class="data-row">
-            <div class="data-label">Teléfono</div>
-            <div class="data-value">
-              <a href="https://wa.me/{{ phone }}" target="_blank" style="color:var(--htk-primary);text-decoration:none;">{{ phone }} <i class="bi bi-whatsapp"></i></a>
-              <button class="btn-htk-outline ms-2" onclick="navigator.clipboard.writeText('{{ phone }}');alert('Copiado')" title="Copiar" style="font-size:0.7em;padding:2px 8px;"><i class="bi bi-copy"></i></button>
-            </div>
+          <div id="contactButtonsContainer">
+            <div class="text-center py-4"><span class="spinner-border spinner-border-sm"></span></div>
           </div>
-          {% endif %}
-          {% if email %}
-          <div class="data-row">
-            <div class="data-label">Email</div>
-            <div class="data-value"><a href="mailto:{{ email }}" style="color:var(--htk-primary);">{{ email }}</a></div>
-          </div>
-          {% endif %}
-          {% if web %}
-          <div class="data-row">
-            <div class="data-label">Web</div>
-            <div class="data-value"><a href="{{ web }}" target="_blank" style="color:var(--htk-primary);">{{ web|replace('https://','')|replace('http://','')|truncate(40) }}</a></div>
-          </div>
-          {% endif %}
-          {% if fb %}
-          <div class="data-row">
-            <div class="data-label">Facebook</div>
-            <div class="data-value"><a href="https://facebook.com/{{ fb }}" target="_blank" style="color:#1877F2;">{{ fb }}</a></div>
-          </div>
-          {% endif %}
-          {% if not phone and not email and not web and not fb %}
-          <div class="empty-state"><i class="bi bi-person-slash"></i>Sin datos de contacto</div>
-          {% endif %}
         </div>
 
-        <!-- Acciones -->
+        <!-- Actions with Stage Control -->
         <div class="card-crm">
-          <div class="section-title"><i class="bi bi-lightning-charge"></i> Acciones</div>
+          <div class="section-title"><i class="bi bi-lightning-charge"></i> Etapa</div>
+          <div class="text-center mb-3">
+            <span class="badge-htk {{ lead.estado or 'nuevo' }}" style="font-size:0.9em;">{{ lead.estado or 'nuevo' }}</span>
+          </div>
+          <div class="stage-nav justify-content-center mb-3">
+            <button class="btn-htk-outline" id="prevStageBtn" onclick="changeStage('prev')" {% if current_idx <= 0 %}disabled style="opacity:0.4;"{% endif %}>
+              <i class="bi bi-chevron-left"></i> Anterior
+            </button>
+            <button class="btn-htk" id="nextStageBtn" onclick="changeStage('next')" {% if current_idx >= stages|length - 1 %}disabled style="opacity:0.4;"{% endif %}>
+              Siguiente <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+          <div class="progress mb-3" style="height:6px;">
+            <div class="progress-bar progress-bar-htk" style="width:{{ pct }}%"></div>
+          </div>
           <div class="d-grid gap-2">
-            {% if phone %}
-            <button class="btn-htk" onclick="enviarMensaje()"><i class="bi bi-send"></i> Enviar vía Bot</button>
-            <button class="btn-htk-outline" onclick="silenciarLead()"><i class="bi bi-volume-mute"></i> Silenciar Lead</button>
-            {% endif %}
-            <a href="/" class="btn-htk-outline text-center" style="text-decoration:none;"><i class="bi bi-arrow-return-left"></i> Volver al CRM</a>
+            <button class="btn-htk" id="enviarBtn" onclick="enviarMensaje()" style="display:none;"><i class="bi bi-send"></i> Enviar via Bot</button>
+            <button class="btn-htk-outline" id="silenciarBtn" onclick="silenciarLead()" style="display:none;"><i class="bi bi-volume-mute"></i> Silenciar Lead</button>
+          </div>
+        </div>
+
+        <!-- Pitch Section (auto-loads) -->
+        <div class="card-crm" id="pitchCard">
+          <div class="section-title"><i class="bi bi-megaphone"></i> Mensajes</div>
+          <div id="pitchContent">
+            <div class="text-center py-3"><span class="spinner-border spinner-border-sm"></span> Cargando plantillas...</div>
           </div>
         </div>
       </div>
 
-      <!-- COLUMNA DERECHA -->
+      <!-- RIGHT COLUMN -->
       <div class="col-lg-8">
-        <!-- Datos completos -->
+        <!-- Lead Info (reordered) -->
         <div class="card-crm">
-          <div class="section-title"><i class="bi bi-info-circle"></i> Información del Lead</div>
+          <div class="section-title"><i class="bi bi-info-circle"></i> Informacion del Lead</div>
           {% set fields = [
-            ('ID', lead.id),
             ('Nombre', lead.nombre),
             ('Nombre Contacto', lead.contacto_nombre),
             ('Contacto', lead.contacto),
             ('Segmento', lead.segmento),
-            ('Línea de Interés', lead.linea_interes),
+            ('Linea de Interes', lead.linea_interes),
             ('Fuente', lead.fuente),
             ('Valor Estimado', lead.valor_estimado),
-            ('Fecha Creación', lead.fecha_creacion),
-            ('Próximo Seguimiento', lead.proximo_seguimiento),
+            ('ID', lead.id),
+            ('Fecha Creacion', lead.fecha_creacion),
+            ('Proximo Seguimiento', lead.proximo_seguimiento),
           ] %}
           <div class="row">
             {% for label, value in fields %}
@@ -194,7 +280,7 @@
           </div>
         </div>
 
-        <!-- Notas editables -->
+        <!-- Editable Notes -->
         <div class="card-crm">
           <div class="section-title justify-content-between">
             <span><i class="bi bi-sticky"></i> Notas</span>
@@ -209,6 +295,34 @@
             </div>
           </div>
         </div>
+
+        <!-- Interactions Timeline -->
+        <div class="card-crm">
+          <div class="section-title justify-content-between">
+            <span><i class="bi bi-chat-dots"></i> Interacciones</span>
+            <button class="btn-htk" onclick="showAddInteraction()"><i class="bi bi-plus-lg"></i> Nueva</button>
+          </div>
+          <div id="interactionsContainer" class="timeline">
+            <div class="text-center py-4"><span class="spinner-border spinner-border-sm"></span> Cargando...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generic Modal -->
+  <div class="modal fade" id="pitchEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content" style="background:var(--htk-card);border:1px solid rgba(255,255,255,0.08);">
+        <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.06);">
+          <h5 class="modal-title" style="color:var(--htk-primary);" id="pitchEditTitle">Editar Plantilla</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="pitchEditBody"></div>
+        <div class="modal-footer" style="border-top:1px solid rgba(255,255,255,0.06);">
+          <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-sm btn-htk" onclick="savePitchTemplate()"><i class="bi bi-check"></i> Guardar Cambios</button>
+        </div>
       </div>
     </div>
   </div>
@@ -217,8 +331,226 @@
   <script>
     const theme = localStorage.getItem('htk-theme') || 'dark';
     document.documentElement.setAttribute('data-bs-theme', theme);
-    const LEAD = { id: '{{ lead.id }}', phone: '{{ phone }}', nombre: '{{ lead.nombre }}' };
 
+    const LEAD_ID = '{{ lead.id }}';
+    const LEAD_NOMBRE = '{{ lead.nombre }}';
+    const LEAD_CONTACTO = '{{ lead.contacto or '' }}';
+    const LEAD_SEGMENTO = '{{ lead.segmento or '' }}';
+    const LEAD_ESTADO = '{{ lead.estado or 'nuevo' }}';
+    const LEAD_LINEA = '{{ lead.linea_interes or '' }}';
+
+    const STAGES = ['nuevo','contactado','cotizado','negociacion','ganado','perdido','cliente'];
+    const STAGE_IDX = STAGES.indexOf(LEAD_ESTADO);
+
+    // Smart Back Navigation
+    document.getElementById('backLink').addEventListener('click', function(e) {
+      e.preventDefault();
+      const ref = document.referrer;
+      const host = window.location.host;
+      if (ref && ref.includes(host)) {
+        if (ref.includes('tab=leads')) {
+          window.location.href = '/?tab=leads';
+        } else if (ref.includes('tab=clients')) {
+          window.location.href = '/?tab=clients';
+        } else if (ref.includes('tab=dashboard')) {
+          window.location.href = '/?tab=dashboard';
+        } else {
+          window.location.href = '/?tab=leads';
+        }
+      } else {
+        window.location.href = '/?tab=leads';
+      }
+    });
+
+    // Parse Contact (detect ALL methods simultaneously)
+    let PARSED = { phone: '', email: '', web: '', fb: '' };
+
+    function parseContact(raw) {
+      if (!raw) return;
+      const lower = raw.toLowerCase();
+
+      // Check for email
+      if (lower.includes('@') && !lower.includes('facebook')) {
+        PARSED.email = raw;
+      }
+
+      // Check for Facebook
+      if (lower.includes('facebook') || lower.includes('fb.com')) {
+        PARSED.fb = raw.replace(/facebook:?\s*@?/i, '').replace(/fb\.com\//i, '').trim();
+      }
+
+      // Check for web URL
+      if (lower.includes('http') || lower.includes('www.') || (lower.includes('.com') && !lower.includes('@'))) {
+        let url = raw.replace(/web:\s*/i, '').trim();
+        if (!url.startsWith('http')) url = 'https://' + url;
+        PARSED.web = url;
+      }
+
+      // Check for phone (default)
+      let phone = raw.replace(/[^\d+]/g, '');
+      if (phone && !phone.startsWith('+')) phone = '+57' + phone.replace(/^57/, '');
+      if (phone !== '+57') PARSED.phone = phone;
+    }
+
+    parseContact(LEAD_CONTACTO);
+
+    // Toast
+    function showToast(msg, type) {
+      const t = document.getElementById('toastMsg');
+      document.getElementById('toastBody').textContent = msg;
+      t.querySelector('.toast-header i').className = (type === 'success' || !type)
+        ? 'bi bi-check-circle-fill text-success me-2'
+        : 'bi bi-exclamation-triangle-fill text-danger me-2';
+      new bootstrap.Toast(t).show();
+    }
+
+    function flashSave() {
+      const el = document.getElementById('saveFlash');
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 1500);
+    }
+
+    function escHtml(s) {
+      if (!s) return '';
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function formatDateTime(iso) {
+      if (!iso) return '-';
+      try { return new Date(iso).toLocaleString('es-CO'); } catch(e) { return iso; }
+    }
+    function formatDate(iso) {
+      if (!iso) return '-';
+      try { return new Date(iso).toLocaleDateString('es-CO'); } catch(e) { return iso; }
+    }
+
+    // Copy to Clipboard
+    async function copyToClipboard(text, btnId) {
+      try {
+        await navigator.clipboard.writeText(text);
+        const btn = document.getElementById(btnId);
+        if (btn) {
+          btn.classList.add('copied');
+          const icon = btn.querySelector('i');
+          if (icon) { const orig = icon.className; icon.className = 'bi bi-check-lg'; setTimeout(() => icon.className = orig, 1500); }
+          setTimeout(() => btn.classList.remove('copied'), 1500);
+        }
+        showToast('Copiado al portapapeles');
+      } catch(e) { showToast('Error al copiar', 'danger'); }
+    }
+
+    // Render Contact Buttons (all methods simultaneously)
+    function renderContactButtons() {
+      const container = document.getElementById('contactButtonsContainer');
+      if (!container) return;
+
+      let html = '<div class="row g-2">';
+
+      // Phone button + Copy
+      if (PARSED.phone) {
+        html += '<div class="col-12">';
+        html += '<button class="contact-action-btn" id="copyPhone_' + LEAD_ID + '" onclick="copyToClipboard(\'' + PARSED.phone + '\',\'copyPhone_' + LEAD_ID + '\')">';
+        html += '<i class="bi bi-telephone-fill" style="color:var(--htk-primary);"></i> ' + PARSED.phone;
+        html += ' <span style="margin-left:auto;font-size:0.78em;color:rgba(255,255,255,0.3);"><i class="bi bi-clipboard"></i> Copiar</span>';
+        html += '</button></div>';
+
+        // WhatsApp button
+        html += '<div class="col-12">';
+        html += '<a class="contact-action-btn" href="https://wa.me/' + PARSED.phone.replace(/\+/g,'') + '?text=Hola%20' + encodeURIComponent(LEAD_NOMBRE) + '%2C%20te%20escribimos%20de%20HTK%20INGENIERIA" target="_blank" rel="noopener" title="Abrir WhatsApp">';
+        html += '<i class="bi bi-whatsapp" style="color:#25D366;"></i> WhatsApp';
+        html += '</a></div>';
+
+        document.getElementById('enviarBtn').style.display = '';
+        document.getElementById('silenciarBtn').style.display = '';
+      }
+
+      // Email button
+      if (PARSED.email) {
+        html += '<div class="col-12">';
+        html += '<a class="contact-action-btn" href="mailto:' + PARSED.email + '" target="_blank" title="Enviar correo">';
+        html += '<i class="bi bi-envelope-fill" style="color:#0dcaf0;"></i> ' + PARSED.email;
+        html += '</a></div>';
+      }
+
+      // Web button
+      if (PARSED.web) {
+        html += '<div class="col-12">';
+        html += '<a class="contact-action-btn" href="' + PARSED.web + '" target="_blank" rel="noopener" title="Visitar sitio web">';
+        html += '<i class="bi bi-globe2" style="color:var(--htk-primary);"></i> Visitar sitio web';
+        html += '</a></div>';
+      }
+
+      // Facebook button
+      if (PARSED.fb) {
+        html += '<div class="col-12">';
+        html += '<a class="contact-action-btn" href="https://facebook.com/' + PARSED.fb + '" target="_blank" rel="noopener" title="Ver perfil de Facebook">';
+        html += '<i class="bi bi-facebook" style="color:#1877F2;"></i> Facebook';
+        html += '</a></div>';
+      }
+
+      // Empty state
+      if (!PARSED.phone && !PARSED.email && !PARSED.web && !PARSED.fb) {
+        html += '<div class="empty-state"><i class="bi bi-person-slash"></i>Sin datos de contacto</div>';
+      }
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    renderContactButtons();
+
+    // Stage Control
+    async function changeStage(direction) {
+      const idx = STAGES.indexOf(LEAD_ESTADO);
+      if (idx === -1) return;
+      const newIdx = direction === 'next' ? Math.min(idx + 1, STAGES.length - 1) : Math.max(idx - 1, 0);
+      if (newIdx === idx) return;
+      try {
+        const resp = await fetch('/api/leads/' + LEAD_ID, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estado: STAGES[newIdx] })
+        });
+        if (resp.ok) {
+          showToast('Etapa actualizada: ' + STAGES[newIdx]);
+          setTimeout(function() { window.location.reload(); }, 800);
+        } else {
+          showToast('Error al cambiar etapa', 'danger');
+        }
+      } catch (e) {
+        showToast('Error al cambiar etapa', 'danger');
+      }
+    }
+
+    // Acciones
+    async function enviarMensaje() {
+      const msg = prompt('Mensaje para ' + (LEAD_NOMBRE || LEAD_ID) + ':');
+      if (!msg) return;
+      try {
+        const r = await fetch('/api/send-message', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({numero: PARSED.phone, mensaje: msg, lead_id: LEAD_ID})
+        });
+        const d = await r.json();
+        if (d.ok) { showToast('Enviado y lead silenciado'); }
+        else { showToast('Error: ' + (d.error||'error'), 'danger'); }
+      } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+    }
+
+    async function silenciarLead() {
+      if (!confirm('Silenciar este lead? El bot no respondera sus mensajes.')) return;
+      try {
+        const r = await fetch('/api/bot/silence', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({numero: PARSED.phone})
+        });
+        const d = await r.json();
+        if (d.ok) { showToast('Silenciado'); }
+        else { showToast('Error: '+(d.error||'error'), 'danger'); }
+      } catch(e) { showToast('Error: '+e.message, 'danger'); }
+    }
+
+    // Notas
     function toggleNotas() {
       const disp = document.getElementById('notasDisplay');
       const edit = document.getElementById('notasEditor');
@@ -233,59 +565,365 @@
     async function guardarNotas() {
       const texto = document.getElementById('notasText').value;
       try {
-        const r = await fetch('/api/leads/' + LEAD.id + '/notes', {
+        const r = await fetch('/api/leads/' + LEAD_ID + '/notes', {
           method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({notas: texto})
         });
-        const d = await r.json();
-        if (d.ok) {
+        if (r.ok) {
           document.getElementById('notasDisplay').innerText = texto;
           toggleNotas();
-        } else { alert('Error al guardar'); }
-      } catch(e) { alert('Error: ' + e.message); }
+          flashSave();
+        } else { showToast('Error al guardar', 'danger'); }
+      } catch(e) { showToast('Error: ' + e.message, 'danger'); }
     }
 
-    async function enviarMensaje() {
-      const msg = prompt('✏️ Mensaje para ' + (LEAD.nombre || LEAD.id) + ':');
-      if (!msg) return;
+    // Interacciones
+    async function loadInteractions() {
+      const container = document.getElementById('interactionsContainer');
+      if (!container) return;
       try {
-        const r = await fetch('/api/send-message', {
+        const resp = await fetch('/api/leads/' + LEAD_ID + '/interactions');
+        const interactions = await resp.json();
+        if (interactions.length === 0) {
+          container.innerHTML = '<div class="text-center py-4" style="color:rgba(255,255,255,0.3);"><i class="bi bi-inbox"></i><p class="mt-1">Sin interacciones registradas</p></div>';
+          return;
+        }
+        const ICONS = { whatsapp:'bi-whatsapp', llamada:'bi-telephone', email:'bi-envelope', presencial:'bi-person-badge', manual:'bi-chat-dots', otro:'bi-chat' };
+        const COLORS = { whatsapp:'#25D366', llamada:'#0dcaf0', email:'#6f42c1', presencial:'#ffc107', manual:'var(--htk-primary)', otro:'#6c757d' };
+        container.innerHTML = interactions.map(function(int) {
+          const icono = ICONS[int.tipo] || 'bi-chat-dots';
+          const color = COLORS[int.tipo] || 'var(--htk-primary)';
+          return '<div class="timeline-item">' +
+            '<div class="timeline-time">' + formatDateTime(int.fecha) + '</div>' +
+            '<div><i class="bi ' + icono + '" style="color:' + color + '"></i> ' +
+              '<span class="badge ' + (int.direccion==='entrante'?'bg-info':'bg-success') + '">' + (int.direccion==='entrante'?'Entrante':'Saliente') + '</span> ' +
+              '<strong>' + escHtml(int.tipo) + '</strong>' +
+            '</div>' +
+            '<div style="color:rgba(255,255,255,0.8);font-size:0.88em;">' + escHtml(int.resumen || '') + '</div>' +
+            (int.proximo_paso ? '<small style="color:var(--htk-primary);"><i class="bi bi-pin"></i> ' + escHtml(int.proximo_paso) + '</small>' : '') +
+          '</div>';
+        }).join('');
+      } catch(e) {
+        container.innerHTML = '<div class="text-center py-4" style="color:#dc3545;">Error al cargar interacciones</div>';
+      }
+    }
+
+    function showAddInteraction() {
+      const html = '<div class="mb-3">' +
+        '<label class="form-label">Tipo</label>' +
+        '<select class="form-select" id="intType" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;">' +
+          '<option value="whatsapp">WhatsApp</option>' +
+          '<option value="llamada">Llamada</option>' +
+          '<option value="email">Email</option>' +
+          '<option value="presencial">Presencial</option>' +
+          '<option value="otro">Otro</option>' +
+        '</select></div>' +
+        '<div class="mb-3">' +
+          '<label class="form-label">Direccion</label>' +
+          '<select class="form-select" id="intDirection" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;">' +
+            '<option value="saliente">Saliente (nosotros contactamos)</option>' +
+            '<option value="entrante">Entrante (ellos contactaron)</option>' +
+          '</select></div>' +
+        '<div class="mb-3">' +
+          '<label class="form-label">Resumen</label>' +
+          '<input class="form-control" id="intSummary" placeholder="Ej: Pitch enviado, cotizacion..." style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;">' +
+        '</div>' +
+        '<div class="mb-3">' +
+          '<label class="form-label">Detalle</label>' +
+          '<textarea class="form-control" id="intDetail" rows="3" placeholder="Descripcion..." style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;"></textarea>' +
+        '</div>' +
+        '<div class="mb-3">' +
+          '<label class="form-label">Proximo paso</label>' +
+          '<input class="form-control" id="intNextStep" placeholder="Ej: Llamar el viernes..." style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;">' +
+        '</div>';
+      const body = document.querySelector('#pitchEditModal .modal-body');
+      document.getElementById('pitchEditTitle').innerHTML = 'Nueva Interaccion';
+      body.innerHTML = html;
+      const footer = document.querySelector('#pitchEditModal .modal-footer');
+      footer.innerHTML = '<button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-sm btn-htk" onclick="doSaveInteraction()"><i class="bi bi-check-lg"></i> Guardar</button>';
+      new bootstrap.Modal(document.getElementById('pitchEditModal')).show();
+    }
+
+    async function doSaveInteraction() {
+      const data = {
+        tipo: document.getElementById('intType').value || 'manual',
+        direccion: document.getElementById('intDirection').value || 'saliente',
+        resumen: document.getElementById('intSummary').value || '',
+        detalle: document.getElementById('intDetail').value || '',
+        proximo_paso: document.getElementById('intNextStep').value || ''
+      };
+      try {
+        const r = await fetch('/api/leads/' + LEAD_ID + '/interactions', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+        });
+        if (r.ok) {
+          bootstrap.Modal.getInstance(document.getElementById('pitchEditModal')).hide();
+          showToast('Interaccion registrada');
+          loadInteractions();
+        } else { showToast('Error al guardar', 'danger'); }
+      } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+    }
+
+    loadInteractions();
+
+    // PITCH SYSTEM -- Auto-load on page load
+
+    let pitchesData = null;
+    let currentPitchChannel = 'whatsapp';
+    let currentPitchTemplateId = null;
+
+    async function fetchPitches() {
+      if (pitchesData) return pitchesData;
+      const r = await fetch('/api/pitches');
+      pitchesData = await r.json();
+      return pitchesData;
+    }
+
+    function personalizar(texto) {
+      if (!texto) return '';
+      const nombre = LEAD_NOMBRE || '';
+      const empresa = LEAD_NOMBRE || LEAD_SEGMENTO || '';
+      const telefono = (LEAD_CONTACTO || '').replace(/[^\d+]/g, '');
+      return texto
+        .replace(/\[Nombre\]/g, nombre)
+        .replace(/\[Empresa\]/g, empresa)
+        .replace(/\[Contacto\]/g, nombre || 'senor/a')
+        .replace(/\[Telefono\]/g, telefono || '315 603 2940');
+    }
+
+    function scoreTemplates(templates) {
+      const segment = LEAD_SEGMENTO || '';
+      const linea = LEAD_LINEA || '';
+      return templates.map(function(t) {
+        let score = 0;
+        const segs = t.segmentos || [];
+        if (segs.includes(segment)) score += 10;
+        if (segs.some(function(s) { return segment.includes(s) || s.includes(segment); })) score += 5;
+        const lines = t.lineas_interes || [];
+        if (lines.some(function(l2) { return linea.includes(l2) || l2.includes(linea); })) score += 3;
+        return { ...t, score: score };
+      }).sort(function(a, b) { return b.score - a.score; });
+    }
+
+    // Auto-load pitches -- no user action needed
+    async function loadPitchTemplates() {
+      const container = document.getElementById('pitchContent');
+      if (!container) return;
+
+      try {
+        const data = await fetchPitches();
+        const templates = data.plantillas_cuerpo || [];
+        const canales = data.canales || {};
+
+        if (templates.length === 0) {
+          container.innerHTML = '<em style="color:rgba(255,255,255,0.3);">No hay plantillas de mensajes disponibles</em>';
+          return;
+        }
+
+        const scored = scoreTemplates(templates);
+        const best = scored[0];
+        currentPitchTemplateId = best && best.score > 0 ? best.id : (templates[0] ? templates[0].id : null);
+
+        // Auto-detect channel by contact
+        const hasEmail = LEAD_CONTACTO && LEAD_CONTACTO.includes('@');
+        currentPitchChannel = hasEmail ? 'email' : 'whatsapp';
+
+        renderPitchUI(scored, canales);
+      } catch (e) {
+        container.innerHTML = '<em style="color:#dc3545;">Error al cargar plantillas</em>';
+      }
+    }
+
+    function renderPitchUI(templates, canales) {
+      const container = document.getElementById('pitchContent');
+      if (!container) return;
+
+      const activeTpl = templates.find(function(t) { return t.id === currentPitchTemplateId; }) || templates[0];
+      if (!activeTpl) return;
+
+      const rawText = activeTpl[currentPitchChannel] || '(Sin plantilla para este canal)';
+      const personalized = personalizar(rawText);
+
+      let html = '';
+
+      // Channel selector
+      html += '<div class="channel-selector">';
+      Object.entries(canales).forEach(function(entry) {
+        const key = entry[0], ch = entry[1];
+        const active = key === currentPitchChannel ? ' active ' + key : '';
+        const icon = ch.icono || 'bi-chat';
+        html += '<button class="channel-btn' + active + '" onclick="switchPitchChannel(\'' + key + '\')" title="' + escHtml(ch.nombre) + '">' +
+          '<i class="bi ' + icon + '"></i> ' + escHtml(ch.nombre) +
+        '</button>';
+      });
+      html += '</div>';
+
+      // Template selector
+      html += '<div class="d-flex align-items-center gap-2 mb-2">';
+      html += '<small style="color:rgba(255,255,255,0.4);">Plantilla:</small>';
+      html += '<select class="template-select flex-grow-1" onchange="switchPitchTemplate(this.value)">';
+      templates.forEach(function(t) {
+        const sel = t.id === currentPitchTemplateId ? ' selected' : '';
+        html += '<option value="' + t.id + '"' + sel + '>' + escHtml(t.nombre) + '</option>';
+      });
+      html += '</select>';
+      html += '</div>';
+
+      // Textarea for message -- editable
+      html += '<textarea class="pitch-textarea form-control" id="pitchPreview" rows="5">' + escHtml(personalized) + '</textarea>';
+
+      // Variables hint
+      const vars = activeTpl.variables || [];
+      if (vars.length > 0) {
+        html += '<div class="mt-2">';
+        html += '<small style="color:rgba(255,255,255,0.3);">Variables: </small>';
+        vars.forEach(function(v) {
+          html += '<span class="pitch-var-tag" title="Se reemplaza con datos del lead">[' + escHtml(v) + ']</span>';
+        });
+        html += '</div>';
+      }
+
+      // Detonante
+      if (activeTpl.detonante) {
+        html += '<div class="pitch-detonante mt-2"><strong>Detonante:</strong> ' + escHtml(activeTpl.detonante) + '</div>';
+      }
+
+      // Action buttons
+      const hasPhone = PARSED.phone.length > 5;
+      const hasEmail = LEAD_CONTACTO && LEAD_CONTACTO.includes('@');
+
+      html += '<div class="pitch-actions">';
+      if (currentPitchChannel === 'whatsapp' && hasPhone) {
+        html += '<button class="btn btn-sm btn-success" onclick="sendPitch(\'whatsapp\')"><i class="bi bi-whatsapp"></i> Enviar WhatsApp</button>';
+      }
+      if (currentPitchChannel === 'email' && hasEmail) {
+        html += '<button class="btn btn-sm btn-info" onclick="sendPitch(\'email\')"><i class="bi bi-envelope-fill"></i> Enviar Email</button>';
+      }
+      html += '<button class="btn btn-sm btn-outline-htk" onclick="copyPitchText()"><i class="bi bi-clipboard"></i> Copiar</button>';
+      html += '<button class="btn btn-sm btn-outline-secondary" onclick="editPitchTemplate()"><i class="bi bi-pencil"></i> Editar</button>';
+      html += '</div>';
+
+      container.innerHTML = html;
+    }
+
+    async function switchPitchChannel(channel) {
+      currentPitchChannel = channel;
+      const data = await fetchPitches();
+      const templates = data.plantillas_cuerpo || [];
+      const canales = data.canales || {};
+      renderPitchUI(scoreTemplates(templates), canales);
+    }
+
+    async function switchPitchTemplate(templateId) {
+      currentPitchTemplateId = templateId;
+      const data = await fetchPitches();
+      const canales = data.canales || {};
+      const templates = data.plantillas_cuerpo || [];
+      renderPitchUI(scoreTemplates(templates), canales);
+    }
+
+    function copyPitchText() {
+      const textarea = document.getElementById('pitchPreview');
+      if (!textarea) return;
+      navigator.clipboard.writeText(textarea.value)
+        .then(function() { showToast('Texto copiado al portapapeles'); })
+        .catch(function() { showToast('Error al copiar', 'danger'); });
+    }
+
+    async function sendPitch(channel) {
+      const textarea = document.getElementById('pitchPreview');
+      if (!textarea) return;
+      const text = textarea.value;
+
+      if (channel === 'whatsapp' && PARSED.phone) {
+        const url = 'https://wa.me/' + PARSED.phone.replace(/\+/g, '') + '?text=' + encodeURIComponent(text);
+        window.open(url, '_blank', 'noopener');
+      } else if (channel === 'email' && PARSED.email) {
+        const lines = text.split('\n');
+        const subject = lines[0].startsWith('Asunto:') ? lines[0].replace('Asunto:', '').trim() : 'HTK INGENIERIA';
+        const body = lines[0].startsWith('Asunto:') ? lines.slice(1).join('\n') : text;
+        window.open('mailto:' + PARSED.email + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body), '_blank', 'noopener');
+      } else {
+        showToast('No hay canal disponible para enviar', 'danger');
+        return;
+      }
+
+      // Register interaction
+      try {
+        await fetch('/api/leads/' + LEAD_ID + '/interactions', {
           method: 'POST', headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({numero: LEAD.phone, mensaje: msg, lead_id: LEAD.id})
+          body: JSON.stringify({
+            tipo: channel === 'whatsapp' ? 'whatsapp' : 'email',
+            direccion: 'saliente',
+            resumen: channel === 'whatsapp' ? 'Mensaje WhatsApp enviado' : 'Email enviado',
+            detalle: text.substring(0, 500),
+            proximo_paso: 'Esperar respuesta del lead'
+          })
         });
-        const d = await r.json();
-        alert(d.ok ? '✅ Enviado y lead silenciado' : '❌ ' + (d.error||'error'));
-      } catch(e) { alert('❌ ' + e.message); }
+        loadInteractions();
+        showToast('Mensaje enviado e interaccion registrada');
+      } catch (e) {
+        showToast('Mensaje abierto pero no se registro interaccion', 'danger');
+      }
     }
 
-    async function silenciarLead() {
-      if (!confirm('¿Silenciar este lead? El bot no responderá sus mensajes.')) return;
+    function editPitchTemplate() {
+      const tplId = currentPitchTemplateId;
+      const channel = currentPitchChannel;
+      if (!tplId) return;
+
+      fetchPitches().then(function(data) {
+        const tpl = data.plantillas_cuerpo.find(function(t) { return t.id === tplId; });
+        if (!tpl) return;
+        const rawText = tpl[channel] || '';
+        const channelName = data.canales[channel] ? data.canales[channel].nombre : channel;
+        const vars = (tpl.variables || []).map(function(v) {
+          return '<span class="pitch-var-tag" onclick="insertVar(\'pitchEditTextarea\',\'[' + escHtml(v) + ']\')">[' + escHtml(v) + ']</span>';
+        }).join(' ');
+
+        document.getElementById('pitchEditTitle').innerHTML = 'Editar Plantilla: ' + escHtml(tpl.nombre) + ' <span class="badge bg-secondary">' + escHtml(channelName) + '</span>';
+        var body = document.querySelector('#pitchEditModal .modal-body');
+        body.innerHTML = '<div class="mb-2">' + vars + '</div>' +
+          '<textarea id="pitchEditTextarea" class="form-control" rows="8" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:monospace;">' + escHtml(rawText) + '</textarea>' +
+          '<div class="d-flex justify-content-between mt-1">' +
+            '<small style="color:rgba(255,255,255,0.3);">Variables: [Nombre] [Empresa] [Contacto] [Telefono]</small>' +
+            '<small id="pitchCharCount" style="color:rgba(255,255,255,0.4);">' + rawText.length + ' caracteres</small>' +
+          '</div>';
+        var footer = document.querySelector('#pitchEditModal .modal-footer');
+        footer.innerHTML = '<button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-sm btn-htk" onclick="savePitchTemplate()"><i class="bi bi-check"></i> Guardar Cambios</button>';
+        new bootstrap.Modal(document.getElementById('pitchEditModal')).show();
+      });
+    }
+
+    function insertVar(textareaId, varName) {
+      const ta = document.getElementById(textareaId);
+      if (!ta) return;
+      const start = ta.selectionStart, end = ta.selectionEnd;
+      ta.value = ta.value.substring(0, start) + varName + ta.value.substring(end);
+      ta.focus();
+      ta.selectionStart = ta.selectionEnd = start + varName.length;
+    }
+
+    async function savePitchTemplate() {
+      const ta = document.getElementById('pitchEditTextarea');
+      if (!ta) return;
+      const newText = ta.value;
       try {
-        const r = await fetch('/api/bot/silence', {
-          method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({numero: LEAD.phone})
+        var r = await fetch('/api/pitches', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: currentPitchTemplateId, canal: currentPitchChannel, texto: newText })
         });
-        const d = await r.json();
-        alert(d.ok ? '🔇 Silenciado' : '❌ '+(d.error||'error'));
-      } catch(e) { alert('❌ '+e.message); }
+        if (!r.ok) throw new Error();
+        pitchesData = null;
+        bootstrap.Modal.getInstance(document.getElementById('pitchEditModal')).hide();
+        flashSave();
+        showToast('Plantilla guardada');
+        await loadPitchTemplates();
+      } catch(e) { showToast('Error al guardar plantilla', 'danger'); }
     }
 
-
+    // Auto-load pitches on page load
+    loadPitchTemplates();
   </script>
-
-  <!-- Interactions timeline -->
-  <div class="container-fluid px-3 px-md-4 pb-4">
-    <div class="card-crm">
-      <div class="section-title"><i class="bi bi-chat-dots"></i> Interacciones</div>
-      {% if actividades %}
-        {% for a in actividades %}
-        <div class="timeline-item">
-          <div class="timeline-time">{{ a.fecha or a.created_at or '' }}</div>
-          <div style="color:rgba(255,255,255,0.8);font-size:0.88em;">{{ a.descripcion or a.tipo or '' }}</div>
-        </div>
-        {% endfor %}
-      {% else %}
-      <div class="empty-state"><i class="bi bi-inbox"></i>Sin interacciones registradas</div>
-      {% endif %}
-    </div>
-  </div>
 </body>
 </html>

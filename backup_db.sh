@@ -5,7 +5,7 @@
 # Uso: ./backup_db.sh --list             # listar backups disponibles
 # Uso: ./backup_db.sh --restore <archivo> # restaurar desde backup
 
-DB_DIR="/home/peku/.openclaw/workspace/crm"
+DB_DIR="/home/peku/htk-crm"
 DB="$DB_DIR/htk_crm.db"
 BACKUP_DIR="$DB_DIR/backups"
 RETENTION=14  # días a conservar

@@ -219,6 +219,20 @@ def page_lead(lid):
     return render_template('lead_detail.html', lead=lead, actividades=actividades)
 
 
+def actividad_crear(lead_id, tipo, resumen, detalle=''):
+    """Log interaction helper."""
+    conn = get_db()
+    try:
+        conn.execute(
+            "INSERT INTO interactions (lead_id, tipo, direccion, resumen, detalle, fecha, estado) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (lead_id, tipo, 'saliente', resumen, detalle, now_iso(), 'completado')
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 # ── Routes HTML ──────────────────────────────────────────────────────
 
 @app.route('/')
@@ -393,8 +407,9 @@ def api_leads():
         new_id = next_id('PRO', 'leads')
         conn.execute("""
             INSERT INTO leads (id, nombre, contacto, segmento, linea_interes, estado, fuente,
-                valor_estimado, fecha_creacion, proximo_seguimiento, notas)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                valor_estimado, fecha_creacion, proximo_seguimiento, notas,
+                telefono, email, url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             new_id,
             data.get('nombre', ''),
@@ -406,7 +421,10 @@ def api_leads():
             data.get('valor_estimado'),
             data.get('fecha_creacion', now_iso()),
             data.get('proximo_seguimiento'),
-            data.get('notas', '')
+            data.get('notas', ''),
+            data.get('telefono', ''),
+            data.get('email', ''),
+            data.get('url', '')
         ))
         conn.commit()
         row = conn.execute("SELECT * FROM leads WHERE id = ?", (new_id,)).fetchone()
@@ -437,7 +455,7 @@ def api_lead(lead_id):
         data = request.get_json()
         updates = []
         params = []
-        for key in ['nombre', 'contacto', 'contacto_nombre', 'segmento', 'linea_interes', 'estado', 'fuente', 'notas', 'valor_estimado', 'proximo_seguimiento']:
+        for key in ['nombre', 'contacto', 'contacto_nombre', 'segmento', 'linea_interes', 'estado', 'fuente', 'notas', 'valor_estimado', 'proximo_seguimiento', 'telefono', 'email', 'url']:
             if key in data:
                 updates.append(f"{key} = ?")
                 params.append(data[key])
@@ -858,7 +876,7 @@ def api_debug():
 
 # ── API Pitches ──────────────────────────────────────────────────────
 
-PITCHES_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'pitches.json')
+PITCHES_PATH = '/home/peku/htk-data/pitches.json'
 
 @app.route('/api/pitches', methods=['GET', 'PUT'])
 @login_required
@@ -1036,7 +1054,7 @@ if __name__ == '__main__':
     os.makedirs(os.path.join(BASE_DIR, 'templates'), exist_ok=True)
     # Ensure DB exists with schema on startup
     if not os.path.exists(DB_PATH) or os.path.getsize(DB_PATH) == 0:
-        print("⚠️  DB no encontrada. Ejecuta migrate_to_sqlite.py primero.")
+        print("--  DB no encontrada. Ejecuta migrate_to_sqlite.py primero.")
     
     # ── API Enviar WhatsApp (proxy al bot API) ──
     @app.route('/api/send-message', methods=['POST'])
@@ -1064,7 +1082,7 @@ if __name__ == '__main__':
             with urllib.request.urlopen(req, timeout=30) as resp:
                 result = json.loads(resp.read())
             if lead_id and result.get('ok'):
-                actividad_crear(lead_id, 'whatsapp', '📤 WhatsApp enviado', mensaje[:150])
+                actividad_crear(lead_id, 'whatsapp', 'WhatsApp enviado', mensaje[:150])
             return jsonify(result)
         except Exception as e:
             return jsonify({'ok': False, 'error': str(e)}), 500
@@ -1139,5 +1157,5 @@ if __name__ == '__main__':
         except Exception as e:
             return jsonify({'ok': False, 'error': str(e)}), 500
     
-    print("⚡ CRM HTK INGENIERIA v2 (SQLite) corriendo en http://localhost:5000")
+    print("CRM HTK INGENIERIA v2 (SQLite) corriendo en http://localhost:5000")
     app.run(host='127.0.0.1', port=5000, debug=True)
