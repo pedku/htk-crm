@@ -759,12 +759,12 @@
 
 <!-- Toast -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
- <div id="toastMsg" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
- <div class="toast-header">
- <i class="bi bi-check-circle-fill text-success me-2"></i>
- <strong class="me-auto">HTK CRM</strong>
- <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
- </div>
+
+
+
+
+
+
  <div class="toast-body" id="toastBody"></div>
  </div>
 </div>
@@ -3877,15 +3877,7 @@ function handleLogout() {
 <script>
 
     let _botStatus = null;
-
-    function showToast(msg, type) {
-      const t = document.getElementById('toastMsg');
-      document.getElementById('toastBody').textContent = msg;
-      t.querySelector('.toast-header i').className = (type === 'success' || !type)
-        ? 'bi bi-check-circle-fill text-success me-2'
-        : 'bi bi-exclamation-triangle-fill text-danger me-2';
-      new bootstrap.Toast(t).show();
-    }
+    let _botInterval = null;
 
     // ─── STATUS ──────────────────────────────────────────
     async function refreshStatus() {
@@ -3984,10 +3976,16 @@ function handleLogout() {
     }
 
     // ─── INIT ────────────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', () => {
-      refreshStatus();
-      refreshLog();
-      setInterval(refreshStatus, 30000);
+    // Iniciar cuando el usuario haga clic en el tab Bot
+    document.querySelector('[data-tab="bot"]')?.addEventListener('click', () => {
+      // Solo iniciar una vez
+      if (!_botInterval) {
+        setTimeout(() => {
+          refreshStatus();
+          refreshLog();
+        }, 300);
+        _botInterval = setInterval(refreshStatus, 30000);
+      }
     });
   
 </script>
