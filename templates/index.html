@@ -2414,8 +2414,29 @@ async function showLeadDetail(id) {
  <p><strong>Nombre Contacto:</strong> <span id="leadContactPerson_${id}">${escHtml(l.contacto_nombre || '-')}</span>
  <button class="btn btn-sm btn-link p-0 ms-1" onclick="editContactPerson('lead','${id}')" title="Editar nombre de contacto" style="font-size:0.75em;color:var(--htk-primary);"><i class="bi bi-pencil"></i></button>
  </p>
- <p><strong>Contacto:</strong> ${escHtml(l.contacto || '-')}</p>
- <p><strong>Segmento:</strong> ${escHtml(l.segmento || '-')}</p>
+ <p><strong>Segmento:</strong>
+ <select class="form-select form-select-sm d-inline-block" style="width:auto;max-width:250px;" id="leadSegmento_${id}" onchange="updateLeadField('${id}','segmento',this.value)">
+ <option value="">— Sin segmento —</option>
+ <option value="B2B taller" ${l.segmento==='B2B taller'?'selected':''}>B2B Taller</option>
+ <option value="B2B fábrica" ${l.segmento==='B2B fábrica'?'selected':''}>B2B Fábrica</option>
+ <option value="B2B comercio" ${l.segmento==='B2B comercio'?'selected':''}>B2B Comercio</option>
+ <option value="distribuidor cargadores" ${l.segmento==='distribuidor cargadores'?'selected':''}>Distribuidor Cargadores</option>
+ <option value="energía solar" ${l.segmento==='energía solar'?'selected':''}>Energía Solar</option>
+ <option value="hoteles" ${l.segmento==='hoteles'?'selected':''}>Hoteles</option>
+ <option value="restaurantes" ${l.segmento==='restaurantes'?'selected':''}>Restaurantes</option>
+ </select>
+ <button class="btn btn-sm btn-link p-0 ms-1" onclick="document.getElementById('leadSegmento_${id}').dispatchEvent(new Event('change'))" title="Guardar segmento"><i class="bi bi-check2" style="color:var(--htk-primary);"></i></button>
+ </p>
+ <p><strong>Teléfono:</strong> <input type="text" class="form-control form-control-sm d-inline-block" style="width:auto;max-width:200px;" id="leadTel_${id}" value="${escHtml(l.telefono||'')}" placeholder="+573001234567" onchange="updateLeadField('${id}','telefono',this.value)">
+ <button class="btn btn-sm btn-link p-0 ms-1" onclick="document.getElementById('leadTel_${id}').dispatchEvent(new Event('change'))" title="Guardar teléfono"><i class="bi bi-check2" style="color:var(--htk-primary);"></i></button>
+ </p>
+ <p><strong>Email:</strong> <input type="email" class="form-control form-control-sm d-inline-block" style="width:auto;max-width:250px;" id="leadEmail_${id}" value="${escHtml(l.email||'')}" placeholder="correo@ejemplo.com" onchange="updateLeadField('${id}','email',this.value)">
+ <button class="btn btn-sm btn-link p-0 ms-1" onclick="document.getElementById('leadEmail_${id}').dispatchEvent(new Event('change'))" title="Guardar email"><i class="bi bi-check2" style="color:var(--htk-primary);"></i></button>
+ </p>
+ <p><strong>Web:</strong> <input type="url" class="form-control form-control-sm d-inline-block" style="width:auto;max-width:300px;" id="leadWeb_${id}" value="${escHtml(l.url||'')}" placeholder="https://ejemplo.com" onchange="updateLeadField('${id}','url',this.value)">
+ <button class="btn btn-sm btn-link p-0 ms-1" onclick="document.getElementById('leadWeb_${id}').dispatchEvent(new Event('change'))" title="Guardar web"><i class="bi bi-check2" style="color:var(--htk-primary);"></i></button>
+ </p>
+ <p><strong>Contacto Original:</strong> <span style="color:rgba(255,255,255,0.4);">${escHtml(l.contacto || '-')}</span></p>
  <p><strong>Línea de Interés:</strong> ${escHtml(l.linea_interes || '-')}</p>
  </div>
  <div class="col-md-6">
@@ -2460,7 +2481,7 @@ async function showLeadDetail(id) {
  <button class="btn btn-sm btn-outline-htk" onclick="loadPitchTemplates('${id}')" id="loadPitchBtn_${id}"><i class="bi bi-arrow-repeat"></i> Cargar</button>
  </div>
  <div id="pitchContent_${id}">
- <em style="color:rgba(255,255,255,0.3);">Haz clic en <strong>Cargar</strong> para ver mensajes personalizados</em>
+ <em style="color:rgba(255,255,255,0.3);">Los mensajes se cargan automáticamente según el segmento del lead</em>
  </div>
  </div>`;
 
@@ -3407,6 +3428,34 @@ function scoreTemplates(templates, lead) {
  return {...t, score };
  }).sort((a, b) => b.score - a.score);
 }
+
+// ─── Update a single lead field via API ───
+async function updateLeadField(id, field, value) {
+ const l = leads.find(x => x.id === id);
+ if (!l) return;
+ 
+ try {
+ const resp = await fetch('/api/leads/' + id, {
+ method: 'PUT',
+ headers: {'Content-Type': 'application/json'},
+ body: JSON.stringify({[field]: value})
+ });
+ const updated = await resp.json();
+ if (updated && !updated.error) {
+ l[field] = value;
+ showToast('✅ ' + field + ' actualizado', 'success');
+ // Re-load pitches if segment changed
+ if (field === 'segmento' && document.getElementById('pitchContent_' + id)) {
+ loadPitchTemplates(id);
+ }
+ } else {
+ showToast('❌ Error: ' + (updated.error || 'desconocido'), 'danger');
+ }
+ } catch (e) {
+ showToast('❌ Error de red: ' + e.message, 'danger');
+ }
+}
+
 
 // Main: load and show pitch templates for a lead
 async function loadPitchTemplates(leadId) {
