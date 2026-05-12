@@ -237,6 +237,11 @@ def actividad_crear(lead_id, tipo, resumen, detalle=''):
 
 # ── Routes HTML ──────────────────────────────────────────────────────
 
+# ─── PÁGINA: Bot WhatsApp ────────────────────────────
+@app.route('/bot-whatsapp')
+def page_bot_whatsapp():
+    return render_template('bot_whatsapp.html')
+
 @app.route('/')
 @login_required
 def index():
@@ -1049,6 +1054,231 @@ def api_auto_backup():
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)})
 
+
+
+# ── API: PIPELINE / KANBAN ──────────────────────────────
+@app.route('/api/pipeline')
+def api_pipeline():
+    conn = get_db()
+    try:
+        rows = conn.execute("SELECT clave, nombre, color, icono, probabilidad FROM etapas ORDER BY orden").fetchall()
+        etapas = [dict(r) for r in rows]
+        funnel = []
+        for e in etapas:
+            count = conn.execute("SELECT COUNT(*) FROM leads WHERE estado = ?", (e['clave'],)).fetchone()[0]
+            total = conn.execute("SELECT COUNT(*) FROM leads").fetchone()[0] or 1
+            funnel.append({**e, 'count': count, 'pct': round(count / total * 100, 1)})
+        return jsonify({'funnel': funnel, 'etapas': etapas})
+    finally:
+        conn.close()
+
+@app.route('/api/leads/kanban')
+def api_leads_kanban():
+    conn = get_db()
+    try:
+        etapas = conn.execute("SELECT clave, nombre, color FROM etapas ORDER BY orden").fetchall()
+        kanban = {}
+        for e in etapas:
+            leads = conn.execute("SELECT * FROM leads WHERE estado = ?", (e['clave'],)).fetchall()
+            kanban[e['clave']] = {
+                'label': e['nombre'],
+                'color': e['color'],
+                'leads': [dict(l) for l in leads]
+            }
+        return jsonify(kanban)
+    finally:
+        conn.close()
+
+@app.route('/api/leads/<lid>/etapa', methods=['PATCH'])
+def api_lead_etapa(lid):
+    data = request.get_json()
+    etapa = data.get('etapa', '')
+    conn = get_db()
+    try:
+        conn.execute("UPDATE leads SET estado = ? WHERE id = ?", (etapa, lid))
+        conn.commit()
+        return jsonify({'ok': True, 'etapa': etapa})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/etapas')
+def api_etapas():
+    conn = get_db()
+    try:
+        rows = conn.execute("SELECT * FROM etapas ORDER BY orden").fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
+@app.route('/api/tags')
+def api_tags():
+    conn = get_db()
+    try:
+        if request.method == 'POST':
+            data = request.get_json()
+            tid = None
+            if data and data.get('nombre'):
+                c = conn.execute("INSERT INTO tags (nombre,color) VALUES (?,?)", 
+                    (data['nombre'], data.get('color','#3b82f6')))
+                conn.commit()
+                tid = c.lastrowid
+            return jsonify({'ok': True, 'id': tid}), 201
+        rows = conn.execute("SELECT * FROM tags ORDER BY nombre").fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
+@app.route('/api/lead-week')
+def api_lead_week():
+    conn = get_db()
+    try:
+        from datetime import datetime, timedelta
+        days = []
+        for i in range(6, -1, -1):
+            d = (datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d')
+            count = conn.execute("SELECT COUNT(*) FROM leads WHERE fecha_creacion LIKE ?", (d+'%',)).fetchone()[0]
+            days.append({'fecha': d, 'count': count, 'label': (datetime.now()-timedelta(days=i)).strftime('%a')})
+        return jsonify(days)
+    finally:
+        conn.close()
+
+@app.route('/api/opciones')
+def api_opciones():
+    conn = get_db()
+    try:
+        rows = conn.execute("SELECT DISTINCT linea_interes FROM leads WHERE linea_interes IS NOT NULL AND linea_interes != ''").fetchall()
+        return jsonify([r['linea_interes'] for r in rows])
+    finally:
+        conn.close()
+
+@app.route('/api/export')
+def api_export():
+    import csv, io
+    from flask import send_file
+    conn = get_db()
+    try:
+        rows = conn.execute("SELECT * FROM leads ORDER BY fecha_creacion DESC").fetchall()
+        output = io.StringIO()
+        writer = csv.writer(output)
+        if rows:
+            writer.writerow(rows[0].keys())
+            for r in rows:
+                writer.writerow(dict(r).values())
+        output.seek(0)
+        return send_file(io.BytesIO(output.getvalue().encode('utf-8-sig')),
+            mimetype='text/csv', as_attachment=True,
+            download_name=f"leads_htk_{datetime.now().strftime('%Y%m%d')}.csv")
+    finally:
+        conn.close()
+
+@app.route('/api/sales', methods=['GET','POST'])
+def api_sales():
+    conn = get_db()
+    try:
+        if request.method == 'POST':
+            data = request.get_json()
+            sid = f"VTA-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            conn.execute("INSERT INTO ventas (id, lead_id, cliente_id, cliente_nombre, producto, capacidad, valor_cotizado, estado, fecha, notas) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (sid, data.get('lead_id',''), data.get('cliente_id',''), data.get('cliente_nombre',''), 
+                 data.get('producto',''), data.get('capacidad',''), data.get('valor_cotizado',0), 'cotizado', 
+                 datetime.now().isoformat(), data.get('notas','')))
+            conn.commit()
+            row = conn.execute("SELECT * FROM ventas WHERE id = ?", (sid,)).fetchone()
+            return jsonify(dict(row)), 201
+        rows = conn.execute("SELECT * FROM ventas ORDER BY fecha DESC").fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
+@app.route('/api/sales/<sid>', methods=['PATCH','DELETE'])
+def api_sale(sid):
+    conn = get_db()
+    try:
+        if request.method == 'DELETE':
+            conn.execute("DELETE FROM ventas WHERE id = ?", (sid,))
+            conn.commit()
+            return jsonify({'ok': True})
+        data = request.get_json()
+        updates = [f"{k}=?" for k in data if k in ['cliente_nombre','producto','capacidad','valor_cotizado','valor_vendido','estado','notas']]
+        if updates:
+            params = [data[k] for k in data if k in ['cliente_nombre','producto','capacidad','valor_cotizado','valor_vendido','estado','notas']]
+            params.append(sid)
+            conn.execute(f"UPDATE ventas SET {','.join(updates)} WHERE id = ?", params)
+            conn.commit()
+        row = conn.execute("SELECT * FROM ventas WHERE id = ?", (sid,)).fetchone()
+        return jsonify(dict(row) if row else {'error': 'No encontrada'})
+    finally:
+        conn.close()
+
+@app.route('/api/prices', methods=['GET','POST'])
+def api_prices():
+    conn = get_db()
+    try:
+        if request.method == 'POST':
+            data = request.get_json()
+            c = conn.execute("INSERT INTO precios (categoria, producto, capacidad, precio_base, precio_venta, notas) VALUES (?,?,?,?,?,?)",
+                (data.get('categoria',''), data.get('producto',''), data.get('capacidad',''), data.get('precio_base',0), data.get('precio_venta',0), data.get('notas','')))
+            conn.commit()
+            return jsonify({'id': c.lastrowid, 'ok': True}), 201
+        rows = conn.execute("SELECT * FROM precios ORDER BY categoria, producto").fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
+@app.route('/api/prices/<int:pid>', methods=['PATCH','DELETE'])
+def api_price(pid):
+    conn = get_db()
+    try:
+        if request.method == 'DELETE':
+            conn.execute("DELETE FROM precios WHERE id = ?", (pid,))
+            conn.commit()
+            return jsonify({'ok': True})
+        data = request.get_json()
+        updates = [f"{k}=?" for k in data if k in ['categoria','producto','capacidad','precio_base','precio_venta','notas']]
+        if updates:
+            params = [data[k] for k in data if k in ['categoria','producto','capacidad','precio_base','precio_venta','notas']]
+            params.append(pid)
+            conn.execute(f"UPDATE precios SET {','.join(updates)} WHERE id = ?", params)
+            conn.commit()
+        return jsonify({'ok': True})
+    finally:
+        conn.close()
+
+@app.route('/api/tasks', methods=['GET','POST'])
+def api_tasks():
+    conn = get_db()
+    try:
+        if request.method == 'POST':
+            data = request.get_json()
+            c = conn.execute("INSERT INTO tareas (lead_id, tarea, estado, prioridad, vence, created_at) VALUES (?,?,?,?,?,?)",
+                (data.get('lead_id',''), data.get('tarea',''), 'pendiente', data.get('prioridad','media'), data.get('vence',''), datetime.now().isoformat()))
+            conn.commit()
+            return jsonify({'id': c.lastrowid, 'ok': True}), 201
+        rows = conn.execute("SELECT * FROM tareas ORDER BY completada ASC, vence ASC").fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
+@app.route('/api/tasks/<int:tid>', methods=['PATCH','DELETE'])
+def api_task(tid):
+    conn = get_db()
+    try:
+        if request.method == 'DELETE':
+            conn.execute("DELETE FROM tareas WHERE id = ?", (tid,))
+            conn.commit()
+            return jsonify({'ok': True})
+        data = request.get_json()
+        updates = [f"{k}=?" for k in data if k in ['tarea','estado','prioridad','vence','completada']]
+        if updates:
+            params = [data[k] for k in data if k in ['tarea','estado','prioridad','vence','completada']]
+            params.append(tid)
+            conn.execute(f"UPDATE tareas SET {','.join(updates)} WHERE id = ?", params)
+            conn.commit()
+        return jsonify({'ok': True})
+    finally:
+        conn.close()
 
 # ── Main ─────────────────────────────────────────────────────────────
 
