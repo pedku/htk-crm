@@ -976,6 +976,25 @@
  <div id="kanbanLeadsLoading" class="loading-overlay">
  <span class="spinner-border spinner-border-sm"></span> Cargando tablero...
  </div>
+ <div style="display:none;" id="kanbanLeadsFilters">
+ <div class="d-flex justify-content-between mb-2">
+ <input class="search-box" id="kanbanBoardSearch" placeholder="Buscar en board..." onkeyup="renderKanbanLeads()" style="width:250px;">
+ <div class="d-flex gap-2">
+ <select class="form-select" id="kanbanBoardSegmentFilter" onchange="renderKanbanLeads()" style="width:170px;font-size:0.82em;">
+ <option value="">Todos los segmentos</option>
+ <option value="B2B taller">B2B taller</option>
+ <option value="B2B fábrica">B2B fábrica</option>
+ <option value="B2B comercio">B2B comercio</option>
+ <option value="distribuidor cargadores">Cargadores</option>
+ <option value="energía solar">Energía Solar</option>
+ <option value="hoteles">Hoteles</option>
+ <option value="restaurantes">Restaurantes</option>
+ <option value="consumidor">Consumidor</option>
+ </select>
+ <span class="text-muted small align-self-center" id="kanbanBoardCount"></span>
+ </div>
+ </div>
+ </div>
  <div id="kanbanLeadsBoard" class="kanban-board" style="display:none;"></div>
  <div id="kanbanLeadsEmpty" class="empty-state" style="display:none;">
  <i class="bi bi-inbox"></i>
@@ -2969,21 +2988,51 @@ async function loadKanbanLeads() {
 }
 
 function renderKanbanLeads() {
- document.getElementById('kanbanLeadsBoard').style.display = '';
+ const board = document.getElementById('kanbanLeadsBoard');
+ const filters = document.getElementById('kanbanLeadsFilters');
+ 
+ board.style.display = '';
  document.getElementById('kanbanLeadsTable').style.display = 'none';
  document.getElementById('kanbanLeadsLoading').style.display = 'none';
 
  if (leads.length === 0) {
- document.getElementById('kanbanLeadsBoard').style.display = 'none';
+ board.style.display = 'none';
+ if (filters) filters.style.display = 'none';
  document.getElementById('kanbanLeadsEmpty').style.display = '';
  document.getElementById('kanbanLeadsLoading').style.display = 'none';
  return;
  }
  document.getElementById('kanbanLeadsEmpty').style.display = 'none';
+ if (filters) filters.style.display = '';
+
+ // Obtener valores de filtro
+ const q = (document.getElementById('kanbanBoardSearch')?.value || '').toLowerCase();
+ const seg = document.getElementById('kanbanBoardSegmentFilter')?.value || '';
+
+ // Filtrar leads (sin modificar el array original)
+ const filtered = leads.filter(l => {
+ if (seg && l.segmento !== seg) return false;
+ if (q) {
+ const nombre = (l.nombre || '').toLowerCase();
+ const contacto = (l.contacto || '').toLowerCase();
+ const id = (l.id || '').toLowerCase();
+ const tel = (l.telefono || '').toLowerCase();
+ const segL = (l.segmento || '').toLowerCase();
+ return nombre.includes(q) || contacto.includes(q) || id.includes(q) || tel.includes(q) || segL.includes(q);
+ }
+ return true;
+ });
+
+ // Actualizar contador
+ const countEl = document.getElementById('kanbanBoardCount');
+ if (countEl) {
+ if (q || seg) countEl.textContent = `${filtered.length} de ${leads.length} leads`;
+ else countEl.textContent = `${leads.length} leads`;
+ }
 
  let html = '';
  LEAD_STATUS_ORDER.forEach(status => {
- const items = leads.filter(l => l.estado === status);
+ const items = filtered.filter(l => l.estado === status);
  html += `
  <div class="kanban-column" data-status="${status}"
  ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropLead(event)">
@@ -2997,7 +3046,7 @@ function renderKanbanLeads() {
  </div>`;
  });
 
- document.getElementById('kanbanLeadsBoard').innerHTML = html;
+ board.innerHTML = html;
  document.getElementById('kanbanLeadsLoading').style.display = 'none';
  // Attach dragstart listeners
  document.querySelectorAll('#kanbanLeadsBoard .kanban-card').forEach(card => {
