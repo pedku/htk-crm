@@ -2813,7 +2813,20 @@ async function saveModal(type, id) {
 async function deleteItem(endpoint, id, name) {
  if (!confirm(`¿Eliminar ${endpoint==='work_orders'?'orden':endpoint==='leads'?'prospecto':'cliente'} "${name||id}"?`)) return;
  
- // Optimistic UI: eliminar del array local y re-renderizar al instante
+ // Esperar confirmacion del servidor primero
+ try {
+ const resp = await fetch(`/api/${endpoint}/${id}`, { method:'DELETE' });
+ if (resp.redirected || resp.url.includes('/login')) {
+ showToast('Sesión expirada, recarga la página', 'danger');
+ return;
+ }
+ if (!resp.ok) throw new Error('HTTP ' + resp.status);
+ } catch(e) {
+ showToast('Error al eliminar: ' + e.message, 'danger');
+ return;
+ }
+ 
+ // Servidor confirmó → eliminar local y re-renderizar
  if (endpoint === 'leads') {
  const idx = leads.findIndex(x => x.id === id);
  if (idx > -1) leads.splice(idx, 1);
@@ -2828,17 +2841,6 @@ async function deleteItem(endpoint, id, name) {
  
  flashSave();
  showToast(`${name||id} eliminado correctamente`);
- 
- try {
- await fetch(`/api/${endpoint}/${id}`, { method:'DELETE' });
- } catch(e) {
- // Si falla, recargar datos reales desde el servidor
- showToast('Error en servidor, recargando...', 'danger');
- if (endpoint === 'clients') await loadClients();
- else if (endpoint === 'work_orders') { await loadWorkOrders(); await loadClients(); }
- else if (endpoint === 'leads') await loadLeads();
- }
- 
  await loadDashboard();
  updateNotifications();
 }
