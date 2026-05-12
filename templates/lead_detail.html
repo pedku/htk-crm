@@ -538,6 +538,13 @@
 
     parseContact(LEAD_CONTACTO);
 
+    // URL del campo separado (tiene prioridad sobre el parse de contacto)
+    if (LEAD_URL) {
+      let u = LEAD_URL.trim();
+      if (!u.startsWith('http')) u = 'https://' + u;
+      PARSED.web = u;
+    }
+
     // Toast
     function showToast(msg, type) {
       const t = document.getElementById('liveToast');
@@ -618,8 +625,10 @@
 
       // Web button
       if (PARSED.web) {
+        var webUrl = PARSED.web;
+        if (!webUrl.startsWith('http')) webUrl = 'https://' + webUrl;
         html += '<div class="col-12">';
-        html += '<a class="contact-action-btn" href="' + PARSED.web + '" target="_blank" rel="noopener" title="Visitar sitio web">';
+        html += '<a class="contact-action-btn" href="' + webUrl + '" target="_blank" rel="noopener" title="Visitar sitio web">';
         html += '<i class="bi bi-globe2" style="color:var(--htk-primary);"></i> Visitar sitio web';
         html += '</a></div>';
       }
