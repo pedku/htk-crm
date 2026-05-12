@@ -550,23 +550,6 @@ def wo_to_dict(conn, wo_id):
         wo['historial'].append(entry)
     return wo
 
-# ── API: PITCHES ──────────────────────────────────────
-@app.route('/api/pitches')
-def api_pitches():
-    import json
-    pitches_path = '/home/peku/htk-data/pitches.json'
-    try:
-        with open(pitches_path) as f:
-            return jsonify(json.load(f))
-    except FileNotFoundError:
-        # Fallback a workspace
-        fallback = '/home/peku/.openclaw/workspace/data/pitches.json'
-        with open(fallback) as f:
-            return jsonify(json.load(f))
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
 @app.route('/api/work_orders', methods=['GET', 'POST'])
 @login_required
 def api_work_orders():
