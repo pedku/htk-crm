@@ -1420,4 +1420,4 @@ if __name__ == '__main__':
             return jsonify({'error': str(e)}), 500
     
     print("CRM HTK INGENIERIA v2 (SQLite) corriendo en http://localhost:5000")
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='127.0.0.1', port=18800, debug=False)
