@@ -1420,5 +1420,19 @@ if __name__ == '__main__':
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     
+    # ── GET /api/lid/stats — estadísticas de resolución ──
+    @app.route('/api/lid/stats')
+    @login_required
+    def api_lid_stats():
+        try:
+            conn = get_db()
+            total = conn.execute("SELECT COUNT(*) FROM interactions WHERE direccion='recibido'").fetchone()[0]
+            total_lid = conn.execute("SELECT COUNT(*) FROM lid_mappings").fetchone()[0]
+            return jsonify({'ok': True, 'total_interactions': total, 'lid_mappings': total_lid})
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)}), 500
+        finally:
+            conn.close()
+
     print("CRM HTK INGENIERIA v2 (SQLite) corriendo en http://localhost:5000")
     app.run(host='127.0.0.1', port=18800, debug=False)
