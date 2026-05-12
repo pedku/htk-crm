@@ -219,6 +219,13 @@ def page_lead(lid):
     return render_template('lead_detail.html', lead=lead, actividades=actividades)
 
 
+# ─── PÁGINA: Bot WhatsApp ────────────────────────────
+@app.route('/bot-whatsapp')
+@login_required
+def page_bot_whatsapp():
+    return render_template('bot_whatsapp.html')
+
+
 def actividad_crear(lead_id, tipo, resumen, detalle=''):
     """Log interaction helper."""
     conn = get_db()
@@ -1156,6 +1163,36 @@ if __name__ == '__main__':
             return jsonify(result)
         except Exception as e:
             return jsonify({'ok': False, 'error': str(e)}), 500
+    
+    # ── GET /api/bot/status — estado del bot ──
+    @app.route('/api/bot/status')
+    @login_required
+    def api_bot_status():
+        import json, urllib.request
+        try:
+            payload = json.dumps({}).encode()
+            req = urllib.request.Request('http://localhost:18802/status', data=payload,
+                headers={'Content-Type': 'application/json'}, method='POST')
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                result = json.loads(resp.read())
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'ok': False, 'status': 'offline', 'error': str(e)})
+    
+    # ── GET /api/bot/log — últimas líneas del log ──
+    @app.route('/api/bot/log')
+    @login_required
+    def api_bot_log():
+        log_path = '/home/peku/htk-whatsapp-bot/bot.log'
+        try:
+            if os.path.exists(log_path):
+                with open(log_path) as f:
+                    lines = f.readlines()
+                    last = lines[-200:]
+                return jsonify({'log': ''.join(last), 'ok': True})
+            return jsonify({'log': '', 'ok': True})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
     
     print("CRM HTK INGENIERIA v2 (SQLite) corriendo en http://localhost:5000")
     app.run(host='127.0.0.1', port=5000, debug=True)

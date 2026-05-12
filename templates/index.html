@@ -713,42 +713,45 @@
 
 <!-- Mobile Menu Overlay -->
 <div id="mobileMenu" class="mobile-menu-overlay d-lg-none" style="display:none;" onclick="if(event.target===this) toggleMobileMenu();">
- <div class="mobile-menu-content">
- <div class="d-flex justify-content-between align-items-center p-3 border-bottom" style="border-color:rgba(255,255,255,0.06)!important;">
- <h5 style="color:var(--htk-primary);margin:0;font-weight:700;"><i class="bi bi-lightning-fill"></i> HTK CRM</h5>
- <button class="btn btn-sm" onclick="toggleMobileMenu()" style="color:rgba(255,255,255,0.5);"><i class="bi bi-x-lg"></i></button>
- </div>
- <nav class="nav flex-column p-2">
- <a class="nav-link mobile-nav-link" href="#" data-tab="dashboard" onclick="toggleMobileMenu()">
- <i class="bi bi-speedometer2"></i> Dashboard
- </a>
- <a class="nav-link mobile-nav-link" href="#" data-tab="leads" onclick="toggleMobileMenu()">
- <i class="bi bi-graph-up-arrow"></i> Prospectos
- </a>
- <a class="nav-link mobile-nav-link" href="#" data-tab="kanban" onclick="toggleMobileMenu()">
- <i class="bi bi-kanban"></i> Kanban
- </a>
- <a class="nav-link mobile-nav-link" href="#" data-tab="clients" onclick="toggleMobileMenu()">
- <i class="bi bi-people"></i> Clientes
- </a>
- <a class="nav-link mobile-nav-link" href="#" data-tab="workorders" onclick="toggleMobileMenu()">
- <i class="bi bi-tools"></i> Órdenes Trabajo
- </a>
- <a class="nav-link mobile-nav-link" href="#" data-tab="interactions" onclick="toggleMobileMenu()">
- <i class="bi bi-chat-dots"></i> Interacciones
- </a>
- <a class="nav-link mobile-nav-link" href="#" data-tab="automation" onclick="toggleMobileMenu()">
- <i class="bi bi-gear-wide-connected"></i> Automatización
- </a>
- <hr style="border-color:rgba(255,255,255,0.06);">
- <a class="nav-link mobile-nav-link" href="#" onclick="toggleTheme();toggleMobileMenu();">
- <i class="bi bi-palette"></i> Cambiar tema
- </a>
- <a class="nav-link mobile-nav-link" href="#" onclick="handleLogout();toggleMobileMenu();">
- <i class="bi bi-box-arrow-right"></i> Cerrar sesión
- </a>
- </nav>
- </div>
+  <div class="mobile-menu-content">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom" style="border-color:rgba(255,255,255,0.06)!important;">
+      <h5 style="color:var(--htk-primary);margin:0;font-weight:700;"><i class="bi bi-lightning-fill"></i> HTK CRM</h5>
+      <button class="btn btn-sm" onclick="toggleMobileMenu()" style="color:rgba(255,255,255,0.5);"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <nav class="nav flex-column p-2">
+      <a class="nav-link mobile-nav-link" href="#" data-tab="dashboard" onclick="toggleMobileMenu()">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="kanban" onclick="toggleMobileMenu()">
+        <i class="bi bi-kanban"></i> Kanban
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="clients" onclick="toggleMobileMenu()">
+        <i class="bi bi-people"></i> Clientes
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="workorders" onclick="toggleMobileMenu()">
+        <i class="bi bi-tools"></i> Órdenes Trabajo
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="leads" onclick="toggleMobileMenu()">
+        <i class="bi bi-graph-up-arrow"></i> Prospectos
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="interactions" onclick="toggleMobileMenu()">
+        <i class="bi bi-chat-dots"></i> Interacciones
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="automation" onclick="toggleMobileMenu()">
+        <i class="bi bi-gear-wide-connected"></i> Automatización
+      </a>
+      <a class="nav-link mobile-nav-link" href="/bot-whatsapp" onclick="toggleMobileMenu()">
+        <i class="bi bi-robot"></i> Bot WhatsApp
+      </a>
+      <hr style="border-color:rgba(255,255,255,0.06);">
+      <a class="nav-link mobile-nav-link" href="#" onclick="toggleTheme();toggleMobileMenu();">
+        <i class="bi bi-palette"></i> Cambiar tema
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" onclick="handleLogout();toggleMobileMenu();">
+        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+      </a>
+    </nav>
+  </div>
 </div>
 
 <!-- Save Flash -->
@@ -767,40 +770,41 @@
 </div>
 
 <div class="container-fluid">
- <div class="row">
- <!-- Sidebar -->
- <div class="col-md-2 sidebar d-none d-lg-flex flex-column p-0">
- <div class="brand d-flex justify-content-between align-items-center">
- <div>
- <h5><i class="bi bi-lightning-fill"></i> HTK CRM</h5>
- <small>Gestión integrada</small>
- </div>
- <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" id="themeToggleBtn">
- <i class="bi bi-moon-fill"></i>
- </button>
- </div>
- <nav class="nav flex-column flex-grow-1">
- <a class="nav-link active" href="#" data-tab="dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
- <a class="nav-link" href="#" data-tab="leads"><i class="bi bi-graph-up-arrow"></i> Prospectos</a>
- <a class="nav-link" href="#" data-tab="kanban" style="position:relative;">
- <i class="bi bi-kanban"></i> Kanban
- <span class="notif-badge d-none" id="kanbanNotif">0</span>
- </a>
- <a class="nav-link" href="#" data-tab="clients"><i class="bi bi-people"></i> Clientes</a>
- <a class="nav-link" href="#" data-tab="workorders"><i class="bi bi-tools"></i> Órdenes Trabajo</a>
- <a class="nav-link" href="#" data-tab="interactions"><i class="bi bi-chat-dots"></i> Interacciones</a>
- <a class="nav-link" href="#" data-tab="automation"><i class="bi bi-gear-wide-connected"></i> Automatización</a>
- </nav>
- <div class="px-3 mt-auto">
- <button class="logout-btn" onclick="handleLogout()" title="Cerrar sesión">
- <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
- </button>
- <small style="color:rgba(255,255,255,0.25); font-size:0.7em;">
- HTK INGENIERIA<br>
- v2.2 — CRM Integrado
- </small>
- </div>
- </div>
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-2 sidebar d-none d-lg-flex flex-column p-0">
+      <div class="brand d-flex justify-content-between align-items-center">
+        <div>
+          <h5><i class="bi bi-lightning-fill"></i> HTK CRM</h5>
+          <small>Gestión integrada</small>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" id="themeToggleBtn">
+          <i class="bi bi-moon-fill"></i>
+        </button>
+      </div>
+      <nav class="nav flex-column flex-grow-1">
+        <a class="nav-link active" href="#" data-tab="dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a class="nav-link" href="#" data-tab="kanban" style="position:relative;">
+          <i class="bi bi-kanban"></i> Kanban
+          <span class="notif-badge d-none" id="kanbanNotif">0</span>
+        </a>
+        <a class="nav-link" href="#" data-tab="clients"><i class="bi bi-people"></i> Clientes</a>
+        <a class="nav-link" href="#" data-tab="workorders"><i class="bi bi-tools"></i> Órdenes Trabajo</a>
+        <a class="nav-link" href="#" data-tab="leads"><i class="bi bi-graph-up-arrow"></i> Prospectos</a>
+        <a class="nav-link" href="#" data-tab="interactions"><i class="bi bi-chat-dots"></i> Interacciones</a>
+        <a class="nav-link" href="#" data-tab="automation"><i class="bi bi-gear-wide-connected"></i> Automatización</a>
+        <a class="nav-link" href="/bot-whatsapp"><i class="bi bi-robot"></i> Bot WhatsApp</a>
+      </nav>
+      <div class="px-3 mt-auto">
+        <button class="logout-btn" onclick="handleLogout()" title="Cerrar sesión">
+          <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+        </button>
+        <small style="color:rgba(255,255,255,0.25); font-size:0.7em;">
+          HTK INGENIERIA ⚡<br>
+          v2.2 — CRM Integrado
+        </small>
+      </div>
+    </div>
 
  <!-- Main -->
  <div class="col-lg-10 ms-lg-auto main-content">
@@ -1363,22 +1367,22 @@ function emptyState(contentId, emptyId, dataLength) {
  }
 }
 
-// Tab Navigation 
-document.querySelectorAll('.sidebar .nav-link').forEach(link => {
- link.addEventListener('click', function(e) {
- e.preventDefault();
- document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
- this.classList.add('active');
- const tab = this.dataset.tab;
- document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
- document.getElementById('tab-' + tab).classList.add('active');
- if (tab === 'dashboard') loadDashboard();
- if (tab === 'kanban') loadKanban();
- if (tab === 'clients') loadClients();
- if (tab === 'workorders') loadWorkOrders();
- if (tab === 'leads') loadLeads();
- if (tab === 'interactions') loadInteractions();
- });
+// ── Tab Navigation ──────────────────────────────────────────────────
+document.querySelectorAll('.sidebar .nav-link[data-tab]').forEach(link => {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+    this.classList.add('active');
+    const tab = this.dataset.tab;
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'dashboard') loadDashboard();
+    if (tab === 'kanban') loadKanban();
+    if (tab === 'clients') loadClients();
+    if (tab === 'workorders') loadWorkOrders();
+    if (tab === 'leads') loadLeads();
+    if (tab === 'interactions') loadInteractions();
+  });
 });
 
 // Mobile Nav Links 

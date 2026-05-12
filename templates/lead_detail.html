@@ -175,11 +175,11 @@
     <h4>{{ lead.nombre or 'Lead #' + lead.id|string }}</h4>
     <span class="badge-htk {{ lead.estado or 'nuevo' }}" style="margin-left:auto;">{{ lead.estado or 'nuevo' }}</span>
   </div>
+  </div>
 
-  <!-- Toast & Save Flash -->
-  <div class="save-flash" id="saveFlash">Guardado</div>
+  <!-- Toast & Flash -->
   <div class="toast-container position-fixed bottom-0 end-0 p-3">
-    <div id="toastMsg" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
       <div class="toast-header">
         <i class="bi bi-check-circle-fill text-success me-2"></i>
         <strong class="me-auto">HTK CRM</strong>
@@ -188,7 +188,46 @@
       <div class="toast-body" id="toastBody"></div>
     </div>
   </div>
+  <div class="save-flash" id="saveFlash">✓ Guardado</div>
 
+  <!-- Modal: Editar contacto -->
+  <div class="modal fade" id="modalContacto" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background:var(--htk-card);border:1px solid rgba(255,255,255,0.08);">
+        <div class="modal-header border-0">
+          <h6 class="modal-title"><i class="bi bi-telephone" style="color:var(--htk-primary)"></i> Editar contacto</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Teléfono / WhatsApp</label>
+            <input id="editTel" class="form-control" placeholder="Ej: 573001234567">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Email</label>
+            <input id="editEmail" class="form-control" type="email" placeholder="correo@ejemplo.com">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Sitio Web</label>
+            <input id="editUrl" class="form-control" placeholder="ejemplo.com">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Tipo de contacto preferido</label>
+            <select id="editTipoContacto" class="form-select">
+              <option value="WhatsApp">💬 WhatsApp</option>
+              <option value="Llamada">📞 Llamada</option>
+              <option value="Email">✉️ Email</option>
+              <option value="Visita">🏢 Visita</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button class="btn-htk-outline" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn-htk" onclick="guardarContacto()"><i class="bi bi-check-lg"></i> Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="container-fluid p-3 p-md-4">
     {% set stages = ['nuevo','contactado','cotizado','negociacion','ganado','perdido','cliente'] %}
     {% set current_idx = stages.index(lead.estado) if lead.estado in stages else 0 %}
@@ -253,11 +292,10 @@
           {% set fields = [
             ('Nombre', lead.nombre),
             ('Nombre Contacto', lead.contacto_nombre),
-            ('Contacto', lead.contacto),
-            ('Segmento', lead.segmento),
-            ('Linea de Interes', lead.linea_interes),
             ('Fuente', lead.fuente),
             ('Valor Estimado', lead.valor_estimado),
+            ('Segmento', lead.segmento),
+            ('Linea de Interes', lead.linea_interes),
             ('ID', lead.id),
             ('Fecha Creacion', lead.fecha_creacion),
             ('Proximo Seguimiento', lead.proximo_seguimiento),
@@ -277,6 +315,40 @@
             </div>
             {% endif %}
             {% endfor %}
+          </div>
+        </div>
+
+        <!-- Contacto editable -->
+        <div class="card-crm">
+          <div class="section-title justify-content-between">
+            <span><i class="bi bi-telephone"></i> Contacto</span>
+            <button class="btn-htk-outline" onclick="editarContacto()" style="font-size:0.75em;"><i class="bi bi-pencil"></i> Editar</button>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="data-row">
+                <div class="data-label">Teléfono</div>
+                <div class="data-value" id="leadTel">{{ lead.telefono or '—' }}</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="data-row">
+                <div class="data-label">Email</div>
+                <div class="data-value" id="leadEmail">{{ lead.email or '—' }}</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="data-row">
+                <div class="data-label">Sitio Web</div>
+                <div class="data-value" id="leadUrl">{{ lead.url or '—' }}</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="data-row">
+                <div class="data-label">Tipo Contacto</div>
+                <div class="data-value"><span class="badge bg-secondary" id="leadTipoContacto">{{ lead.tipo_contacto or '—' }}</span></div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -338,6 +410,56 @@
     const LEAD_SEGMENTO = '{{ lead.segmento or '' }}';
     const LEAD_ESTADO = '{{ lead.estado or 'nuevo' }}';
     const LEAD_LINEA = '{{ lead.linea_interes or '' }}';
+    const LEAD_TEL = '{{ lead.telefono or '' }}';
+    const LEAD_EMAIL = '{{ lead.email or '' }}';
+    const LEAD_URL = '{{ lead.url or '' }}';
+    const LEAD_TIPO_CONTACTO = '{{ lead.tipo_contacto or '' }}';
+
+    // ─── EDITAR CONTACTO ──────────────────────────────
+    function editarContacto() {
+      const getVal = (id) => {
+        const el = document.getElementById(id);
+        const txt = el ? el.textContent.trim() : '';
+        return (txt === '—' || txt === '') ? '' : txt;
+      };
+      document.getElementById('editTel').value = getVal('leadTel');
+      document.getElementById('editEmail').value = getVal('leadEmail');
+      document.getElementById('editUrl').value = getVal('leadUrl');
+      const tipoActual = getVal('leadTipoContacto');
+      const sel = document.getElementById('editTipoContacto');
+      if (tipoActual && [...sel.options].some(o => o.value === tipoActual)) sel.value = tipoActual;
+      new bootstrap.Modal(document.getElementById('modalContacto')).show();
+    }
+
+    async function guardarContacto() {
+      const tel = document.getElementById('editTel').value.trim();
+      const email = document.getElementById('editEmail').value.trim();
+      const url = document.getElementById('editUrl').value.trim();
+      const tipo = document.getElementById('editTipoContacto').value;
+      const data = { telefono: tel, email: email, url: url, tipo_contacto: tipo };
+      try {
+        const r = await fetch('/api/leads/' + LEAD_ID, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+        const res = await r.json();
+        if (res && !res.error) {
+          document.getElementById('leadTel').textContent = tel || '—';
+          document.getElementById('leadEmail').textContent = email || '—';
+          document.getElementById('leadUrl').textContent = url || '—';
+          const tipoEl = document.getElementById('leadTipoContacto');
+          tipoEl.textContent = tipo || '—';
+          tipoEl.className = 'badge bg-secondary';
+          bootstrap.Modal.getInstance(document.getElementById('modalContacto')).hide();
+          showToast('Contacto actualizado');
+        } else {
+          showToast('Error: ' + (res.error || 'desconocido'));
+        }
+      } catch(e) {
+        showToast('Error de conexión');
+      }
+    }
 
     const STAGES = ['nuevo','contactado','cotizado','negociacion','ganado','perdido','cliente'];
     const STAGE_IDX = STAGES.indexOf(LEAD_ESTADO);
@@ -396,7 +518,7 @@
 
     // Toast
     function showToast(msg, type) {
-      const t = document.getElementById('toastMsg');
+      const t = document.getElementById('liveToast');
       document.getElementById('toastBody').textContent = msg;
       t.querySelector('.toast-header i').className = (type === 'success' || !type)
         ? 'bi bi-check-circle-fill text-success me-2'

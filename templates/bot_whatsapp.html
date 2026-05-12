@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bot WhatsApp — HTK CRM</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root { --htk-primary: #00d4aa; --htk-dark: #111827; --htk-card: #1a2332; --htk-bg: #0d1b2a; }
+    body { background: var(--htk-bg); color: rgba(255,255,255,0.85); font-family: 'Segoe UI', system-ui, sans-serif; }
+    .topbar { background: var(--htk-card); padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+    .topbar a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.1em; }
+    .topbar a:hover { color: var(--htk-primary); }
+    .topbar h4 { margin: 0; font-weight: 600; font-size: 1.1em; }
+    .card-crm { background: var(--htk-card); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+    .section-title { font-size: 0.95em; font-weight: 600; color: var(--htk-primary); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 8px; }
+    .btn-htk { background: var(--htk-primary); color: #000; border: none; font-weight: 600; border-radius: 8px; padding: 6px 14px; font-size: 0.82em; cursor: pointer; transition: all 0.2s; }
+    .btn-htk:hover { background: #00bf9a; color: #000; }
+    .btn-htk-outline { background: transparent; color: var(--htk-primary); border: 1px solid rgba(0,212,170,0.3); font-weight: 600; border-radius: 8px; padding: 6px 14px; font-size: 0.82em; cursor: pointer; transition: all 0.2s; }
+    .btn-htk-outline:hover { background: var(--htk-primary); color: #000; }
+    .form-control, .form-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+    .form-control:focus, .form-select:focus { border-color: var(--htk-primary); box-shadow: 0 0 0 0.2rem rgba(0,212,170,0.15); background: rgba(255,255,255,0.08); color: #fff; }
+    .form-select option { background: #1a2332; color: #fff; }
+    .form-label { color: rgba(255,255,255,0.7); font-size: 0.85em; font-weight: 500; }
+    .stat-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+    .stat-item { flex: 1; min-width: 120px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); text-align: center; }
+    .stat-item .value { font-size: 1.3em; font-weight: 700; }
+    .stat-item .label { font-size: 0.75em; color: rgba(255,255,255,0.4); }
+    .log-viewer { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 16px; font-size: 0.75rem; font-family: monospace; max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.5; }
+    .timeline-flow .flow-item { position: relative; padding-left: 28px; margin-bottom: 14px; }
+    .timeline-flow .flow-item::before { content: ''; position: absolute; left: 8px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--htk-primary); }
+    .timeline-flow .flow-item::after { content: ''; position: absolute; left: 11px; top: 14px; bottom: -14px; width: 2px; background: rgba(255,255,255,0.08); }
+    .timeline-flow .flow-item:last-child::after { display: none; }
+    .timeline-flow .flow-item .title { font-weight: 600; font-size: 0.9em; }
+    .timeline-flow .flow-item .desc { font-size: 0.8em; color: rgba(255,255,255,0.45); }
+    .toast-container { z-index: 9999; }
+  </style>
+</head>
+<body>
+  <div class="topbar" style="display:flex;align-items:center;gap:12px;overflow-x:auto;">
+    <i class="bi bi-robot" style="color:var(--htk-primary);font-size:1.2em;"></i>
+    <h4 style="margin:0;font-weight:600;font-size:1em;white-space:nowrap;">Bot WhatsApp</h4>
+    <div style="display:flex;gap:4px;flex-wrap:nowrap;margin-left:auto;margin-right:12px;">
+      <a href="/?tab=dashboard" class="btn-htk-outline" style="font-size:0.72em;padding:4px 8px;white-space:nowrap;"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="/?tab=leads" class="btn-htk-outline" style="font-size:0.72em;padding:4px 8px;white-space:nowrap;"><i class="bi bi-graph-up-arrow"></i> Prospectos</a>
+      <a href="/?tab=clients" class="btn-htk-outline" style="font-size:0.72em;padding:4px 8px;white-space:nowrap;"><i class="bi bi-people"></i> Clientes</a>
+      <a href="/?tab=automation" class="btn-htk-outline" style="font-size:0.72em;padding:4px 8px;white-space:nowrap;"><i class="bi bi-gear-wide-connected"></i> Automatización</a>
+    </div>
+    <span class="badge bg-secondary" id="botStatusBadge" style="font-size:0.72em;flex-shrink:0;">⏳ Verificando...</span>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toastMsg" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header"><i class="bi bi-check-circle-fill text-success me-2"></i><strong class="me-auto">HTK CRM</strong><button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button></div>
+      <div class="toast-body" id="toastBody"></div>
+    </div>
+  </div>
+
+  <div class="container-fluid p-3 p-md-4">
+    <div class="row g-4">
+      <!-- Left column: Status + Controls -->
+      <div class="col-lg-5">
+        <!-- Status -->
+        <div class="card-crm">
+          <div class="section-title"><i class="bi bi-info-circle"></i> Estado</div>
+          <div class="stat-grid mb-3" id="statusGrid">
+            <div class="stat-item"><div class="value" id="botState">—</div><div class="label">Estado</div></div>
+            <div class="stat-item"><div class="value" id="botConnected">—</div><div class="label">WhatsApp</div></div>
+            <div class="stat-item"><div class="value" id="botNumber">—</div><div class="label">Número</div></div>
+            <div class="stat-item"><div class="value" id="botUptime">—</div><div class="label">Uptime</div></div>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn-htk" id="btnToggleBot" onclick="toggleBot()"><i class="bi bi-power"></i> Encender/Apagar</button>
+            <button class="btn-htk-outline" onclick="refreshStatus()"><i class="bi bi-arrow-clockwise"></i> Refrescar</button>
+          </div>
+        </div>
+
+        <!-- Send Manual -->
+        <div class="card-crm">
+          <div class="section-title"><i class="bi bi-send"></i> Enviar mensaje manual</div>
+          <div class="mb-2">
+            <label class="form-label">Número (formato internacional, sin +)</label>
+            <input type="text" id="sendNumero" class="form-control form-control-sm" placeholder="573001234567">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Mensaje</label>
+            <textarea id="sendMensaje" class="form-control" rows="6" style="font-size:0.85em;font-family:monospace;"></textarea>
+          </div>
+          <button class="btn-htk w-100" onclick="enviarManual()"><i class="bi bi-whatsapp"></i> Enviar por WhatsApp</button>
+          <div id="sendResult" class="small mt-2" style="color:rgba(255,255,255,0.4);"></div>
+        </div>
+
+        <!-- Silence -->
+        <div class="card-crm">
+          <div class="section-title"><i class="bi bi-volume-mute"></i> Silenciar / Desilenciar</div>
+          <div class="mb-2">
+            <label class="form-label">Número</label>
+            <input type="text" id="silenceNumero" class="form-control form-control-sm" placeholder="573001234567">
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn-htk-outline" onclick="silenciar('silence')" style="border-color:#d97706;color:#d97706;"><i class="bi bi-bell-slash"></i> Silenciar</button>
+            <button class="btn-htk-outline" onclick="silenciar('unsilence')" style="border-color:#16a34a;color:#16a34a;"><i class="bi bi-bell"></i> Desilenciar</button>
+          </div>
+          <div id="silenceResult" class="small mt-2" style="color:rgba(255,255,255,0.4);"></div>
+        </div>
+      </div>
+
+      <!-- Right column: Workflow + Logs -->
+      <div class="col-lg-7">
+        <!-- Workflow -->
+        <div class="card-crm">
+          <div class="section-title"><i class="bi bi-diagram-3"></i> Flujo de trabajo del Bot</div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;">
+                <h6 style="color:#0dcaf0;font-size:0.85em;font-weight:600;margin-bottom:12px;">📥 Recepción</h6>
+                <div class="timeline-flow">
+                  <div class="flow-item"><div class="title">Mensaje entrante</div><div class="desc">Cliente escribe al WhatsApp de HTK</div></div>
+                  <div class="flow-item"><div class="title">Detección de intención</div><div class="desc">Palabras clave → opción 1-6 (reparación, elevadores, automatización, cargadores, IoT, otra)</div></div>
+                  <div class="flow-item"><div class="title">Respuesta automática</div><div class="desc">FAQ o mensaje contextual según la opción detectada</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;">
+                <h6 style="color:#198754;font-size:0.85em;font-weight:600;margin-bottom:12px;">📤 Prospección</h6>
+                <div class="timeline-flow">
+                  <div class="flow-item"><div class="title">Lead Finder</div><div class="desc">Scraping automático de leads de Google Maps</div></div>
+                  <div class="flow-item"><div class="title">Pitch por segmento</div><div class="desc">Selecciona plantilla según el segmento del lead</div></div>
+                  <div class="flow-item"><div class="title">Envío + silenciado</div><div class="desc">Mensaje enviado, número silenciado para evitar auto-respuesta</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;">
+                <h6 style="color:#ffc107;font-size:0.85em;font-weight:600;margin-bottom:12px;">🔄 Gestión</h6>
+                <div class="timeline-flow">
+                  <div class="flow-item"><div class="title">Sesión por chat</div><div class="desc">Cada conversación tiene estado: esperando, activo, silencioso, finalizado</div></div>
+                  <div class="flow-item"><div class="title">Derivación a Pedro</div><div class="desc">Si no entiende o pasan 5 mensajes → notifica al ingeniero</div></div>
+                  <div class="flow-item"><div class="title">Lead creado en CRM</div><div class="desc">Cada nuevo contacto se registra como lead automáticamente</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;">
+                <h6 style="color:#0dcaf0;font-size:0.85em;font-weight:600;margin-bottom:12px;">🔧 API Endpoints</h6>
+                <div class="small" style="color:rgba(255,255,255,0.5);font-family:monospace;font-size:0.78em;">
+                  <code>POST /api/bot/status</code> — Estado<br>
+                  <code>POST /api/bot/send</code> — Enviar mensaje<br>
+                  <code>POST /api/bot/global-on/off</code> — Encender/apagar<br>
+                  <code>POST /api/bot/silence</code> — Silenciar número<br>
+                  <code>GET /api/bot/log</code> — Últimas líneas del log
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="card-crm">
+          <div class="section-title justify-content-between">
+            <span><i class="bi bi-journal-text"></i> Últimas actividades del Bot</span>
+            <button class="btn-htk-outline" onclick="refreshLog()" style="font-size:0.75em;padding:4px 10px;"><i class="bi bi-arrow-clockwise"></i></button>
+          </div>
+          <div class="log-viewer" id="botLog">Cargando logs...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let _botStatus = null;
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toastMsg');
+      document.getElementById('toastBody').textContent = msg;
+      t.querySelector('.toast-header i').className = (type === 'success' || !type)
+        ? 'bi bi-check-circle-fill text-success me-2'
+        : 'bi bi-exclamation-triangle-fill text-danger me-2';
+      new bootstrap.Toast(t).show();
+    }
+
+    // ─── STATUS ──────────────────────────────────────────
+    async function refreshStatus() {
+      const badge = document.getElementById('botStatusBadge');
+      try {
+        const r = await fetch('/api/bot/status');
+        _botStatus = await r.json();
+        if (_botStatus.error || !_botStatus.ok) {
+          badge.textContent = '⚠️ Offline';
+          badge.className = 'badge bg-danger ms-auto';
+          document.getElementById('botState').textContent = 'Desconectado';
+          document.getElementById('botConnected').textContent = '❌';
+          document.getElementById('botNumber').textContent = '—';
+          document.getElementById('botUptime').textContent = '—';
+          return;
+        }
+        const isOn = _botStatus.status === 'on';
+        const isConnected = _botStatus.connected;
+        badge.textContent = isOn ? '🟢 Activo' : '🔴 Apagado';
+        badge.className = isOn ? 'badge bg-success ms-auto' : 'badge bg-danger ms-auto';
+        document.getElementById('botState').textContent = isOn ? 'Encendido' : 'Apagado';
+        document.getElementById('botConnected').innerHTML = isConnected ? '<span style="color:#198754;">✅ Conectado</span>' : '<span style="color:#d97706;">⏳ Conectando...</span>';
+        document.getElementById('botNumber').textContent = _botStatus.botNumber ? '57' + _botStatus.botNumber : '—';
+        const up = _botStatus.uptime || 0;
+        document.getElementById('botUptime').textContent = Math.floor(up / 3600) + 'h ' + Math.floor((up % 3600) / 60) + 'm';
+      } catch(e) {
+        badge.textContent = '⚠️ Error';
+        badge.className = 'badge bg-danger ms-auto';
+        document.getElementById('botState').textContent = 'Error de conexión';
+      }
+    }
+
+    async function toggleBot() {
+      if (!_botStatus) await refreshStatus();
+      const newState = _botStatus?.status === 'on' ? 'off' : 'on';
+      const endpoint = newState === 'on' ? '/api/bot/global-on' : '/api/bot/global-off';
+      try {
+        const r = await fetch(endpoint, { method: 'POST', headers: {'Content-Type': 'application/json'} });
+        const res = await r.json();
+        showToast(res.ok ? '✅ Bot ' + (newState === 'on' ? 'encendido' : 'apagado') : '⚠️ Error');
+        refreshStatus();
+      } catch(e) { showToast('⚠️ Error de conexión', 'danger'); }
+    }
+
+    // ─── SEND ────────────────────────────────────────────
+    async function enviarManual() {
+      const to = document.getElementById('sendNumero').value.trim();
+      const message = document.getElementById('sendMensaje').value.trim();
+      const result = document.getElementById('sendResult');
+      if (!to || !message) { result.textContent = '⚠️ Completa número y mensaje'; result.style.color = '#dc2626'; return; }
+      result.textContent = '⏳ Enviando...'; result.style.color = '#d97706';
+      try {
+        const r = await fetch('/api/send-message', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({numero: to, mensaje: message})
+        });
+        const res = await r.json();
+        if (res.ok) {
+          result.textContent = '✅ Mensaje enviado'; result.style.color = '#198754';
+          document.getElementById('sendMensaje').value = '';
+        } else {
+          result.textContent = '❌ Error: ' + (res.error || 'desconocido'); result.style.color = '#dc2626';
+        }
+      } catch(e) { result.textContent = '❌ Error de conexión'; result.style.color = '#dc2626'; }
+    }
+
+    // ─── SILENCE ─────────────────────────────────────────
+    async function silenciar(action) {
+      const numero = document.getElementById('silenceNumero').value.trim();
+      const result = document.getElementById('silenceResult');
+      if (!numero) { result.textContent = '⚠️ Ingresa un número'; result.style.color = '#dc2626'; return; }
+      const endpoint = action === 'silence' ? '/api/bot/silence' : '/api/bot/unsilence';
+      try {
+        const r = await fetch(endpoint, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({numero}) });
+        const res = await r.json();
+        result.textContent = res.ok ? '✅ Número ' + (action === 'silence' ? 'silenciado' : 'desilenciado') : '⚠️ Error';
+        result.style.color = res.ok ? '#198754' : '#dc2626';
+      } catch(e) { result.textContent = '❌ Error de conexión'; result.style.color = '#dc2626'; }
+    }
+
+    // ─── LOGS ────────────────────────────────────────────
+    async function refreshLog() {
+      const logEl = document.getElementById('botLog');
+      logEl.textContent = 'Cargando...';
+      try {
+        const r = await fetch('/api/bot/log');
+        const res = await r.json();
+        if (res.log) {
+          const lines = res.log.split('\n').slice(-60).join('\n');
+          logEl.textContent = lines;
+          logEl.scrollTop = logEl.scrollHeight;
+        } else {
+          logEl.textContent = res.error || 'Sin logs disponibles';
+        }
+      } catch(e) { logEl.textContent = '❌ Error: ' + e.message; }
+    }
+
+    // ─── INIT ────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      refreshStatus();
+      refreshLog();
+      setInterval(refreshStatus, 30000);
+    });
+  </script>
+</body>
+</html>
