@@ -2530,9 +2530,18 @@ async function changeLeadStage(id, direction) {
  if (idx === -1) return;
  const newIdx = direction === 'next' ? Math.min(idx + 1, stages.length - 1) : Math.max(idx - 1, 0);
  if (newIdx === idx) return;
- // Optimistic: actualizar local y re-renderizar al instante
+ // Actualizar local y re-renderizar tabla
  l.estado = stages[newIdx];
  renderLeads();
+ 
+ // Refrescar modal si está abierto
+ try {
+ const modalEl = document.getElementById('genericModal');
+ if (modalEl && modalEl.classList.contains('show')) {
+ showLeadDetail(id);
+ }
+ } catch(e) {}
+ 
  showToast('Lead avanzado a: ' + stages[newIdx]);
  try {
  await fetch(`/api/leads/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({estado: stages[newIdx]}) });
@@ -3534,6 +3543,13 @@ async function updateLeadField(id, field, value) {
  if (field === 'segmento' && document.getElementById('pitchContent_' + id)) {
  loadPitchTemplates(id);
  }
+ // Refrescar modal si está abierto
+ try {
+ const modalEl = document.getElementById('genericModal');
+ if (modalEl && modalEl.classList.contains('show')) {
+ showLeadDetail(id);
+ }
+ } catch(e) {}
  } else {
  showToast('❌ Error: ' + (updated.error || 'desconocido'), 'danger');
  }
