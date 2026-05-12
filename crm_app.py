@@ -220,11 +220,6 @@ def page_lead(lid):
 
 
 # ─── PÁGINA: Bot WhatsApp ────────────────────────────
-@app.route('/bot-whatsapp')
-@login_required
-def page_bot_whatsapp():
-    return render_template('bot_whatsapp.html')
-
 
 def actividad_crear(lead_id, tipo, resumen, detalle=''):
     """Log interaction helper."""
