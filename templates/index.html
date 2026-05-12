@@ -91,11 +91,9 @@
 .tab-content.active { display: block; }
 .conversion-badge { cursor: pointer; }
 
-.kanban-col { background: rgba(0,0,0,0.15); border-radius: 12px; overflow: hidden; }
-.kanban-col-body { scrollbar-width: thin; }
-.kanban-hover { outline: 2px dashed var(--htk-primary); }
-.kanban-card:hover { background: rgba(255,255,255,0.09) !important; }
-.funnel-bar { transition: height 0.5s ease; }
+/* kanban-col */ background: rgba(0,0,0,0.15); border-radius: 12px; overflow: hidden; }
+.kanban-col-body { scrollbar-width: thin; } outline: 2px dashed var(--htk-primary); }
+.kanban-card:hover { background: rgba(255,255,255,0.09) !important; } transition: height 0.5s ease; }
 .toast-container { z-index: 9999; }
 .progress-bar-htk { background: var(--htk-primary); }
 .section-title { color: var(--htk-primary); font-size: 1.1em; font-weight: 600; margin-bottom: 12px; }
@@ -1666,7 +1664,6 @@ function escapeHtml(text) {
 let _dragLeadId = null;
 
 async function loadKanban() {
-  const container = document.getElementById('kanbanContainer');
   if (!container) return;
   container.innerHTML = '<div class="text-center py-5 w-100"><span class="spinner-border spinner-border-sm"></span></div>';
   try {
@@ -1738,10 +1735,8 @@ async function loadPipeline() {
 }
 
 // Load kanban when tab clicked
-document.querySelector('[data-tab="kanban"]')?.addEventListener('click', () => {
-  if (!_tabLoaded.kanban) { _tabLoaded.kanban = true; loadKanban(); }
-});
-_tabLoaded = _tabLoaded || {};
+document.querySelector('[data-tab="kanban"]')?.addEventListener('click', loadKanban);
+
 
 async function loadDashboard() {
  showLoading('dashboardLoading','dashboardContent');
@@ -1808,7 +1803,7 @@ async function loadDashboard() {
  
  hideLoading('dashboardLoading','dashboardContent');
  } catch(e) { showToast('Error al cargar dashboard', 'danger'); hideLoading('dashboardLoading','dashboardContent'); }
-}
+};
 
 function escHtml(s) {
  if (!s) return '';
@@ -2730,6 +2725,7 @@ async function saveModal(type, id) {
  await loadClients();
  await loadDashboard();
  } catch(e) { showToast('Error al guardar orden', 'danger'); }
+  setTimeout(loadPipeline, 1000);
 
  } else if (type === 'lead') {
  data = {
@@ -2786,6 +2782,9 @@ let draggedItemId = null;
 let draggedItemType = null; // 'wo' or 'lead'
 
 // Kanban Tab Entry Point 
+
+
+
 async function loadKanban() {
  if (currentKanbanSub === 'wo') loadKanbanWO();
  else loadKanbanLeads();
