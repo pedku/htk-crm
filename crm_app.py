@@ -1090,6 +1090,7 @@ def api_leads_kanban():
         conn.close()
 
 @app.route('/api/leads/<lid>/etapa', methods=['PATCH'])
+@login_required
 def api_lead_etapa(lid):
     data = request.get_json()
     etapa = data.get('etapa', '')

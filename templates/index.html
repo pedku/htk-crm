@@ -3183,33 +3183,30 @@ async function updateWOStatusFromKanban(woId, newStatus) {
 
 async function updateLeadStatusFromKanban(leadId, newStatus) {
  const localLead = leads.find(x => x.id === leadId);
- const oldStatus = localLead ? localLead.estado : null;
+ if (!localLead) return;
+ const oldStatus = localLead.estado;
  
- // 1. Actualizar local optimista: mover el lead al instante
- if (localLead) localLead.estado = newStatus;
- 
- // 2. Re-renderizar la board al instante (sin esperar servidor)
- try { renderKanbanLeads(); } catch(e) { /* la board puede estar oculta */ }
- flashSave();
- showToast(`Lead movido a ${ESTADOS_LEAD[newStatus]?.label||newStatus}`);
- 
- // 3. Enviar al servidor (async, no bloquea)
+ // 1. Enviar al servidor PRIMERO (esperar confirmación)
  try {
- const resp = await fetch(`/api/leads/${leadId}`, {
- method: 'PUT',
+ const resp = await fetch(`/api/leads/${leadId}/etapa`, {
+ method: 'PATCH',
  headers: {'Content-Type': 'application/json'},
- body: JSON.stringify({ estado: newStatus })
+ body: JSON.stringify({ etapa: newStatus })
  });
  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+ const text = await resp.text();
+ const data = JSON.parse(text);
+ if (!data.ok) throw new Error(data.error || 'Error desconocido');
  } catch(e) {
- // Si falla, revertir y recargar
- if (localLead && oldStatus) localLead.estado = oldStatus;
- try { renderKanbanLeads(); } catch(e2) {}
- showToast('Error al guardar en servidor, recarga la página', 'danger');
+ showToast('Error: ' + e.message, 'danger');
  return;
  }
  
- // 4. Marcar como modificado para que loadKanbanLeads refresque al cambiar de pestaña
+ // 2. Servidor confirmó → actualizar local y re-renderizar
+ localLead.estado = newStatus;
+ try { renderKanbanLeads(); } catch(e) { /* board oculta */ }
+ flashSave();
+ showToast(`Lead movido a ${ESTADOS_LEAD[newStatus]?.label||newStatus}`);
  updateNotifications();
 }
 
