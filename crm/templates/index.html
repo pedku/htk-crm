@@ -19,16 +19,16 @@
  min-height: 100vh;
  border-right: 1px solid rgba(255,255,255,0.06);
  }
-.sidebar.nav-link {
+.sidebar .nav-link {
  color: rgba(255,255,255,0.65);
  padding: 12px 20px;
  border-radius: 10px;
  margin: 2px 8px;
  transition: all 0.2s;
  }
-.sidebar.nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
-.sidebar.nav-link.active { background: var(--htk-primary); color: #000; font-weight: 600; }
-.sidebar.nav-link i { margin-right: 10px; font-size: 1.2em; }
+.sidebar .nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
+.sidebar .nav-link.active { background: var(--htk-primary); color: #000; font-weight: 600; }
+.sidebar .nav-link i { margin-right: 10px; font-size: 1.2em; }
 .brand {
  padding: 20px;
  border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -90,6 +90,10 @@
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 .conversion-badge { cursor: pointer; }
+
+/* kanban-col */ background: rgba(0,0,0,0.15); border-radius: 12px; overflow: hidden; }
+.kanban-col-body { scrollbar-width: thin; } outline: 2px dashed var(--htk-primary); }
+.kanban-card:hover { background: rgba(255,255,255,0.09) !important; } transition: height 0.5s ease; }
 .toast-container { z-index: 9999; }
 .progress-bar-htk { background: var(--htk-primary); }
 .section-title { color: var(--htk-primary); font-size: 1.1em; font-weight: 600; margin-bottom: 12px; }
@@ -468,11 +472,11 @@
 
  @media (min-width: 768px) and (max-width: 991px) {
 .sidebar { flex: 0 0 70px !important; max-width: 70px !important; }
-.sidebar.nav-link span { display: none !important; }
+.sidebar .nav-link span { display: none !important; }
 .sidebar.brand h5 { font-size: 0.9em !important; }
 .sidebar.brand small { display: none !important; }
-.sidebar.nav-link { padding: 12px 8px !important; text-align: center !important; margin: 2px 4px !important; }
-.sidebar.nav-link i { margin-right: 0 !important; font-size: 1.4em !important; }
+.sidebar .nav-link { padding: 12px 8px !important; text-align: center !important; margin: 2px 4px !important; }
+.sidebar .nav-link i { margin-right: 0 !important; font-size: 1.4em !important; }
 .main-content { padding: 16px 20px !important; }
 .col-md-3 { flex: 0 0 50% !important; max-width: 50% !important; }
 .sidebar.logout-btn span,.sidebar.logout-btn i { display: inline !important; text-align: center; margin: 0 auto; }
@@ -630,9 +634,9 @@
  }
  [data-bs-theme="light"] body { background: #f5f7fa; color: #1a1a2e; }
  [data-bs-theme="light"].sidebar { background: #e8ecf1; border-right: 1px solid rgba(0,0,0,0.08); }
- [data-bs-theme="light"].sidebar.nav-link { color: rgba(0,0,0,0.55); }
- [data-bs-theme="light"].sidebar.nav-link:hover { color: #000; background: rgba(0,0,0,0.04); }
- [data-bs-theme="light"].sidebar.nav-link.active { background: var(--htk-primary); color: #fff; }
+ [data-bs-theme="light"].sidebar .nav-link { color: rgba(0,0,0,0.55); }
+ [data-bs-theme="light"].sidebar .nav-link:hover { color: #000; background: rgba(0,0,0,0.04); }
+ [data-bs-theme="light"].sidebar .nav-link.active { background: var(--htk-primary); color: #fff; }
  [data-bs-theme="light"].brand small { color: rgba(0,0,0,0.4); }
  [data-bs-theme="light"].stat-card { background: #fff; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
  [data-bs-theme="light"].stat-card.label { color: rgba(0,0,0,0.45); }
@@ -713,42 +717,45 @@
 
 <!-- Mobile Menu Overlay -->
 <div id="mobileMenu" class="mobile-menu-overlay d-lg-none" style="display:none;" onclick="if(event.target===this) toggleMobileMenu();">
- <div class="mobile-menu-content">
- <div class="d-flex justify-content-between align-items-center p-3 border-bottom" style="border-color:rgba(255,255,255,0.06)!important;">
- <h5 style="color:var(--htk-primary);margin:0;font-weight:700;"><i class="bi bi-lightning-fill"></i> HTK CRM</h5>
- <button class="btn btn-sm" onclick="toggleMobileMenu()" style="color:rgba(255,255,255,0.5);"><i class="bi bi-x-lg"></i></button>
- </div>
- <nav class="nav flex-column p-2">
- <a class="nav-link mobile-nav-link" href="#" data-tab="dashboard" onclick="toggleMobileMenu()">
- <i class="bi bi-speedometer2"></i> Dashboard
- </a>
- <a class="nav-link mobile-nav-link" href="#" data-tab="leads" onclick="toggleMobileMenu()">
- <i class="bi bi-graph-up-arrow"></i> Prospectos
- </a>
- <a class="nav-link mobile-nav-link" href="#" data-tab="kanban" onclick="toggleMobileMenu()">
- <i class="bi bi-kanban"></i> Kanban
- </a>
- <a class="nav-link mobile-nav-link" href="#" data-tab="clients" onclick="toggleMobileMenu()">
- <i class="bi bi-people"></i> Clientes
- </a>
- <a class="nav-link mobile-nav-link" href="#" data-tab="workorders" onclick="toggleMobileMenu()">
- <i class="bi bi-tools"></i> Órdenes Trabajo
- </a>
- <a class="nav-link mobile-nav-link" href="#" data-tab="interactions" onclick="toggleMobileMenu()">
- <i class="bi bi-chat-dots"></i> Interacciones
- </a>
- <a class="nav-link mobile-nav-link" href="#" data-tab="automation" onclick="toggleMobileMenu()">
- <i class="bi bi-gear-wide-connected"></i> Automatización
- </a>
- <hr style="border-color:rgba(255,255,255,0.06);">
- <a class="nav-link mobile-nav-link" href="#" onclick="toggleTheme();toggleMobileMenu();">
- <i class="bi bi-palette"></i> Cambiar tema
- </a>
- <a class="nav-link mobile-nav-link" href="#" onclick="handleLogout();toggleMobileMenu();">
- <i class="bi bi-box-arrow-right"></i> Cerrar sesión
- </a>
- </nav>
- </div>
+  <div class="mobile-menu-content">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom" style="border-color:rgba(255,255,255,0.06)!important;">
+      <h5 style="color:var(--htk-primary);margin:0;font-weight:700;"><i class="bi bi-lightning-fill"></i> HTK CRM</h5>
+      <button class="btn btn-sm" onclick="toggleMobileMenu()" style="color:rgba(255,255,255,0.5);"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <nav class="nav flex-column p-2">
+      <a class="nav-link mobile-nav-link" href="#" data-tab="dashboard" onclick="toggleMobileMenu()">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="kanban" onclick="toggleMobileMenu()">
+        <i class="bi bi-kanban"></i> Kanban
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="clients" onclick="toggleMobileMenu()">
+        <i class="bi bi-people"></i> Clientes
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="workorders" onclick="toggleMobileMenu()">
+        <i class="bi bi-tools"></i> Órdenes Trabajo
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="leads" onclick="toggleMobileMenu()">
+        <i class="bi bi-graph-up-arrow"></i> Prospectos
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="interactions" onclick="toggleMobileMenu()">
+        <i class="bi bi-chat-dots"></i> Interacciones
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="automation" onclick="toggleMobileMenu()">
+        <i class="bi bi-gear-wide-connected"></i> Automatización
+      </a>
+      <a class="nav-link mobile-nav-link" href="/bot-whatsapp" onclick="toggleMobileMenu()">
+        <i class="bi bi-robot"></i> Bot WhatsApp
+      </a>
+      <hr style="border-color:rgba(255,255,255,0.06);">
+      <a class="nav-link mobile-nav-link" href="#" onclick="toggleTheme();toggleMobileMenu();">
+        <i class="bi bi-palette"></i> Cambiar tema
+      </a>
+      <a class="nav-link mobile-nav-link" href="#" onclick="handleLogout();toggleMobileMenu();">
+        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+      </a>
+    </nav>
+  </div>
 </div>
 
 <!-- Save Flash -->
@@ -756,51 +763,52 @@
 
 <!-- Toast -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
- <div id="toastMsg" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
- <div class="toast-header">
- <i class="bi bi-check-circle-fill text-success me-2"></i>
- <strong class="me-auto">HTK CRM</strong>
- <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
- </div>
+
+
+
+
+
+
  <div class="toast-body" id="toastBody"></div>
  </div>
 </div>
 
 <div class="container-fluid">
- <div class="row">
- <!-- Sidebar -->
- <div class="col-md-2 sidebar d-none d-lg-flex flex-column p-0">
- <div class="brand d-flex justify-content-between align-items-center">
- <div>
- <h5><i class="bi bi-lightning-fill"></i> HTK CRM</h5>
- <small>Gestión integrada</small>
- </div>
- <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" id="themeToggleBtn">
- <i class="bi bi-moon-fill"></i>
- </button>
- </div>
- <nav class="nav flex-column flex-grow-1">
- <a class="nav-link active" href="#" data-tab="dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
- <a class="nav-link" href="#" data-tab="leads"><i class="bi bi-graph-up-arrow"></i> Prospectos</a>
- <a class="nav-link" href="#" data-tab="kanban" style="position:relative;">
- <i class="bi bi-kanban"></i> Kanban
- <span class="notif-badge d-none" id="kanbanNotif">0</span>
- </a>
- <a class="nav-link" href="#" data-tab="clients"><i class="bi bi-people"></i> Clientes</a>
- <a class="nav-link" href="#" data-tab="workorders"><i class="bi bi-tools"></i> Órdenes Trabajo</a>
- <a class="nav-link" href="#" data-tab="interactions"><i class="bi bi-chat-dots"></i> Interacciones</a>
- <a class="nav-link" href="#" data-tab="automation"><i class="bi bi-gear-wide-connected"></i> Automatización</a>
- </nav>
- <div class="px-3 mt-auto">
- <button class="logout-btn" onclick="handleLogout()" title="Cerrar sesión">
- <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
- </button>
- <small style="color:rgba(255,255,255,0.25); font-size:0.7em;">
- HTK INGENIERIA<br>
- v2.2 — CRM Integrado
- </small>
- </div>
- </div>
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-2 sidebar d-none d-lg-flex flex-column p-0">
+      <div class="brand d-flex justify-content-between align-items-center">
+        <div>
+          <h5><i class="bi bi-lightning-fill"></i> HTK CRM</h5>
+          <small>Gestión integrada</small>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" id="themeToggleBtn">
+          <i class="bi bi-moon-fill"></i>
+        </button>
+      </div>
+      <nav class="nav flex-column flex-grow-1">
+        <a class="nav-link active" href="#" data-tab="dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a class="nav-link" href="#" data-tab="kanban" style="position:relative;">
+          <i class="bi bi-kanban"></i> Kanban
+          <span class="notif-badge d-none" id="kanbanNotif">0</span>
+        </a>
+        <a class="nav-link" href="#" data-tab="clients"><i class="bi bi-people"></i> Clientes</a>
+        <a class="nav-link" href="#" data-tab="workorders"><i class="bi bi-tools"></i> Órdenes Trabajo</a>
+        <a class="nav-link" href="#" data-tab="leads"><i class="bi bi-graph-up-arrow"></i> Prospectos</a>
+        <a class="nav-link" href="#" data-tab="interactions"><i class="bi bi-chat-dots"></i> Interacciones</a>
+        <a class="nav-link" href="#" data-tab="automation"><i class="bi bi-gear-wide-connected"></i> Automatización</a>
+        <a class="nav-link" href="/bot-whatsapp"><i class="bi bi-robot"></i> Bot WhatsApp</a>
+      </nav>
+      <div class="px-3 mt-auto">
+        <button class="logout-btn" onclick="handleLogout()" title="Cerrar sesión">
+          <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+        </button>
+        <small style="color:rgba(255,255,255,0.25); font-size:0.7em;">
+          HTK INGENIERIA ⚡<br>
+          v2.2 — CRM Integrado
+        </small>
+      </div>
+    </div>
 
  <!-- Main -->
  <div class="col-lg-10 ms-lg-auto main-content">
@@ -968,6 +976,25 @@
  <div id="kanbanLeadsLoading" class="loading-overlay">
  <span class="spinner-border spinner-border-sm"></span> Cargando tablero...
  </div>
+ <div style="display:none;" id="kanbanLeadsFilters">
+ <div class="d-flex justify-content-between mb-2">
+ <input class="search-box" id="kanbanBoardSearch" placeholder="Buscar en board..." onkeyup="renderKanbanLeads()" style="width:250px;">
+ <div class="d-flex gap-2">
+ <select class="form-select" id="kanbanBoardSegmentFilter" onchange="renderKanbanLeads()" style="width:170px;font-size:0.82em;">
+ <option value="">Todos los segmentos</option>
+ <option value="B2B taller">B2B taller</option>
+ <option value="B2B fábrica">B2B fábrica</option>
+ <option value="B2B comercio">B2B comercio</option>
+ <option value="distribuidor cargadores">Cargadores</option>
+ <option value="energía solar">Energía Solar</option>
+ <option value="hoteles">Hoteles</option>
+ <option value="restaurantes">Restaurantes</option>
+ <option value="consumidor">Consumidor</option>
+ </select>
+ <span class="text-muted small align-self-center" id="kanbanBoardCount"></span>
+ </div>
+ </div>
+ </div>
  <div id="kanbanLeadsBoard" class="kanban-board" style="display:none;"></div>
  <div id="kanbanLeadsEmpty" class="empty-state" style="display:none;">
  <i class="bi bi-inbox"></i>
@@ -1078,17 +1105,27 @@
  </div>
  <div id="leadsContent" style="display:none;" class="table-container">
  <div class="d-flex justify-content-between mb-3">
- <input class="search-box" id="leadSearch" placeholder="Buscar prospecto..." onkeyup="renderLeads()" style="width:300px;">
- <select class="form-select" id="leadSegmentFilter" onchange="renderLeads()" style="width:200px;">
- <option value="">Todos</option>
+ <input class="search-box" id="leadSearch" placeholder="Buscar prospecto..." onkeyup="renderLeads()" style="width:250px;">
+ <select class="form-select" id="leadEstadoFilter" onchange="renderLeads()" style="width:160px;">
+ <option value="">Todos los estados</option>
+ <option value="nuevo">Nuevo</option>
+ <option value="contactado">Contactado</option>
+ <option value="cotizado">Cotizado</option>
+ <option value="negociacion">Negociación</option>
+ <option value="ganado">Ganado</option>
+ <option value="perdido">Perdido</option>
+ <option value="cliente">Cliente</option>
+ </select>
+ <select class="form-select" id="leadSegmentFilter" onchange="renderLeads()" style="width:180px;">
+ <option value="">Todos los segmentos</option>
  <option value="B2B taller">B2B taller</option>
- <option value="B2B fabrica">B2B fabrica</option>
- <option value="cargadores">cargadores</option>
- <option value="energia solar">energia solar</option>
- <option value="hoteles">hoteles</option>
- <option value="restaurantes">restaurantes</option>
- <option value="comercio">comercio</option>
- <option value="consumidor">consumidor</option>
+ <option value="B2B fábrica">B2B fábrica</option>
+ <option value="B2B comercio">B2B comercio</option>
+ <option value="distribuidor cargadores">Cargadores</option>
+ <option value="energía solar">Energía Solar</option>
+ <option value="hoteles">Hoteles</option>
+ <option value="restaurantes">Restaurantes</option>
+ <option value="consumidor">Consumidor</option>
  </select>
  </div>
  <div style="overflow-x:auto;">
@@ -1129,6 +1166,7 @@
 
  <!-- Tab: Automatización -->
  <div id="tab-automation" class="tab-content">
+
  <div class="d-flex justify-content-between align-items-center mb-3">
  <h3 class="page-title mb-0"><i class="bi bi-gear-wide-connected"></i> Automatización</h3>
  <small style="color:rgba(255,255,255,0.4);">Scripts autónomos — sin IA</small>
@@ -1288,6 +1326,19 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+<div id="tab-kanban" class="tab-content">
+<div class="d-flex justify-content-between align-items-center mb-3">
+ <h3 class="page-title mb-0"><i class="bi bi-columns-gap"></i> Pipeline Kanban</h3>
+ <div><span class="text-muted small me-2" id="kanbanLeadTotal"></span><button class="btn btn-sm btn-outline-htk" onclick="loadKanban()"><i class="bi bi-arrow-repeat"></i> Refrescar</button></div>
+</div>
+<div id="kanbanContainer" class="d-flex gap-3 overflow-auto pb-3" style="min-height:60vh;scrollbar-width:thin">
+ <div class="text-center text-muted py-5 w-100">Cargando kanban...</div>
+</div>
+</div>
+
 <script>
 // Globals 
 const API = window.location.origin;
@@ -1363,32 +1414,32 @@ function emptyState(contentId, emptyId, dataLength) {
  }
 }
 
-// Tab Navigation 
-document.querySelectorAll('.sidebar.nav-link').forEach(link => {
- link.addEventListener('click', function(e) {
- e.preventDefault();
- document.querySelectorAll('.sidebar.nav-link').forEach(l => l.classList.remove('active'));
- this.classList.add('active');
- const tab = this.dataset.tab;
- document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
- document.getElementById('tab-' + tab).classList.add('active');
- if (tab === 'dashboard') loadDashboard();
- if (tab === 'kanban') loadKanban();
- if (tab === 'clients') loadClients();
- if (tab === 'workorders') loadWorkOrders();
- if (tab === 'leads') loadLeads();
- if (tab === 'interactions') loadInteractions();
- });
+// ── Tab Navigation ──────────────────────────────────────────────────
+document.querySelectorAll('.sidebar .nav-link[data-tab]').forEach(link => {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+    this.classList.add('active');
+    const tab = this.dataset.tab;
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'dashboard') loadDashboard();
+    if (tab === 'kanban') loadKanban();
+    if (tab === 'clients') loadClients();
+    if (tab === 'workorders') loadWorkOrders();
+    if (tab === 'leads') loadLeads();
+    if (tab === 'interactions') loadInteractions();
+  });
 });
 
 // Mobile Nav Links 
 document.querySelectorAll('.mobile-nav-link[data-tab]').forEach(link => {
  link.addEventListener('click', function(e) {
  e.preventDefault();
- document.querySelectorAll('.sidebar.nav-link').forEach(l => l.classList.remove('active'));
+ document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
  document.querySelectorAll('.mobile-nav-link').forEach(l => l.classList.remove('active'));
  this.classList.add('active');
- const sidebarCounterpart = document.querySelector(`.sidebar.nav-link[data-tab="${this.dataset.tab}"]`);
+ const sidebarCounterpart = document.querySelector(`.sidebar .nav-link[data-tab="${this.dataset.tab}"]`);
  if (sidebarCounterpart) sidebarCounterpart.classList.add('active');
  const tab = this.dataset.tab;
  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -1481,9 +1532,9 @@ function navigateToResult(type, id) {
 }
 
 function navigateToTab(tabName) {
- document.querySelectorAll('.sidebar.nav-link.active').forEach(l => l.classList.remove('active'));
+ document.querySelectorAll('.sidebar .nav-link.active').forEach(l => l.classList.remove('active'));
  document.querySelectorAll('.mobile-nav-link.active').forEach(l => l.classList.remove('active'));
- const target = document.querySelector(`.sidebar.nav-link[data-tab="${tabName}"]`);
+ const target = document.querySelector(`.sidebar .nav-link[data-tab="${tabName}"]`);
  const mobileTarget = document.querySelector(`.mobile-nav-link[data-tab="${tabName}"]`);
  if (target) {
  target.classList.add('active');
@@ -1533,7 +1584,10 @@ function updateNotifications() {
 }
 
 // Data Loading 
-async function fetchJSON(url) { const r = await fetch(url); return r.json(); }
+async function fetchJSON(url, options) { 
+ if (options) { const r = await fetch(url, options); return r.json(); }
+ const r = await fetch(url); return r.json(); 
+}
 function getVal(id) { return document.getElementById(id).value; }
 
 // Automation Tools 
@@ -1637,6 +1691,85 @@ function escapeHtml(text) {
  return d.innerHTML;
 }
 
+
+// ─── KANBAN ────────────────────────────────────────────
+let _dragLeadId = null;
+
+async function loadKanban() {
+  if (!container) return;
+  container.innerHTML = '<div class="text-center py-5 w-100"><span class="spinner-border spinner-border-sm"></span></div>';
+  try {
+    const data = await fetchJSON('/api/leads/kanban');
+    document.getElementById('kanbanLeadTotal').textContent = Object.values(data).reduce((a,c)=>a+c.leads.length,0)+' leads';
+    let html = '';
+    for (const [key, col] of Object.entries(data)) {
+      html += `<div class="kanban-col flex-shrink-0" style="width:240px;" ondrop="kanbanDrop(event,'${key}')" ondragover="allowDrop(event)" ondragleave="kanbanDragLeave(event)">
+        <div class="kanban-col-header" style="background:${col.color||'#3b82f6'};color:#fff;padding:8px 12px;border-radius:10px 10px 0 0;font-weight:600;font-size:0.85em;display:flex;justify-content:space-between;">
+          ${col.label} <span class="badge bg-dark">${col.leads.length}</span>
+        </div>
+        <div class="kanban-col-body" style="background:rgba(255,255,255,0.03);border-radius:0 0 10px 10px;padding:8px;min-height:100px;max-height:55vh;overflow-y:auto;">`;
+      col.leads.forEach(l => {
+        html += `<div class="kanban-card" draggable="true" id="kcard_${l.id}" ondragstart="kanbanDragStart(event,'${l.id}')" ondragend="kanbanDragEnd(event)" style="background:rgba(255,255,255,0.06);border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:grab;border-left:3px solid ${col.color||'#3b82f6'}">
+          <div style="font-size:0.85em;font-weight:600;color:#fff;">${escHtml(l.nombre||l.id)}</div>
+          <div style="font-size:0.75em;color:rgba(255,255,255,0.4);">${escHtml(l.segmento||'')} ${l.telefono?'· '+l.telefono:''}</div>
+          <div class="mt-1 d-flex gap-1">
+            <button class="btn btn-sm p-0" style="color:var(--htk-primary);font-size:0.7em;" onclick="showLeadDetail('${l.id}')" title="Ver perfil"><i class="bi bi-eye"></i></button>
+            ${l.telefono||(l.contacto||'').replace(/[^\d+]/g,'').length>5?`<button class="btn btn-sm p-0" style="color:#25D366;font-size:0.7em;" onclick="window.open('https://wa.me/${(()=>{let p=(l.telefono||l.contacto||'').replace(/[^\d+]/g,'');if(p&&!p.startsWith('+'))p='+57'+p.replace(/^57/,'');return p.replace(/\+/g,'')})()}','_blank')" title="WhatsApp"><i class="bi bi-whatsapp"></i></button>`:''}
+          </div>
+        </div>`;
+      });
+      html += '</div></div>';
+    }
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = '<div class="text-center py-4 text-danger">Error al cargar kanban</div>';
+  }
+}
+
+function kanbanDragStart(ev, id) { _dragLeadId = id; ev.dataTransfer.effectAllowed = 'move'; ev.target.style.opacity = '0.5'; }
+function kanbanDragEnd(ev) { ev.target.style.opacity = '1'; }
+function allowDrop(ev) { ev.preventDefault(); ev.currentTarget.classList.add('kanban-hover'); }
+function kanbanDragLeave(ev) { ev.currentTarget.classList.remove('kanban-hover'); }
+
+async function kanbanDrop(ev, etapa) {
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('kanban-hover');
+  if (!_dragLeadId) return;
+  try {
+    await fetchJSON('/api/leads/'+_dragLeadId+'/etapa', {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({etapa})});
+    const l = leads.find(x => x.id === _dragLeadId);
+    if (l) l.estado = etapa;
+    loadKanban();
+    showToast(' Lead movido a ' + etapa);
+  } catch(e) { showToast('Error al mover lead', 'danger'); }
+}
+
+// ─── PIPELINE FUNNEL (Dashboard) ───────────────────────
+async function loadPipeline() {
+  const container = document.getElementById('pipelineFunnel');
+  if (!container) return;
+  try {
+    const data = await fetchJSON('/api/pipeline');
+    const funnel = data.funnel || [];
+    let html = '<div class="d-flex align-items-end gap-2" style="height:150px;">';
+    funnel.forEach(f => {
+      const maxCount = Math.max(...funnel.map(x=>x.count), 1);
+      const h = f.count > 0 ? Math.max(15, (f.count / maxCount) * 130) : 8;
+      html += `<div class="flex-fill text-center" style="cursor:pointer;" onclick="loadLeadsTab();setLeadFilter('estado','${f.clave}')" title="${f.nombre}: ${f.count} leads (${f.pct}%)">
+        <div style="font-size:0.75em;font-weight:600;color:#fff;">${f.count}</div>
+        <div class="funnel-bar mx-auto" style="height:${h}px;background:${f.color};border-radius:6px 6px 0 0;width:80%;min-width:40px;"></div>
+        <div style="font-size:0.65em;color:rgba(255,255,255,0.5);margin-top:4px;">${f.nombre}</div>
+      </div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  } catch(e) {}
+}
+
+// Load kanban when tab clicked
+document.querySelector('[data-tab="kanban"]')?.addEventListener('click', loadKanban);
+
+
 async function loadDashboard() {
  showLoading('dashboardLoading','dashboardContent');
  try {
@@ -1702,7 +1835,7 @@ async function loadDashboard() {
  
  hideLoading('dashboardLoading','dashboardContent');
  } catch(e) { showToast('Error al cargar dashboard', 'danger'); hideLoading('dashboardLoading','dashboardContent'); }
-}
+};
 
 function escHtml(s) {
  if (!s) return '';
@@ -2101,8 +2234,10 @@ async function loadLeads() {
 function renderLeads() {
  const q = (document.getElementById('leadSearch')?.value || '').toLowerCase();
  const seg = document.getElementById('leadSegmentFilter')?.value || '';
+ const est = document.getElementById('leadEstadoFilter')?.value || '';
  const filtered = leads.filter(l => {
  if (seg && l.segmento !== seg) return false;
+ if (est && (l.estado || 'nuevo') !== est) return false;
  return (l.nombre || '').toLowerCase().includes(q) || (l.contacto || '').toLowerCase().includes(q) || (l.id || '').toLowerCase().includes(q);
  });
  document.getElementById('leadsBody').innerHTML = filtered.map(l => {
@@ -2121,17 +2256,30 @@ function renderLeads() {
  <td><strong>${l.id}</strong></td>
  <td><strong><a href="/leads/${l.id}" style="color:var(--htk-primary);text-decoration:none;">${escHtml(l.nombre || '-')}</a></strong></td>
  <td>${escHtml(l.contacto || '-')}</td>
- <td>${escHtml(l.segmento || '-')}</td>
+ <td><select class="form-select form-select-sm" style="font-size:0.78em;padding:2px 6px;max-width:140px;background:transparent;border-color:rgba(255,255,255,0.1);" onchange="updateLeadSegmentQuick('${l.id}',this.value)">
+ <option value="">—</option>
+ <option value="B2B taller" ${l.segmento==='B2B taller'?'selected':''}>B2B Taller</option>
+ <option value="B2B fábrica" ${l.segmento==='B2B fábrica'?'selected':''}>B2B Fábrica</option>
+ <option value="B2B comercio" ${l.segmento==='B2B comercio'?'selected':''}>B2B Comercio</option>
+ <option value="distribuidor cargadores" ${l.segmento==='distribuidor cargadores'?'selected':''}>Cargadores</option>
+ <option value="energía solar" ${l.segmento==='energía solar'?'selected':''}>Solar</option>
+ <option value="hoteles" ${l.segmento==='hoteles'?'selected':''}>Hoteles</option>
+ <option value="restaurantes" ${l.segmento==='restaurantes'?'selected':''}>Restaurantes</option>
+ </select></td>
  <td>${escHtml(l.linea_interes || '-')}</td>
  <td><span class="badge ${es.class}">${es.label}</span></td>
  <td>${formatCurrency(l.valor_estimado)}</td>
  <td><small>${formatDate(l.fecha_creacion)}</small></td>
  <td>
- <button class="action-btn primary" onclick="showModal('lead','${l.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
- <button class="action-btn primary" onclick="showLeadDetail('${l.id}')" title="Ver"><i class="bi bi-eye"></i></button>
+ <div class="d-flex gap-1 flex-wrap" style="max-width:200px;">
+ <button class="action-btn primary" onclick="showLeadDetail('${l.id}')" title="Ver perfil"><i class="bi bi-eye"></i></button>
+ ${(()=>{let p=(l.telefono||l.contacto||'').replace(/[^\d+]/g,'');if(p&&!p.startsWith('+'))p='+57'+p.replace(/^57/,'');return p&&p!=='+57'?`<button class="action-btn" style="color:#25D366;" onclick="window.open('https://wa.me/${p.replace(/\+/g,'')}','_blank')" title="WhatsApp rápido"><i class="bi bi-whatsapp"></i></button>`:'';})()}
+ ${l.email&&l.email.includes('@')?`<button class="action-btn" style="color:#0dcaf0;" onclick="window.open('mailto:${l.email}','_blank')" title="Enviar email"><i class="bi bi-envelope"></i></button>`:''}
+ <button class="action-btn" style="color:var(--htk-primary);" onclick="showModal('lead','${l.id}')" title="Editar lead"><i class="bi bi-pencil"></i></button>
  ${canConvert ? `<button class="action-btn" style="color:#ffc107;" onclick="convertLead('${l.id}')" title="Convertir a Cliente"><i class="bi bi-person-plus"></i></button>` : ''}
  <button class="action-btn danger" onclick="deleteItem('leads','${l.id}','${escHtml(l.nombre||'')}')" title="Eliminar"><i class="bi bi-trash"></i></button>
  ${stageBtns}
+ </div>
  </td>
  </tr>`;
  }).join('');
@@ -2143,26 +2291,36 @@ async function showLeadDetail(id) {
  const l = leads.find(x => x.id === id);
  if (!l) return;
 
- // Parse contact info for action buttons
+ // Parse contact info for action buttons — prefer new fields, fall back to contacto
  const contactoStr = l.contacto || '';
- let phoneClean = '';
- let hasEmail = false;
- let emailAddr = '';
- let hasWeb = false;
- let webUrl = '';
+ let phoneClean = l.telefono || '';
+ let hasEmail = !!(l.email && l.email.includes('@'));
+ let emailAddr = l.email || '';
+ let hasWeb = !!(l.url && l.url.trim());
+ let webUrl = l.url || '';
  let hasFb = false;
  let fbUser = '';
 
- if (contactoStr) {
- if (contactoStr.includes('@')) { hasEmail = true; emailAddr = contactoStr; }
+ // Fallback: parse from contacto if new fields empty
+ if (!phoneClean && contactoStr) {
+ phoneClean = contactoStr.replace(/[^\d+]/g, '');
+ }
+ if (!hasEmail && contactoStr.includes('@')) {
+ hasEmail = true;
+ emailAddr = contactoStr;
+ }
+ if (!hasWeb && contactoStr) {
  if (contactoStr.toLowerCase().includes('http') || contactoStr.toLowerCase().includes('www.') || contactoStr.toLowerCase().includes('.com')) {
  hasWeb = true; webUrl = contactoStr.startsWith('http') ? contactoStr : 'https://' + contactoStr;
+ }
  }
  if (contactoStr.toLowerCase().includes('facebook')) {
  hasFb = true;
  fbUser = contactoStr.replace(/facebook:?\s*@?/i, '').trim();
  }
- phoneClean = contactoStr.replace(/[^\d+]/g, '');
+ // Clean phone
+ if (phoneClean) {
+ phoneClean = phoneClean.replace(/[^\d+]/g, '');
  if (phoneClean && !phoneClean.startsWith('+')) phoneClean = '+57' + phoneClean.replace(/^57/,'');
  if (phoneClean === '+57') phoneClean = '';
  }
@@ -2255,8 +2413,29 @@ async function showLeadDetail(id) {
  <p><strong>Nombre Contacto:</strong> <span id="leadContactPerson_${id}">${escHtml(l.contacto_nombre || '-')}</span>
  <button class="btn btn-sm btn-link p-0 ms-1" onclick="editContactPerson('lead','${id}')" title="Editar nombre de contacto" style="font-size:0.75em;color:var(--htk-primary);"><i class="bi bi-pencil"></i></button>
  </p>
- <p><strong>Contacto:</strong> ${escHtml(l.contacto || '-')}</p>
- <p><strong>Segmento:</strong> ${escHtml(l.segmento || '-')}</p>
+ <p><strong>Segmento:</strong>
+ <select class="form-select form-select-sm d-inline-block" style="width:auto;max-width:250px;" id="leadSegmento_${id}" onchange="updateLeadField('${id}','segmento',this.value)">
+ <option value="">— Sin segmento —</option>
+ <option value="B2B taller" ${l.segmento==='B2B taller'?'selected':''}>B2B Taller</option>
+ <option value="B2B fábrica" ${l.segmento==='B2B fábrica'?'selected':''}>B2B Fábrica</option>
+ <option value="B2B comercio" ${l.segmento==='B2B comercio'?'selected':''}>B2B Comercio</option>
+ <option value="distribuidor cargadores" ${l.segmento==='distribuidor cargadores'?'selected':''}>Distribuidor Cargadores</option>
+ <option value="energía solar" ${l.segmento==='energía solar'?'selected':''}>Energía Solar</option>
+ <option value="hoteles" ${l.segmento==='hoteles'?'selected':''}>Hoteles</option>
+ <option value="restaurantes" ${l.segmento==='restaurantes'?'selected':''}>Restaurantes</option>
+ </select>
+ <button class="btn btn-sm btn-link p-0 ms-1" onclick="document.getElementById('leadSegmento_${id}').dispatchEvent(new Event('change'))" title="Guardar segmento"><i class="bi bi-check2" style="color:var(--htk-primary);"></i></button>
+ </p>
+ <p><strong>Teléfono:</strong> <input type="text" class="form-control form-control-sm d-inline-block" style="width:auto;max-width:200px;" id="leadTel_${id}" value="${escHtml(l.telefono||'')}" placeholder="+573001234567" onchange="updateLeadField('${id}','telefono',this.value)">
+ <button class="btn btn-sm btn-link p-0 ms-1" onclick="document.getElementById('leadTel_${id}').dispatchEvent(new Event('change'))" title="Guardar teléfono"><i class="bi bi-check2" style="color:var(--htk-primary);"></i></button>
+ </p>
+ <p><strong>Email:</strong> <input type="email" class="form-control form-control-sm d-inline-block" style="width:auto;max-width:250px;" id="leadEmail_${id}" value="${escHtml(l.email||'')}" placeholder="correo@ejemplo.com" onchange="updateLeadField('${id}','email',this.value)">
+ <button class="btn btn-sm btn-link p-0 ms-1" onclick="document.getElementById('leadEmail_${id}').dispatchEvent(new Event('change'))" title="Guardar email"><i class="bi bi-check2" style="color:var(--htk-primary);"></i></button>
+ </p>
+ <p><strong>Web:</strong> <input type="url" class="form-control form-control-sm d-inline-block" style="width:auto;max-width:300px;" id="leadWeb_${id}" value="${escHtml(l.url||'')}" placeholder="https://ejemplo.com" onchange="updateLeadField('${id}','url',this.value)">
+ <button class="btn btn-sm btn-link p-0 ms-1" onclick="document.getElementById('leadWeb_${id}').dispatchEvent(new Event('change'))" title="Guardar web"><i class="bi bi-check2" style="color:var(--htk-primary);"></i></button>
+ </p>
+ <p><strong>Contacto Original:</strong> <span style="color:rgba(255,255,255,0.4);">${escHtml(l.contacto || '-')}</span></p>
  <p><strong>Línea de Interés:</strong> ${escHtml(l.linea_interes || '-')}</p>
  </div>
  <div class="col-md-6">
@@ -2301,7 +2480,7 @@ async function showLeadDetail(id) {
  <button class="btn btn-sm btn-outline-htk" onclick="loadPitchTemplates('${id}')" id="loadPitchBtn_${id}"><i class="bi bi-arrow-repeat"></i> Cargar</button>
  </div>
  <div id="pitchContent_${id}">
- <em style="color:rgba(255,255,255,0.3);">Haz clic en <strong>Cargar</strong> para ver mensajes personalizados</em>
+ <em style="color:rgba(255,255,255,0.3);">Los mensajes se cargan automáticamente según el segmento del lead</em>
  </div>
  </div>`;
 
@@ -2350,12 +2529,18 @@ async function changeLeadStage(id, direction) {
  if (idx === -1) return;
  const newIdx = direction === 'next' ? Math.min(idx + 1, stages.length - 1) : Math.max(idx - 1, 0);
  if (newIdx === idx) return;
+ // Optimistic: actualizar local y re-renderizar al instante
+ l.estado = stages[newIdx];
+ renderLeads();
+ showToast('Lead avanzado a: ' + stages[newIdx]);
  try {
  await fetch(`/api/leads/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({estado: stages[newIdx]}) });
- showToast('Lead avanzado a: ' + stages[newIdx]);
- await loadLeads();
- showLeadDetail(id);
- } catch(e) { showToast('Error al cambiar etapa', 'danger'); }
+ } catch(e) { 
+ // Revertir en caso de error
+ l.estado = stages[idx];
+ renderLeads();
+ showToast('Error al cambiar etapa, revertido', 'danger'); 
+ }
 }
 
 // INTERACCIONES 
@@ -2465,10 +2650,13 @@ async function showModal(type, id) {
  title = id ? 'Editar Prospecto' : 'Nuevo Prospecto';
  if (id) item = leads.find(l => l.id === id);
  fields = [
- {label:'Nombre / Empresa', key:'nombre', type:'text', required:true},
- {label:'Nombre Contacto (persona)', key:'contacto_nombre', type:'text', placeholder:'Ej: Juan Pérez'},
- {label:'Contacto', key:'contacto', type:'text', placeholder:'Teléfono, email o red social'},
- {label:'Segmento', key:'segmento', type:'select', options:['B2B taller','B2B comercio','B2B industria','B2C consumidor','distribuidor','otro']},
+  {label:'Nombre / Empresa', key:'nombre', type:'text', required:true},
+  {label:'Nombre Contacto (persona)', key:'contacto_nombre', type:'text', placeholder:'Ej: Juan Pérez'},
+  {label:'Teléfono', key:'telefono', type:'text', placeholder:'+573001234567'},
+  {label:'Email', key:'email', type:'text', placeholder:'contacto@ejemplo.com'},
+  {label:'Sitio Web', key:'url', type:'text', placeholder:'https://ejemplo.com'},
+  {label:'Contacto (legacy)', key:'contacto', type:'text', placeholder:'Teléfono, email o red social'},
+ {label:'Segmento', key:'segmento', type:'select', options:['B2B taller','B2B fábrica','B2B comercio','distribuidor cargadores','energía solar','hoteles','restaurantes','consumidor']},
  {label:'Línea de Interés', key:'linea_interes', type:'select', options:['automatizacion','iot','mantenimiento','cargadores','varios']},
  {label:'Estado', key:'estado', type:'select', options:['nuevo','contactado','cotizado','negociacion','ganado','perdido']},
  {label:'Fuente', key:'fuente', type:'select', options:['Facebook','web','referido','llamada','feria','alianza','directorio','otro']},
@@ -2577,11 +2765,15 @@ async function saveModal(type, id) {
  await loadClients();
  await loadDashboard();
  } catch(e) { showToast('Error al guardar orden', 'danger'); }
+  setTimeout(loadPipeline, 1000);
 
  } else if (type === 'lead') {
  data = {
  nombre: document.getElementById('f_nombre')?.value,
  contacto_nombre: document.getElementById('f_contacto_nombre')?.value || '',
+ telefono: document.getElementById('f_telefono')?.value || '',
+ email: document.getElementById('f_email')?.value || '',
+ url: document.getElementById('f_url')?.value || '',
  contacto: document.getElementById('f_contacto')?.value,
  segmento: document.getElementById('f_segmento')?.value,
  linea_interes: document.getElementById('f_linea_interes')?.value,
@@ -2610,16 +2802,35 @@ async function saveModal(type, id) {
 // DELETE 
 async function deleteItem(endpoint, id, name) {
  if (!confirm(`¿Eliminar ${endpoint==='work_orders'?'orden':endpoint==='leads'?'prospecto':'cliente'} "${name||id}"?`)) return;
- try {
- await fetch(`/api/${endpoint}/${id}`, { method:'DELETE' });
+ 
+ // Optimistic UI: eliminar del array local y re-renderizar al instante
+ if (endpoint === 'leads') {
+ const idx = leads.findIndex(x => x.id === id);
+ if (idx > -1) leads.splice(idx, 1);
+ renderLeads();
+ } else if (endpoint === 'clients') {
+ const idx = clients.findIndex(x => x.id === id);
+ if (idx > -1) { clients.splice(idx, 1); renderClients(); }
+ } else if (endpoint === 'work_orders') {
+ const idx = workOrders.findIndex(x => x.id === id);
+ if (idx > -1) { workOrders.splice(idx, 1); renderWorkOrders(); }
+ }
+ 
  flashSave();
  showToast(`${name||id} eliminado correctamente`);
+ 
+ try {
+ await fetch(`/api/${endpoint}/${id}`, { method:'DELETE' });
+ } catch(e) {
+ // Si falla, recargar datos reales desde el servidor
+ showToast('Error en servidor, recargando...', 'danger');
  if (endpoint === 'clients') await loadClients();
  else if (endpoint === 'work_orders') { await loadWorkOrders(); await loadClients(); }
  else if (endpoint === 'leads') await loadLeads();
+ }
+ 
  await loadDashboard();
  updateNotifications();
- } catch(e) { showToast('Error al eliminar', 'danger'); }
 }
 
 // 
@@ -2630,6 +2841,9 @@ let draggedItemId = null;
 let draggedItemType = null; // 'wo' or 'lead'
 
 // Kanban Tab Entry Point 
+
+
+
 async function loadKanban() {
  if (currentKanbanSub === 'wo') loadKanbanWO();
  else loadKanbanLeads();
@@ -2703,7 +2917,7 @@ function renderKanbanWO() {
  document.getElementById('kanbanWOBoard').innerHTML = html;
  document.getElementById('kanbanWOLoading').style.display = 'none';
  // Attach dragstart listeners
- document.querySelectorAll('#kanbanWOBoard.kanban-card').forEach(card => {
+ document.querySelectorAll('#kanbanWOBoard .kanban-card').forEach(card => {
  card.addEventListener('dragstart', handleDragStartWO);
  card.addEventListener('dragend', handleDragEnd);
  });
@@ -2768,27 +2982,57 @@ function renderKanbanWOTable() {
 
 // Kanban: Leads 
 async function loadKanbanLeads() {
- if (leads.length === 0) leads = await fetchJSON('/api/leads');
+ leads = await fetchJSON('/api/leads');
  if (currentKanbanView === 'kanban') renderKanbanLeads();
  else renderKanbanLeadsTable();
 }
 
 function renderKanbanLeads() {
- document.getElementById('kanbanLeadsBoard').style.display = '';
+ const board = document.getElementById('kanbanLeadsBoard');
+ const filters = document.getElementById('kanbanLeadsFilters');
+ 
+ board.style.display = '';
  document.getElementById('kanbanLeadsTable').style.display = 'none';
  document.getElementById('kanbanLeadsLoading').style.display = 'none';
 
  if (leads.length === 0) {
- document.getElementById('kanbanLeadsBoard').style.display = 'none';
+ board.style.display = 'none';
+ if (filters) filters.style.display = 'none';
  document.getElementById('kanbanLeadsEmpty').style.display = '';
  document.getElementById('kanbanLeadsLoading').style.display = 'none';
  return;
  }
  document.getElementById('kanbanLeadsEmpty').style.display = 'none';
+ if (filters) filters.style.display = '';
+
+ // Obtener valores de filtro
+ const q = (document.getElementById('kanbanBoardSearch')?.value || '').toLowerCase();
+ const seg = document.getElementById('kanbanBoardSegmentFilter')?.value || '';
+
+ // Filtrar leads (sin modificar el array original)
+ const filtered = leads.filter(l => {
+ if (seg && l.segmento !== seg) return false;
+ if (q) {
+ const nombre = (l.nombre || '').toLowerCase();
+ const contacto = (l.contacto || '').toLowerCase();
+ const id = (l.id || '').toLowerCase();
+ const tel = (l.telefono || '').toLowerCase();
+ const segL = (l.segmento || '').toLowerCase();
+ return nombre.includes(q) || contacto.includes(q) || id.includes(q) || tel.includes(q) || segL.includes(q);
+ }
+ return true;
+ });
+
+ // Actualizar contador
+ const countEl = document.getElementById('kanbanBoardCount');
+ if (countEl) {
+ if (q || seg) countEl.textContent = `${filtered.length} de ${leads.length} leads`;
+ else countEl.textContent = `${leads.length} leads`;
+ }
 
  let html = '';
  LEAD_STATUS_ORDER.forEach(status => {
- const items = leads.filter(l => l.estado === status);
+ const items = filtered.filter(l => l.estado === status);
  html += `
  <div class="kanban-column" data-status="${status}"
  ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropLead(event)">
@@ -2802,10 +3046,10 @@ function renderKanbanLeads() {
  </div>`;
  });
 
- document.getElementById('kanbanLeadsBoard').innerHTML = html;
+ board.innerHTML = html;
  document.getElementById('kanbanLeadsLoading').style.display = 'none';
  // Attach dragstart listeners
- document.querySelectorAll('#kanbanLeadsBoard.kanban-card').forEach(card => {
+ document.querySelectorAll('#kanbanLeadsBoard .kanban-card').forEach(card => {
  card.addEventListener('dragstart', handleDragStartLead);
  card.addEventListener('dragend', handleDragEnd);
  });
@@ -2938,18 +3182,32 @@ async function updateWOStatusFromKanban(woId, newStatus) {
 }
 
 async function updateLeadStatusFromKanban(leadId, newStatus) {
+ const localLead = leads.find(x => x.id === leadId);
+ if (!localLead) return;
+ const oldStatus = localLead.estado;
+ 
+ // 1. Enviar al servidor PRIMERO (esperar confirmación)
  try {
- await fetch(`/api/leads/${leadId}`, {
- method: 'PUT',
+ const resp = await fetch(`/api/leads/${leadId}/etapa`, {
+ method: 'PATCH',
  headers: {'Content-Type': 'application/json'},
- body: JSON.stringify({ estado: newStatus })
+ body: JSON.stringify({ etapa: newStatus })
  });
+ if (!resp.ok) throw new Error('HTTP ' + resp.status);
+ const text = await resp.text();
+ const data = JSON.parse(text);
+ if (!data.ok) throw new Error(data.error || 'Error desconocido');
+ } catch(e) {
+ showToast('Error: ' + e.message, 'danger');
+ return;
+ }
+ 
+ // 2. Servidor confirmó → actualizar local y re-renderizar
+ localLead.estado = newStatus;
+ try { renderKanbanLeads(); } catch(e) { /* board oculta */ }
  flashSave();
- showToast(`Lead ${leadId} → ${ESTADOS_LEAD[newStatus]?.label||newStatus}`);
- leads = await fetchJSON('/api/leads');
- renderKanbanLeads();
+ showToast(`Lead movido a ${ESTADOS_LEAD[newStatus]?.label||newStatus}`);
  updateNotifications();
- } catch(e) { showToast('Error al mover lead', 'danger'); }
 }
 
 // Upcoming Followups (Dashboard) 
@@ -3243,6 +3501,47 @@ function scoreTemplates(templates, lead) {
  }).sort((a, b) => b.score - a.score);
 }
 
+// ─── Quick segment update from leads table ───
+async function updateLeadSegmentQuick(id, segmento) {
+ const l = leads.find(x => x.id === id);
+ if (!l) return;
+ try {
+ await fetchJSON('/api/leads/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({segmento}) });
+ l.segmento = segmento;
+ showToast('✅ Segmento actualizado', 'success');
+ } catch(e) {
+ showToast('❌ Error: ' + e.message, 'danger');
+ }
+}
+
+// ─── Update a single lead field via API ───
+async function updateLeadField(id, field, value) {
+ const l = leads.find(x => x.id === id);
+ if (!l) return;
+ 
+ try {
+ const resp = await fetch('/api/leads/' + id, {
+ method: 'PUT',
+ headers: {'Content-Type': 'application/json'},
+ body: JSON.stringify({[field]: value})
+ });
+ const updated = await resp.json();
+ if (updated && !updated.error) {
+ l[field] = value;
+ showToast('✅ ' + field + ' actualizado', 'success');
+ // Re-load pitches if segment changed
+ if (field === 'segmento' && document.getElementById('pitchContent_' + id)) {
+ loadPitchTemplates(id);
+ }
+ } else {
+ showToast('❌ Error: ' + (updated.error || 'desconocido'), 'danger');
+ }
+ } catch (e) {
+ showToast('❌ Error de red: ' + e.message, 'danger');
+ }
+}
+
+
 // Main: load and show pitch templates for a lead
 async function loadPitchTemplates(leadId) {
  const l = leads.find(x => x.id === leadId);
@@ -3415,7 +3714,7 @@ async function sendPitch(leadId, channel) {
  const text = preview.textContent || preview.innerText || '';
 
  if (channel === 'whatsapp') {
- let phone = (l.contacto || '').replace(/[^\d+]/g, '');
+ let phone = (l.telefono || l.contacto || '').replace(/[^\d+]/g, '');
  if (phone && !phone.startsWith('+')) phone = '+57' + phone;
  if (phone === '+57' || !phone) {
  showToast('No se pudo extraer número de teléfono', 'danger');
@@ -3424,10 +3723,15 @@ async function sendPitch(leadId, channel) {
  const url = `https://wa.me/${phone.replace(/\+/g, '')}?text=${encodeURIComponent(text)}`;
  window.open(url, '_blank');
  } else if (channel === 'email') {
+ const emailAddr = l.email || l.contacto || '';
+ if (!emailAddr.includes('@')) {
+ showToast('No se encontró dirección de email', 'danger');
+ return;
+ }
  const lines = text.split('\n');
  const subject = lines[0].startsWith('Asunto:') ? lines[0].replace('Asunto:', '').trim() : 'HTK INGENIERIA';
  const body = lines[0].startsWith('Asunto:') ? lines.slice(1).join('\n') : text;
- const mailto = `mailto:${l.contacto}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+ const mailto = `mailto:${emailAddr}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
  window.open(mailto, '_blank');
  }
 
@@ -3550,10 +3854,10 @@ document.addEventListener('DOMContentLoaded', async function() {
  const params = new URLSearchParams(window.location.search);
  const tabParam = params.get('tab');
  if (tabParam) {
- const sidebarLink = document.querySelector(`.sidebar.nav-link[data-tab="${tabParam}"]`);
+ const sidebarLink = document.querySelector(`.sidebar .nav-link[data-tab="${tabParam}"]`);
  const mobileLink = document.querySelector(`.mobile-nav-link[data-tab="${tabParam}"]`);
  if (sidebarLink || mobileLink) {
- document.querySelectorAll('.sidebar.nav-link').forEach(l => l.classList.remove('active'));
+ document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
  document.querySelectorAll('.mobile-nav-link').forEach(l => l.classList.remove('active'));
  if (sidebarLink) sidebarLink.classList.add('active');
  if (mobileLink) mobileLink.classList.add('active');
@@ -3565,6 +3869,8 @@ document.addEventListener('DOMContentLoaded', async function() {
  else if (tabParam === 'workorders') loadWorkOrders();
  else if (tabParam === 'kanban') loadKanban();
  else if (tabParam === 'interactions') loadInteractions();
+ // Limpiar URL para evitar que el tab quede "linkeado" al recargar
+ window.history.replaceState({}, '', '/');
  }
  }
  loadInteractions();
@@ -3628,5 +3934,7 @@ function handleLogout() {
  window.location.href = '/logout';
 }
 </script>
-</body>
-</html>
+
+<script>
+
+    

@@ -140,6 +140,25 @@
         "Empresa"
       ],
       "detonante": "Si responde 'sí', 'me interesa', pide más info, pregunta detalles → Alerta: Avisar a Pedro."
+    },
+    {
+      "id": "energia-solar",
+      "nombre": "Energía Solar — Mantenimiento Electrónico",
+      "segmentos": [
+        "energía solar",
+        "B2B comercio"
+      ],
+      "lineas_interes": [
+        "mantenimiento",
+        "instalacion"
+      ],
+      "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque veo que trabajan con energía solar y sé que los inversores, controladores y sistemas de monitoreo electrónico son el corazón de cualquier instalación. Cuando fallan, todo el sistema se detiene.\n\nNosotros ayudamos a que eso no pase. Reparamos tarjetas electrónicas, controladores de carga, inversores y sistemas de monitoreo — con diagnóstico rápido y respuesta ágil.\n\nLa idea es simple: tener un aliado técnico en Barranquilla para cuando algo falle a nivel electrónico. ¿Ha tenido inconvenientes con inversores o controladores que no consigue reparar?",
+      "email": "Asunto: Soporte técnico electrónico para sistemas solares\n\nBuenos días [Contacto],\n\nSoy Pedro Castro, ingeniero de HTK INGENIERÍA (HOUSETRONIK S.A.S.), empresa barranquillera especializada en automatización industrial y mantenimiento electrónico.\n\nSabemos que en instalaciones solares, los inversores, controladores de carga y sistemas de monitoreo son equipos críticos — y cuando fallan, la generación se detiene.\n\nOfrecemos:\nDiagnóstico Servicio de revisión técnica sin costo\nReparación Reparación profesional de tarjetas electrónicas, inversores y controladores\nRespuesta Tiempos ágiles para minimizar el tiempo fuera de servicio\n\nTrabajamos como su aliado técnico para mantener sus sistemas operativos.\n\n¿Podemos coordinar una visita o llamada?\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo pedroluiscastrofranco@gmail.com\nUbicación Barranquilla, Colombia",
+      "variables": [
+        "Contacto",
+        "Empresa"
+      ],
+      "detonante": "Si responde afirmativamente, pregunta por costos o tiempos → Alerta: Avisar a Pedro."
     }
   ]
 }
