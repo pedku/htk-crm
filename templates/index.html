@@ -2298,6 +2298,7 @@ async function showLeadDetail(id) {
  let emailAddr = l.email || '';
  let hasWeb = !!(l.url && l.url.trim());
  let webUrl = l.url || '';
+ if (webUrl && !webUrl.startsWith('http')) webUrl = 'https://' + webUrl;
  let hasFb = false;
  let fbUser = '';
 
