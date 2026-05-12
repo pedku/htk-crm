@@ -173,7 +173,7 @@
     <a href="#" id="backLink" title="Volver"><i class="bi bi-arrow-left"></i></a>
     <i class="bi bi-person-badge" style="color:var(--htk-primary);"></i>
     <h4>{{ lead.nombre or 'Lead #' + lead.id|string }}</h4>
-    <span class="badge-htk {{ lead.estado or 'nuevo' }}" style="margin-left:auto;">{{ lead.estado or 'nuevo' }}</span>
+    <span class="badge-htk {{ lead.estado or 'nuevo' }}" id="leadEstadoBadge" style="margin-left:auto;">{{ lead.estado or 'nuevo' }}</span>
   </div>
   </div>
 
@@ -410,8 +410,8 @@
     const LEAD_SEGMENTO = '{{ lead.segmento or '' }}';
     const LEAD_ESTADO = '{{ lead.estado or 'nuevo' }}';
     const LEAD_LINEA = '{{ lead.linea_interes or '' }}';
-    const LEAD_TEL = '{{ lead.telefono or '' }}';
-    const LEAD_EMAIL = '{{ lead.email or '' }}';
+    let LEAD_TEL = '{{ lead.telefono or '' }}';
+    let LEAD_EMAIL = '{{ lead.email or '' }}';
     const LEAD_URL = '{{ lead.url or '' }}';
     const LEAD_TIPO_CONTACTO = '{{ lead.tipo_contacto or '' }}';
 
@@ -452,6 +452,18 @@
           tipoEl.textContent = tipo || '—';
           tipoEl.className = 'badge bg-secondary';
           bootstrap.Modal.getInstance(document.getElementById('modalContacto')).hide();
+          // Actualizar PARSED y re-renderizar botones de contacto
+          LEAD_TEL = tel;
+          LEAD_EMAIL = email;
+          if (tel) {
+            let t = tel.replace(/[^\d+]/g, '');
+            if (t && !t.startsWith('+')) t = '+57' + t.replace(/^57/, '');
+            if (t !== '+57') PARSED.phone = t;
+          } else {
+            PARSED.phone = '';
+          }
+          if (email) PARSED.email = email;
+          renderContactButtons();
           showToast('Contacto actualizado');
         } else {
           showToast('Error: ' + (res.error || 'desconocido'));
@@ -512,6 +524,16 @@
       let phone = raw.replace(/[^\d+]/g, '');
       if (phone && !phone.startsWith('+')) phone = '+57' + phone.replace(/^57/, '');
       if (phone !== '+57') PARSED.phone = phone;
+    }
+
+    // Tambien usar campos separados del lead si existen
+    if (LEAD_TEL) {
+      let t = LEAD_TEL.replace(/[^\d+]/g, '');
+      if (t && !t.startsWith('+')) t = '+57' + t.replace(/^57/, '');
+      if (t !== '+57') PARSED.phone = t;
+    }
+    if (LEAD_EMAIL && !PARSED.email) {
+      PARSED.email = LEAD_EMAIL;
     }
 
     parseContact(LEAD_CONTACTO);
@@ -610,6 +632,14 @@
         html += '</a></div>';
       }
 
+      // Si no hay telefono, mostrar opcion para agregarlo
+      if (!PARSED.phone) {
+        html += '<div class="col-12">';
+        html += '<button class="contact-action-btn" onclick="editarContacto()" style="border:1px dashed rgba(0,212,170,0.3);">';
+        html += '<i class="bi bi-plus-circle" style="color:var(--htk-primary);"></i> Agregar WhatsApp / Telefono';
+        html += '</button></div>';
+      }
+
       // Empty state
       if (!PARSED.phone && !PARSED.email && !PARSED.web && !PARSED.fb) {
         html += '<div class="empty-state"><i class="bi bi-person-slash"></i>Sin datos de contacto</div>';
@@ -646,7 +676,10 @@
 
     // Acciones
     async function enviarMensaje() {
-      const msg = prompt('Mensaje para ' + (LEAD_NOMBRE || LEAD_ID) + ':');
+      // Tomar el texto del pitch si está visible
+      const textarea = document.getElementById('pitchPreview');
+      const defaultMsg = textarea ? textarea.value : '';
+      const msg = prompt('Mensaje para ' + (LEAD_NOMBRE || LEAD_ID) + ':', defaultMsg || '');
       if (!msg) return;
       try {
         const r = await fetch('/api/send-message', {
@@ -654,7 +687,21 @@
           body: JSON.stringify({numero: PARSED.phone, mensaje: msg, lead_id: LEAD_ID})
         });
         const d = await r.json();
-        if (d.ok) { showToast('Enviado y lead silenciado'); }
+        if (d.ok) {
+          showToast('Enviado y lead silenciado');
+          // Auto-avanzar estado si es "nuevo"
+          if (LEAD_ESTADO === 'nuevo') {
+            try {
+              await fetch('/api/leads/' + LEAD_ID, {
+                method: 'PUT', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({estado: 'contactado'})
+              });
+              LEAD_ESTADO = 'contactado';
+              document.getElementById('leadEstadoBadge').textContent = 'Contactado';
+              showToast('📋 Estado actualizado: Contactado');
+            } catch(e) {}
+          }
+        }
         else { showToast('Error: ' + (d.error||'error'), 'danger'); }
       } catch(e) { showToast('Error: ' + e.message, 'danger'); }
     }
@@ -956,9 +1003,47 @@
       if (!textarea) return;
       const text = textarea.value;
 
+      // Confirm before sending
+      if (!confirm('Enviar este mensaje a ' + PARSED.phone + ' por ' + channel + '?')) return;
+
       if (channel === 'whatsapp' && PARSED.phone) {
-        const url = 'https://wa.me/' + PARSED.phone.replace(/\+/g, '') + '?text=' + encodeURIComponent(text);
-        window.open(url, '_blank', 'noopener');
+        // Send via WhatsApp Bot API (desde el número de HTK)
+        try {
+          const r = await fetch('/api/send-message', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({numero: PARSED.phone, mensaje: text, lead_id: LEAD_ID})
+          });
+          const d = await r.json();
+          if (d.ok) {
+            showToast('✅ Enviado por WhatsApp Bot a ' + PARSED.phone);
+            // Auto-avanzar estado si es "nuevo"
+            if (LEAD_ESTADO === 'nuevo') {
+              try {
+                await fetch('/api/leads/' + LEAD_ID, {
+                  method: 'PUT', headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({estado: 'contactado'})
+                });
+                LEAD_ESTADO = 'contactado';
+                document.getElementById('leadEstadoBadge').textContent = 'Contactado';
+                showToast('📋 Estado actualizado: Contactado');
+              } catch(e) {}
+            }
+          } else {
+            showToast('Error Bot: ' + (d.error || 'desconocido'), 'danger');
+            // Fallback: abrir wa.me
+            if (confirm('¿Abrir WhatsApp Web como respaldo?')) {
+              const url = 'https://wa.me/' + PARSED.phone.replace(/\+/g, '') + '?text=' + encodeURIComponent(text);
+              window.open(url, '_blank', 'noopener');
+            }
+          }
+        } catch (e) {
+          showToast('Error de conexión con el bot: ' + e.message, 'danger');
+          // Fallback: abrir wa.me
+          if (confirm('¿Abrir WhatsApp Web como respaldo?')) {
+            const url = 'https://wa.me/' + PARSED.phone.replace(/\+/g, '') + '?text=' + encodeURIComponent(text);
+            window.open(url, '_blank', 'noopener');
+          }
+        }
       } else if (channel === 'email' && PARSED.email) {
         const lines = text.split('\n');
         const subject = lines[0].startsWith('Asunto:') ? lines[0].replace('Asunto:', '').trim() : 'HTK INGENIERIA';
@@ -969,7 +1054,7 @@
         return;
       }
 
-      // Register interaction
+      // Register interaction (ya lo hace api/send-message internamente, pero dejamos backup)
       try {
         await fetch('/api/leads/' + LEAD_ID + '/interactions', {
           method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -980,11 +1065,10 @@
             detalle: text.substring(0, 500),
             proximo_paso: 'Esperar respuesta del lead'
           })
-        });
+        }).catch(function(){});  // ignore if already registered by /api/send-message
         loadInteractions();
-        showToast('Mensaje enviado e interaccion registrada');
       } catch (e) {
-        showToast('Mensaje abierto pero no se registro interaccion', 'danger');
+        // silent
       }
     }
 

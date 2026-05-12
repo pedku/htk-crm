@@ -1086,17 +1086,27 @@
  </div>
  <div id="leadsContent" style="display:none;" class="table-container">
  <div class="d-flex justify-content-between mb-3">
- <input class="search-box" id="leadSearch" placeholder="Buscar prospecto..." onkeyup="renderLeads()" style="width:300px;">
- <select class="form-select" id="leadSegmentFilter" onchange="renderLeads()" style="width:200px;">
- <option value="">Todos</option>
+ <input class="search-box" id="leadSearch" placeholder="Buscar prospecto..." onkeyup="renderLeads()" style="width:250px;">
+ <select class="form-select" id="leadEstadoFilter" onchange="renderLeads()" style="width:160px;">
+ <option value="">Todos los estados</option>
+ <option value="nuevo">Nuevo</option>
+ <option value="contactado">Contactado</option>
+ <option value="cotizado">Cotizado</option>
+ <option value="negociacion">Negociación</option>
+ <option value="ganado">Ganado</option>
+ <option value="perdido">Perdido</option>
+ <option value="cliente">Cliente</option>
+ </select>
+ <select class="form-select" id="leadSegmentFilter" onchange="renderLeads()" style="width:180px;">
+ <option value="">Todos los segmentos</option>
  <option value="B2B taller">B2B taller</option>
- <option value="B2B fabrica">B2B fabrica</option>
- <option value="cargadores">cargadores</option>
- <option value="energia solar">energia solar</option>
- <option value="hoteles">hoteles</option>
- <option value="restaurantes">restaurantes</option>
- <option value="comercio">comercio</option>
- <option value="consumidor">consumidor</option>
+ <option value="B2B fábrica">B2B fábrica</option>
+ <option value="B2B comercio">B2B comercio</option>
+ <option value="distribuidor cargadores">Cargadores</option>
+ <option value="energía solar">Energía Solar</option>
+ <option value="hoteles">Hoteles</option>
+ <option value="restaurantes">Restaurantes</option>
+ <option value="consumidor">Consumidor</option>
  </select>
  </div>
  <div style="overflow-x:auto;">
@@ -1555,7 +1565,10 @@ function updateNotifications() {
 }
 
 // Data Loading 
-async function fetchJSON(url) { const r = await fetch(url); return r.json(); }
+async function fetchJSON(url, options) { 
+ if (options) { const r = await fetch(url, options); return r.json(); }
+ const r = await fetch(url); return r.json(); 
+}
 function getVal(id) { return document.getElementById(id).value; }
 
 // Automation Tools 
@@ -2202,8 +2215,10 @@ async function loadLeads() {
 function renderLeads() {
  const q = (document.getElementById('leadSearch')?.value || '').toLowerCase();
  const seg = document.getElementById('leadSegmentFilter')?.value || '';
+ const est = document.getElementById('leadEstadoFilter')?.value || '';
  const filtered = leads.filter(l => {
  if (seg && l.segmento !== seg) return false;
+ if (est && (l.estado || 'nuevo') !== est) return false;
  return (l.nombre || '').toLowerCase().includes(q) || (l.contacto || '').toLowerCase().includes(q) || (l.id || '').toLowerCase().includes(q);
  });
  document.getElementById('leadsBody').innerHTML = filtered.map(l => {
@@ -2495,12 +2510,18 @@ async function changeLeadStage(id, direction) {
  if (idx === -1) return;
  const newIdx = direction === 'next' ? Math.min(idx + 1, stages.length - 1) : Math.max(idx - 1, 0);
  if (newIdx === idx) return;
+ // Optimistic: actualizar local y re-renderizar al instante
+ l.estado = stages[newIdx];
+ renderLeads();
+ showToast('Lead avanzado a: ' + stages[newIdx]);
  try {
  await fetch(`/api/leads/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({estado: stages[newIdx]}) });
- showToast('Lead avanzado a: ' + stages[newIdx]);
- await loadLeads();
- showLeadDetail(id);
- } catch(e) { showToast('Error al cambiar etapa', 'danger'); }
+ } catch(e) { 
+ // Revertir en caso de error
+ l.estado = stages[idx];
+ renderLeads();
+ showToast('Error al cambiar etapa, revertido', 'danger'); 
+ }
 }
 
 // INTERACCIONES 
@@ -2762,16 +2783,35 @@ async function saveModal(type, id) {
 // DELETE 
 async function deleteItem(endpoint, id, name) {
  if (!confirm(`¿Eliminar ${endpoint==='work_orders'?'orden':endpoint==='leads'?'prospecto':'cliente'} "${name||id}"?`)) return;
- try {
- await fetch(`/api/${endpoint}/${id}`, { method:'DELETE' });
+ 
+ // Optimistic UI: eliminar del array local y re-renderizar al instante
+ if (endpoint === 'leads') {
+ const idx = leads.findIndex(x => x.id === id);
+ if (idx > -1) leads.splice(idx, 1);
+ renderLeads();
+ } else if (endpoint === 'clients') {
+ const idx = clients.findIndex(x => x.id === id);
+ if (idx > -1) { clients.splice(idx, 1); renderClients(); }
+ } else if (endpoint === 'work_orders') {
+ const idx = workOrders.findIndex(x => x.id === id);
+ if (idx > -1) { workOrders.splice(idx, 1); renderWorkOrders(); }
+ }
+ 
  flashSave();
  showToast(`${name||id} eliminado correctamente`);
+ 
+ try {
+ await fetch(`/api/${endpoint}/${id}`, { method:'DELETE' });
+ } catch(e) {
+ // Si falla, recargar datos reales desde el servidor
+ showToast('Error en servidor, recargando...', 'danger');
  if (endpoint === 'clients') await loadClients();
  else if (endpoint === 'work_orders') { await loadWorkOrders(); await loadClients(); }
  else if (endpoint === 'leads') await loadLeads();
+ }
+ 
  await loadDashboard();
  updateNotifications();
- } catch(e) { showToast('Error al eliminar', 'danger'); }
 }
 
 // 
@@ -2858,7 +2898,7 @@ function renderKanbanWO() {
  document.getElementById('kanbanWOBoard').innerHTML = html;
  document.getElementById('kanbanWOLoading').style.display = 'none';
  // Attach dragstart listeners
- document.querySelectorAll('#kanbanWOBoard.kanban-card').forEach(card => {
+ document.querySelectorAll('#kanbanWOBoard .kanban-card').forEach(card => {
  card.addEventListener('dragstart', handleDragStartWO);
  card.addEventListener('dragend', handleDragEnd);
  });
@@ -2923,7 +2963,7 @@ function renderKanbanWOTable() {
 
 // Kanban: Leads 
 async function loadKanbanLeads() {
- if (leads.length === 0) leads = await fetchJSON('/api/leads');
+ leads = await fetchJSON('/api/leads');
  if (currentKanbanView === 'kanban') renderKanbanLeads();
  else renderKanbanLeadsTable();
 }
@@ -2960,7 +3000,7 @@ function renderKanbanLeads() {
  document.getElementById('kanbanLeadsBoard').innerHTML = html;
  document.getElementById('kanbanLeadsLoading').style.display = 'none';
  // Attach dragstart listeners
- document.querySelectorAll('#kanbanLeadsBoard.kanban-card').forEach(card => {
+ document.querySelectorAll('#kanbanLeadsBoard .kanban-card').forEach(card => {
  card.addEventListener('dragstart', handleDragStartLead);
  card.addEventListener('dragend', handleDragEnd);
  });
@@ -3093,18 +3133,35 @@ async function updateWOStatusFromKanban(woId, newStatus) {
 }
 
 async function updateLeadStatusFromKanban(leadId, newStatus) {
+ const localLead = leads.find(x => x.id === leadId);
+ const oldStatus = localLead ? localLead.estado : null;
+ 
+ // 1. Actualizar local optimista: mover el lead al instante
+ if (localLead) localLead.estado = newStatus;
+ 
+ // 2. Re-renderizar la board al instante (sin esperar servidor)
+ try { renderKanbanLeads(); } catch(e) { /* la board puede estar oculta */ }
+ flashSave();
+ showToast(`Lead movido a ${ESTADOS_LEAD[newStatus]?.label||newStatus}`);
+ 
+ // 3. Enviar al servidor (async, no bloquea)
  try {
- await fetch(`/api/leads/${leadId}`, {
+ const resp = await fetch(`/api/leads/${leadId}`, {
  method: 'PUT',
  headers: {'Content-Type': 'application/json'},
  body: JSON.stringify({ estado: newStatus })
  });
- flashSave();
- showToast(`Lead ${leadId} → ${ESTADOS_LEAD[newStatus]?.label||newStatus}`);
- leads = await fetchJSON('/api/leads');
- renderKanbanLeads();
+ if (!resp.ok) throw new Error('HTTP ' + resp.status);
+ } catch(e) {
+ // Si falla, revertir y recargar
+ if (localLead && oldStatus) localLead.estado = oldStatus;
+ try { renderKanbanLeads(); } catch(e2) {}
+ showToast('Error al guardar en servidor, recarga la página', 'danger');
+ return;
+ }
+ 
+ // 4. Marcar como modificado para que loadKanbanLeads refresque al cambiar de pestaña
  updateNotifications();
- } catch(e) { showToast('Error al mover lead', 'danger'); }
 }
 
 // Upcoming Followups (Dashboard) 
@@ -3766,6 +3823,8 @@ document.addEventListener('DOMContentLoaded', async function() {
  else if (tabParam === 'workorders') loadWorkOrders();
  else if (tabParam === 'kanban') loadKanban();
  else if (tabParam === 'interactions') loadInteractions();
+ // Limpiar URL para evitar que el tab quede "linkeado" al recargar
+ window.history.replaceState({}, '', '/');
  }
  }
  loadInteractions();
