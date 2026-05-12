@@ -2270,17 +2270,30 @@ function renderLeads() {
  <td><strong>${l.id}</strong></td>
  <td><strong><a href="/leads/${l.id}" style="color:var(--htk-primary);text-decoration:none;">${escHtml(l.nombre || '-')}</a></strong></td>
  <td>${escHtml(l.contacto || '-')}</td>
- <td>${escHtml(l.segmento || '-')}</td>
+ <td><select class="form-select form-select-sm" style="font-size:0.78em;padding:2px 6px;max-width:140px;background:transparent;border-color:rgba(255,255,255,0.1);" onchange="updateLeadSegmentQuick('${l.id}',this.value)">
+ <option value="">—</option>
+ <option value="B2B taller" ${l.segmento==='B2B taller'?'selected':''}>B2B Taller</option>
+ <option value="B2B fábrica" ${l.segmento==='B2B fábrica'?'selected':''}>B2B Fábrica</option>
+ <option value="B2B comercio" ${l.segmento==='B2B comercio'?'selected':''}>B2B Comercio</option>
+ <option value="distribuidor cargadores" ${l.segmento==='distribuidor cargadores'?'selected':''}>Cargadores</option>
+ <option value="energía solar" ${l.segmento==='energía solar'?'selected':''}>Solar</option>
+ <option value="hoteles" ${l.segmento==='hoteles'?'selected':''}>Hoteles</option>
+ <option value="restaurantes" ${l.segmento==='restaurantes'?'selected':''}>Restaurantes</option>
+ </select></td>
  <td>${escHtml(l.linea_interes || '-')}</td>
  <td><span class="badge ${es.class}">${es.label}</span></td>
  <td>${formatCurrency(l.valor_estimado)}</td>
  <td><small>${formatDate(l.fecha_creacion)}</small></td>
  <td>
- <button class="action-btn primary" onclick="showModal('lead','${l.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
- <button class="action-btn primary" onclick="showLeadDetail('${l.id}')" title="Ver"><i class="bi bi-eye"></i></button>
+ <div class="d-flex gap-1 flex-wrap" style="max-width:200px;">
+ <button class="action-btn primary" onclick="showLeadDetail('${l.id}')" title="Ver perfil"><i class="bi bi-eye"></i></button>
+ ${(()=>{let p=(l.telefono||l.contacto||'').replace(/[^\d+]/g,'');if(p&&!p.startsWith('+'))p='+57'+p.replace(/^57/,'');return p&&p!=='+57'?`<button class="action-btn" style="color:#25D366;" onclick="window.open('https://wa.me/${p.replace(/\+/g,'')}','_blank')" title="WhatsApp rápido"><i class="bi bi-whatsapp"></i></button>`:'';})()}
+ ${l.email&&l.email.includes('@')?`<button class="action-btn" style="color:#0dcaf0;" onclick="window.open('mailto:${l.email}','_blank')" title="Enviar email"><i class="bi bi-envelope"></i></button>`:''}
+ <button class="action-btn" style="color:var(--htk-primary);" onclick="showModal('lead','${l.id}')" title="Editar lead"><i class="bi bi-pencil"></i></button>
  ${canConvert ? `<button class="action-btn" style="color:#ffc107;" onclick="convertLead('${l.id}')" title="Convertir a Cliente"><i class="bi bi-person-plus"></i></button>` : ''}
  <button class="action-btn danger" onclick="deleteItem('leads','${l.id}','${escHtml(l.nombre||'')}')" title="Eliminar"><i class="bi bi-trash"></i></button>
  ${stageBtns}
+ </div>
  </td>
  </tr>`;
  }).join('');
@@ -3427,6 +3440,19 @@ function scoreTemplates(templates, lead) {
  if (lines.some(l2 => linea.includes(l2) || l2.includes(linea))) score += 3;
  return {...t, score };
  }).sort((a, b) => b.score - a.score);
+}
+
+// ─── Quick segment update from leads table ───
+async function updateLeadSegmentQuick(id, segmento) {
+ const l = leads.find(x => x.id === id);
+ if (!l) return;
+ try {
+ await fetchJSON('/api/leads/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({segmento}) });
+ l.segmento = segmento;
+ showToast('✅ Segmento actualizado', 'success');
+ } catch(e) {
+ showToast('❌ Error: ' + e.message, 'danger');
+ }
 }
 
 // ─── Update a single lead field via API ───
