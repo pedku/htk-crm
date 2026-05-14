@@ -798,11 +798,10 @@
         <a class="nav-link" href="#" data-tab="interactions"><i class="bi bi-chat-dots"></i> Interacciones</a>
         <a class="nav-link" href="#" data-tab="automation"><i class="bi bi-gear-wide-connected"></i> Automatización</a>
         <a class="nav-link" href="/bot-whatsapp"><i class="bi bi-robot"></i> Bot WhatsApp</a>
+        <hr style="border-color:rgba(255,255,255,0.06);margin-top:auto;">
+        <a class="nav-link" href="#" onclick="handleLogout()"><i class="bi bi-box-arrow-right" style="color:#dc3545;"></i> <span style="color:#dc3545;">Cerrar Sesión</span></a>
       </nav>
       <div class="px-3 mt-auto">
-        <button class="logout-btn" onclick="handleLogout()" title="Cerrar sesión">
-          <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-        </button>
         <small style="color:rgba(255,255,255,0.25); font-size:0.7em;">
           HTK INGENIERIA ⚡<br>
           v2.2 — CRM Integrado
@@ -980,17 +979,7 @@
  <div class="d-flex justify-content-between mb-2">
  <input class="search-box" id="kanbanBoardSearch" placeholder="Buscar en board..." onkeyup="renderKanbanLeads()" style="width:250px;">
  <div class="d-flex gap-2">
- <select class="form-select" id="kanbanBoardSegmentFilter" onchange="renderKanbanLeads()" style="width:170px;font-size:0.82em;">
- <option value="">Todos los segmentos</option>
- <option value="B2B taller">B2B taller</option>
- <option value="B2B fábrica">B2B fábrica</option>
- <option value="B2B comercio">B2B comercio</option>
- <option value="distribuidor cargadores">Cargadores</option>
- <option value="energía solar">Energía Solar</option>
- <option value="hoteles">Hoteles</option>
- <option value="restaurantes">Restaurantes</option>
- <option value="consumidor">Consumidor</option>
- </select>
+ <select class="form-select" id="kanbanBoardSegmentFilter" onchange="renderKanbanLeads()" style="width:170px;font-size:0.82em;" data-segments="true" data-placeholder="Todos los segmentos"></select>
  <span class="text-muted small align-self-center" id="kanbanBoardCount"></span>
  </div>
  </div>
@@ -1116,17 +1105,7 @@
  <option value="perdido">Perdido</option>
  <option value="cliente">Cliente</option>
  </select>
- <select class="form-select" id="leadSegmentFilter" onchange="renderLeads()" style="width:180px;">
- <option value="">Todos los segmentos</option>
- <option value="B2B taller">B2B taller</option>
- <option value="B2B fábrica">B2B fábrica</option>
- <option value="B2B comercio">B2B comercio</option>
- <option value="distribuidor cargadores">Cargadores</option>
- <option value="energía solar">Energía Solar</option>
- <option value="hoteles">Hoteles</option>
- <option value="restaurantes">Restaurantes</option>
- <option value="consumidor">Consumidor</option>
- </select>
+ <select class="form-select" id="leadSegmentFilter" onchange="renderLeads()" style="width:180px;" data-segments="true" data-placeholder="Todos los segmentos"></select>
  </div>
  <div style="overflow-x:auto;">
  <table class="table table-hover">
@@ -1240,13 +1219,8 @@
  <p class="card-text small text-muted">Genera mensajes personalizados desde las plantillas de pitch para un segmento.</p>
  <div class="row g-2 mb-2">
  <div class="col-4">
- <select class="form-select form-select-sm" id="campaignSegment">
- <option value="distribuidor cargadores"> Cargadores</option>
- <option value="B2B taller">Talleres</option>
- <option value="B2B fabrica"> Fábricas</option>
- <option value="energia solar"> Solar</option>
- <option value="hoteles"> Hoteles</option>
- <option value="restaurantes"> Restaurantes</option>
+ <select class="form-select form-select-sm" id="campaignSegment" data-segments="true" data-placeholder="Seleccionar segmento">
+ <option value="">Seleccionar segmento</option>
  </select>
  </div>
  <div class="col-3">
@@ -1380,6 +1354,59 @@ const WO_STATUS_ORDER = ['recibido','diagnosticando','presupuestado','aprobado',
 const LEAD_STATUS_ORDER = ['nuevo','contactado','cotizado','negociacion','ganado','perdido','cliente'];
 
 // Save Flash 
+// ── Segmentos dinámicos desde DB ─────────────
+let _segmentsCache = null;
+
+async function loadSegments() {
+ if (_segmentsCache) return _segmentsCache;
+ try {
+ const resp = await fetch('/api/segments');
+ _segmentsCache = await resp.json();
+ return _segmentsCache;
+ } catch(e) {
+ console.error('Error loading segments:', e);
+ return [];
+ }
+}
+
+function segmentOptionsHtml(selectedKey) {
+ if (!window._segments) return '<option value="">— Sin segmento —</option>';
+ let html = '<option value="">— Sin segmento —</option>';
+ window._segments.forEach(s => {
+ const sel = s.key === selectedKey ? 'selected' : '';
+ html += `<option value="${s.key}" ${sel}>${s.label}</option>`;
+ });
+ return html;
+}
+
+async function populateSegmentSelects() {
+ const segs = await loadSegments();
+ window._segments = segs;
+ document.querySelectorAll('[data-segments="true"]').forEach(sel => {
+ const currentVal = sel.value;
+ const placeholder = sel.getAttribute('data-placeholder') || 'Todos';
+ const isLeadEdit = sel.hasAttribute('data-lead-edit');
+ const currentLeadId = sel.getAttribute('data-lead-id');
+ 
+ // Save selected value before clearing
+ let selectedVal = currentVal;
+ if (isLeadEdit && currentLeadId && window.leads) {
+ const lead = window.leads.find(l => l.id === currentLeadId);
+ if (lead) selectedVal = lead.segmento || '';
+ }
+ 
+ sel.innerHTML = `<option value="">${placeholder}</option>`;
+ segs.forEach(s => {
+ const opt = document.createElement('option');
+ opt.value = s.key;
+ opt.textContent = s.label;
+ opt.style.color = s.color;
+ if (s.key === selectedVal) opt.selected = true;
+ sel.appendChild(opt);
+ });
+ });
+}
+
 function flashSave() {
  const el = document.getElementById('saveFlash');
  el.classList.add('show');
@@ -1875,7 +1902,7 @@ function renderClients() {
  document.getElementById('clientsBody').innerHTML = filtered.map(c => {
  const es = ESTADOS_CLIENTE[c.estado] || {label:c.estado||'nuevo', class:'bg-secondary'};
  return `<tr>
- <td><strong>${c.id}</strong></td>
+ <td><strong>${c.id}</strong>${c.lead_id?` <small style="color:var(--htk-primary);font-size:0.7em;">← ${c.lead_id}</small>`:''}</td>
  <td><strong>${escHtml(c.nombre || '-')}</strong></td>
  <td>${escHtml(c.telefono || '-')}</td>
  <td><span class="badge ${es.class}">${es.label}</span></td>
@@ -2253,19 +2280,10 @@ function renderLeads() {
  stageBtns += '<button class="action-btn" onclick="changeLeadStage(\''+l.id+'\',\'next\')" title="Siguiente etapa"><i class="bi bi-chevron-right"></i></button>';
  }
  return `<tr>
- <td><strong>${l.id}</strong></td>
+ <td><strong>${l.id}${l.estado==='cliente'?' <span class="badge bg-success" style="font-size:0.6em;">✓ Cliente</span>':''}</strong></td>
  <td><strong><a href="/leads/${l.id}" style="color:var(--htk-primary);text-decoration:none;">${escHtml(l.nombre || '-')}</a></strong></td>
  <td>${escHtml(l.contacto || '-')}</td>
- <td><select class="form-select form-select-sm" style="font-size:0.78em;padding:2px 6px;max-width:140px;background:transparent;border-color:rgba(255,255,255,0.1);" onchange="updateLeadSegmentQuick('${l.id}',this.value)">
- <option value="">—</option>
- <option value="B2B taller" ${l.segmento==='B2B taller'?'selected':''}>B2B Taller</option>
- <option value="B2B fábrica" ${l.segmento==='B2B fábrica'?'selected':''}>B2B Fábrica</option>
- <option value="B2B comercio" ${l.segmento==='B2B comercio'?'selected':''}>B2B Comercio</option>
- <option value="distribuidor cargadores" ${l.segmento==='distribuidor cargadores'?'selected':''}>Cargadores</option>
- <option value="energía solar" ${l.segmento==='energía solar'?'selected':''}>Solar</option>
- <option value="hoteles" ${l.segmento==='hoteles'?'selected':''}>Hoteles</option>
- <option value="restaurantes" ${l.segmento==='restaurantes'?'selected':''}>Restaurantes</option>
- </select></td>
+ <td>${escHtml(l.segmento || '-')}</td>
  <td>${escHtml(l.linea_interes || '-')}</td>
  <td><span class="badge ${es.class}">${es.label}</span></td>
  <td>${formatCurrency(l.valor_estimado)}</td>
@@ -2298,6 +2316,7 @@ async function showLeadDetail(id) {
  let emailAddr = l.email || '';
  let hasWeb = !!(l.url && l.url.trim());
  let webUrl = l.url || '';
+ if (webUrl && !webUrl.startsWith('http')) webUrl = 'https://' + webUrl;
  let hasFb = false;
  let fbUser = '';
 
@@ -2415,14 +2434,7 @@ async function showLeadDetail(id) {
  </p>
  <p><strong>Segmento:</strong>
  <select class="form-select form-select-sm d-inline-block" style="width:auto;max-width:250px;" id="leadSegmento_${id}" onchange="updateLeadField('${id}','segmento',this.value)">
- <option value="">— Sin segmento —</option>
- <option value="B2B taller" ${l.segmento==='B2B taller'?'selected':''}>B2B Taller</option>
- <option value="B2B fábrica" ${l.segmento==='B2B fábrica'?'selected':''}>B2B Fábrica</option>
- <option value="B2B comercio" ${l.segmento==='B2B comercio'?'selected':''}>B2B Comercio</option>
- <option value="distribuidor cargadores" ${l.segmento==='distribuidor cargadores'?'selected':''}>Distribuidor Cargadores</option>
- <option value="energía solar" ${l.segmento==='energía solar'?'selected':''}>Energía Solar</option>
- <option value="hoteles" ${l.segmento==='hoteles'?'selected':''}>Hoteles</option>
- <option value="restaurantes" ${l.segmento==='restaurantes'?'selected':''}>Restaurantes</option>
+ ${segmentOptionsHtml(l.segmento)}
  </select>
  <button class="btn btn-sm btn-link p-0 ms-1" onclick="document.getElementById('leadSegmento_${id}').dispatchEvent(new Event('change'))" title="Guardar segmento"><i class="bi bi-check2" style="color:var(--htk-primary);"></i></button>
  </p>
@@ -2529,9 +2541,18 @@ async function changeLeadStage(id, direction) {
  if (idx === -1) return;
  const newIdx = direction === 'next' ? Math.min(idx + 1, stages.length - 1) : Math.max(idx - 1, 0);
  if (newIdx === idx) return;
- // Optimistic: actualizar local y re-renderizar al instante
+ // Actualizar local y re-renderizar tabla
  l.estado = stages[newIdx];
  renderLeads();
+ 
+ // Refrescar modal si está abierto
+ try {
+ const modalEl = document.getElementById('genericModal');
+ if (modalEl && modalEl.classList.contains('show')) {
+ showLeadDetail(id);
+ }
+ } catch(e) {}
+ 
  showToast('Lead avanzado a: ' + stages[newIdx]);
  try {
  await fetch(`/api/leads/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({estado: stages[newIdx]}) });
@@ -2604,7 +2625,7 @@ async function showModal(type, id) {
  {label:'Teléfono', key:'telefono', type:'text', placeholder:'+573001234567'},
  {label:'Fuente', key:'fuente', type:'select', options:['whatsapp','prospeccion','referido','web','otro']},
  {label:'Estado', key:'estado', type:'select', options:['lead','contacto','cliente','inactivo']},
- {label:'Segmento', key:'segmento', type:'select', options:['taller','fabrica','distribuidor','consumidor','B2B taller','B2B comercio','B2B industria','otro']},
+ {label:'Segmento', key:'segmento', type:'segment'},
  {label:'Línea de Interés', key:'linea_interes', type:'select', options:['automatizacion','iot','mantenimiento','cargadores','varios']},
  {label:'Notas', key:'notas', type:'textarea'}
  ];
@@ -2656,7 +2677,7 @@ async function showModal(type, id) {
   {label:'Email', key:'email', type:'text', placeholder:'contacto@ejemplo.com'},
   {label:'Sitio Web', key:'url', type:'text', placeholder:'https://ejemplo.com'},
   {label:'Contacto (legacy)', key:'contacto', type:'text', placeholder:'Teléfono, email o red social'},
- {label:'Segmento', key:'segmento', type:'select', options:['B2B taller','B2B fábrica','B2B comercio','distribuidor cargadores','energía solar','hoteles','restaurantes','consumidor']},
+ {label:'Segmento', key:'segmento', type:'segment'},
  {label:'Línea de Interés', key:'linea_interes', type:'select', options:['automatizacion','iot','mantenimiento','cargadores','varios']},
  {label:'Estado', key:'estado', type:'select', options:['nuevo','contactado','cotizado','negociacion','ganado','perdido']},
  {label:'Fuente', key:'fuente', type:'select', options:['Facebook','web','referido','llamada','feria','alianza','directorio','otro']},
@@ -2682,6 +2703,13 @@ function formField(f, val) {
  return `<div class="mb-3">
  <label class="form-label">${f.label}${f.required?' <span class="text-danger">*</span>':''}</label>
  <textarea class="form-control" id="f_${f.key}" rows="3" ${f.required?'required':''} placeholder="${f.placeholder||''}">${escHtml(String(val||''))}</textarea>
+ </div>`;
+ }
+ if (f.type === 'segment') {
+ const opts = segmentOptionsHtml(val);
+ return `<div class="mb-3">
+ <label class="form-label">${f.label}</label>
+ <select class="form-select" id="f_${f.key}">${opts}</select>
  </div>`;
  }
  if (f.type === 'select') {
@@ -2803,7 +2831,20 @@ async function saveModal(type, id) {
 async function deleteItem(endpoint, id, name) {
  if (!confirm(`¿Eliminar ${endpoint==='work_orders'?'orden':endpoint==='leads'?'prospecto':'cliente'} "${name||id}"?`)) return;
  
- // Optimistic UI: eliminar del array local y re-renderizar al instante
+ // Esperar confirmacion del servidor primero
+ try {
+ const resp = await fetch(`/api/${endpoint}/${id}`, { method:'DELETE' });
+ if (resp.redirected || resp.url.includes('/login')) {
+ showToast('Sesión expirada, recarga la página', 'danger');
+ return;
+ }
+ if (!resp.ok) throw new Error('HTTP ' + resp.status);
+ } catch(e) {
+ showToast('Error al eliminar: ' + e.message, 'danger');
+ return;
+ }
+ 
+ // Servidor confirmó → eliminar local y re-renderizar
  if (endpoint === 'leads') {
  const idx = leads.findIndex(x => x.id === id);
  if (idx > -1) leads.splice(idx, 1);
@@ -2818,18 +2859,6 @@ async function deleteItem(endpoint, id, name) {
  
  flashSave();
  showToast(`${name||id} eliminado correctamente`);
- 
- try {
- await fetch(`/api/${endpoint}/${id}`, { method:'DELETE' });
- } catch(e) {
- // Si falla, recargar datos reales desde el servidor
- showToast('Error en servidor, recargando...', 'danger');
- if (endpoint === 'clients') await loadClients();
- else if (endpoint === 'work_orders') { await loadWorkOrders(); await loadClients(); }
- else if (endpoint === 'leads') await loadLeads();
- }
- 
- await loadDashboard();
  updateNotifications();
 }
 
@@ -3533,6 +3562,13 @@ async function updateLeadField(id, field, value) {
  if (field === 'segmento' && document.getElementById('pitchContent_' + id)) {
  loadPitchTemplates(id);
  }
+ // Refrescar modal si está abierto
+ try {
+ const modalEl = document.getElementById('genericModal');
+ if (modalEl && modalEl.classList.contains('show')) {
+ showLeadDetail(id);
+ }
+ } catch(e) {}
  } else {
  showToast('❌ Error: ' + (updated.error || 'desconocido'), 'danger');
  }
@@ -3846,6 +3882,7 @@ async function savePitchTemplate(leadId) {
 // INIT 
 document.addEventListener('DOMContentLoaded', async function() {
  applyTheme();
+ await populateSegmentSelects();
  loadDashboard();
  loadClients();
  loadWorkOrders();

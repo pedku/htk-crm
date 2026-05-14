@@ -179,3 +179,107 @@ Próximo paso: [lo que sigue]
 ```
 
 ---
+
+---
+
+## 🎯 Segmento: Gimnasios
+
+**Enfoque:** Dueños de gimnasios independientes. Clima y equipos funcionando = clientes contentos.
+
+**Pitch WhatsApp:**
+```
+Buenos días, ¿cómo está?
+
+Soy Pedro Castro, ingeniero, de HTK INGENIERÍA 
+en Barranquilla.
+
+Le escribo porque sé que en gimnasios como
+[NOMBRE], mantener el clima y los equipos
+funcionando es clave para la experiencia de sus
+clientes — nadie quiere entrenar sin aire
+acondicionado.
+
+En HTK ofrecemos:
+• Mantenimiento y reparación de aires acondicionados
+• Reparación de tarjetas electrónicas de equipos
+  de cardio y pesas
+• Sistemas de sonido profesional y CCTV
+• Automatización de iluminación para ahorro energético
+
+Trabajamos con empresas como la suya, con respuestas
+rápidas y sin burocracia.
+
+¿Qué le parece si coordinamos una visita sin costo
+para revisar sus equipos?
+```
+
+**Detonante de interés:** Si responde "sí", "me interesa", pide visita o presupuesto → 🚨 **Avisar a Pedro.**
+
+---
+
+## 🎯 Segmento: Clínicas Odontológicas
+
+**Enfoque:** Odontólogo-propietario. Un clima dañado = pacientes incómodos = citas canceladas.
+
+**Pitch WhatsApp:**
+```
+Buenos días, ¿cómo está?
+
+Soy Pedro Castro, ingeniero, de HTK INGENIERÍA 
+en Barranquilla.
+
+Le escribo porque sé que en una clínica odontológica 
+como [NOMBRE], el clima y los equipos son críticos 
+— un compresor dañado o un aire acondicionado fuera 
+de servicio significa citas canceladas.
+
+En HTK ofrecemos:
+• Mantenimiento y reparación de aires acondicionados
+• Reparación de compresores, autoclaves y equipos
+  electrónicos odontológicos
+• Instalación de sistemas CCTV y control de acceso
+• Reparación de tarjetas electrónicas
+
+Trabajamos directo con odontólogos como usted,
+con servicio rápido y sin intermediarios.
+
+¿Qué le parece si coordinamos una revisión sin costo
+de sus equipos?
+```
+
+**Detonante de interés:** Si responde "sí", "me interesa", pide visita o presupuesto → 🚨 **Avisar a Pedro.**
+
+---
+
+## 🎯 Segmento: Colegios Privados Pequeños
+
+**Enfoque:** Rectores/administradores. Seguridad y confort de estudiantes con presupuesto ajustado.
+
+**Pitch WhatsApp:**
+```
+Buenos días, ¿cómo está?
+
+Soy Pedro Castro, ingeniero, de HTK INGENIERÍA 
+en Barranquilla.
+
+Le escribo porque sé que en colegios como
+[NOMBRE] la seguridad y el confort de los
+estudiantes son prioridad — aires acondicionados
+funcionando y cámaras operativas todo el tiempo.
+
+En HTK ofrecemos:
+• Instalación y mantenimiento de sistemas CCTV
+  y control de acceso
+• Mantenimiento preventivo y correctivo de aires
+  acondicionados
+• Automatización de iluminación para ahorro
+• Mantenimiento eléctrico general
+
+Trabajamos con instituciones educativas, con
+servicio ágil y presupuestos justos.
+
+¿Qué le parece si coordinamos una visita para
+revisar sus instalaciones sin costo?
+```
+
+**Detonante de interés:** Si responde "sí", "me interesa", pide visita o presupuesto → 🚨 **Avisar a Pedro.**

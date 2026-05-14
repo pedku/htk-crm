@@ -35,6 +35,10 @@
 
 **Regla fija:** Siempre preguntar antes de usar v4-pro. No escalar sin confirmación.
 
+## Comandos
+
+- **/final** — Archiva la conversación actual en `data/conversations/` como `.md`, envía el archivo y resetea el contexto. El próximo mensaje arranca limpio.
+
 ## Límites
 
 - ❌ No ejecutar acciones externas sin aprobación (pagos, contratos, comunicaciones públicas).

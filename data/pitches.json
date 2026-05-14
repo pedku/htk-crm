@@ -159,6 +159,61 @@
         "Empresa"
       ],
       "detonante": "Si responde afirmativamente, pregunta por costos o tiempos → Alerta: Avisar a Pedro."
+    },
+    {
+      "id": "gimnasios",
+      "nombre": "Gimnasios — Mantenimiento de Clima y Electrónica",
+      "segmentos": [
+        "gimnasios",
+        "B2C consumidor"
+      ],
+      "lineas_interes": [
+        "mantenimiento",
+        "clima",
+        "automatizacion"
+      ],
+      "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque sé que en gimnasios como [Empresa], mantener el clima y los equipos funcionando es clave para la experiencia de sus clientes — nadie quiere entrenar sin aire acondicionado.\n\nEn HTK ofrecemos:\n• Mantenimiento y reparación de aires acondicionados para todo tipo de gimnasio\n• Reparación de tarjetas electrónicas de equipos de cardio y pesas\n• Sistemas de sonido profesional y CCTV\n• Automatización de iluminación para ahorro energético\n\nTrabajamos con empresas como la suya, con respuestas rápidas y sin la burocracia de las grandes compañías.\n\n¿Qué le parece si coordinamos una visita sin costo para revisar sus equipos?",
+      "email": "",
+      "variables": [
+        "Empresa"
+      ],
+      "detonante": "Si responde \"sí\", \"me interesa\", pide visita o presupuesto → 🚨 Avisar a Pedro."
+    },
+    {
+      "id": "clinicas-odontologicas",
+      "nombre": "Clínicas Odontológicas — Mantenimiento de Equipos y Clima",
+      "segmentos": [
+        "clínicas odontológicas"
+      ],
+      "lineas_interes": [
+        "mantenimiento",
+        "clima",
+        "cctv"
+      ],
+      "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque sé que en una clínica odontológica como [Empresa], el clima y los equipos son críticos — un compresor dañado o un aire acondicionado fuera de servicio significa citas canceladas.\n\nEn HTK ofrecemos:\n• Mantenimiento y reparación de aires acondicionados (vital para su consultorio)\n• Reparación de compresores, autoclaves y equipos electrónicos odontológicos\n• Instalación y mantenimiento de sistemas CCTV y control de acceso\n• Reparación de tarjetas electrónicas de equipos especializados\n\nTrabajamos directo con odontólogos como usted, con servicio rápido y sin intermediarios.\n\n¿Qué le parece si coordinamos una revisión sin costo de sus equipos?",
+      "email": "",
+      "variables": [
+        "Empresa"
+      ],
+      "detonante": "Si responde \"sí\", \"me interesa\", pide visita o presupuesto → 🚨 Avisar a Pedro."
+    },
+    {
+      "id": "colegios-privados",
+      "nombre": "Colegios Privados — CCTV, Clima y Mantenimiento General",
+      "segmentos": [
+        "colegios privados"
+      ],
+      "lineas_interes": [
+        "cctv",
+        "clima",
+        "mantenimiento"
+      ],
+      "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque sé que en colegios como [Empresa] la seguridad y el confort de los estudiantes son prioridad — aires acondicionados funcionando y cámaras operativas todo el tiempo.\n\nEn HTK ofrecemos:\n• Instalación y mantenimiento de sistemas CCTV y control de acceso\n• Mantenimiento preventivo y correctivo de aires acondicionados\n• Automatización de iluminación para reducir costos operativos\n• Mantenimiento eléctrico general\n\nTrabajamos con instituciones educativas, con servicio ágil y presupuestos justos.\n\n¿Qué le parece si coordinamos una visita para revisar sus instalaciones sin costo?",
+      "email": "",
+      "variables": [
+        "Empresa"
+      ],
+      "detonante": "Si responde \"sí\", \"me interesa\", pide visita o presupuesto → 🚨 Avisar a Pedro."
     }
   ]
 }

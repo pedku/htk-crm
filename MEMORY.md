@@ -73,7 +73,15 @@ Backup automático cada 12h via crontab (6am/6pm).
 - Prioridad: cargadores > taller > fábrica > solar > hoteles > restaurantes
 - Solo falta Los Kioscos (contacto encontrado pero necesita scraping fino)
 
-### 🎯 Próximo paso
+### 🎯 Últimos pasos
 - Sáb 9/05 8am: contactar distribuidores cargadores (6 con tel + email)
+
+## 🏆 Hitos Comerciales
+
+### 2026-05-12 — EDC (Electrolineras de Colombia) ✅
+**PRO-017** — Entrevista virtual concretada. **Acuerdo verbal como distribuidores** de sus equipos de carga EV en Barranquilla y la Costa Caribe.
+- Pendiente: definir márgenes comerciales, instalación piloto, certificación fabricante
+- Estado CRM: `negociacion`
+- Próximo seguimiento: 2026-05-15
 
 ---

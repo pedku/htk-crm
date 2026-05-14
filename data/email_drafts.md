@@ -262,6 +262,58 @@ El beneficio para Electrolineras es claro:
 ✅ Diferenciación frente a competidores que solo venden el equipo
 ✅ Mayor tasa de cierre al ofrecer instalación incluida
 ✅ Clientes satisfechos con una experiencia completa
+```
+
+### 🎙️ Pitch para entrevista virtual — 2026-05-12
+
+**Formato:** Conversación, no correo. Puntos clave para llevar.
+
+---
+
+**1. PRESENTACIÓN PERSONAL (30 seg)**
+> "Soy Pedro Castro, ingeniero — acá mi tarjeta profesional — y fundador de HTK INGENIERÍA, empresa de ingeniería con sede en Barranquilla llevando X años en el sector eléctrico y automatización."
+
+💡 **Clave:** Muestra la tarjeta profesional físicamente si puedes. Da credibilidad al instante.
+
+---
+
+**2. EL PROBLEMA QUE RESOLVEMOS (1 min)**
+> "Ustedes distribuyen cargadores EV y despachan a Barranquilla y la Costa. Pero el cliente final necesita instalación, y si no se las dan llave en mano, muchos lo dejan para después o contratan a cualquiera."
+
+> "HTK es ese eslabón que falta: nosotros llegamos, instalamos, probamos y entregamos funcionando. Ustedes venden, nosotros montamos."
+
+---
+
+**3. POR QUÉ NOSOTROS (1 min)**
+- 🎓 Ingeniero con **tarjeta profesional vigente** — podemos firmar proyectos eléctricos
+- 📍 **Local en Barranquilla** — cobertura inmediata en la Costa Caribe
+- ⚡ Experiencia en automatización e instalaciones eléctricas industriales
+- 🏢 Empresa constituida (HOUSETRONIK S.A.S.) — facturamos, damos garantía
+
+---
+
+**4. MODELO DE ALIANZA (2 min)**
+| Ellos | Nosotros |
+|---|---|
+| Venden el cargador | Hacemos visita técnica |
+| Nos pasan el cliente | Instalamos y configuramos |
+| — | Puesta en marcha y pruebas |
+| — | Soporte post-venta local |
+
+> "Ustedes no necesitan tener técnicos rodando por la Costa. Nosotros somos su equipo allá."
+
+---
+
+**5. SIGUIENTES PASOS (30 seg)**
+Si hay interés:
+- Definir tipo de cargadores que más rotan en Barranquilla
+- Acordar comisión por instalación o margen
+- Hacer una instalación piloto conjunta (primer cliente que tengan en la región, lo tomamos como demo)
+- Luego vemos si quieren que saque la certificación del fabricante específico
+
+---
+
+⚡ **Dato extra:** Si preguntan por certificación de fabricante — "No la tengo aún, pero mi tarjeta profesional de ingeniero me habilita legalmente para instalaciones eléctricas. La certificación del fabricante la tramito cuando definamos el modelo de alianza, normalmente ellos mismos la ofrecen a sus instaladores partner."
 
 ¿Les interesaría conversar para alinear los detalles de cómo 
 podemos trabajar juntos?
