@@ -23,6 +23,38 @@ DB_PATH = os.path.join(BASE_DIR, 'htk_crm.db')
 
 COL_TZ = timezone(timedelta(hours=-5))
 
+# ── Tipos de Órdenes de Trabajo ────────────────────────────────────
+
+TIPOS_OT = {
+    'reparacion': {
+        'label': 'Reparación',
+        'icono': '🔧',
+        'color': '#f97316',
+        'estados': ['recibido','diagnosticando','presupuestado','aprobado','reparando','esperando_repuestos','completado','entregado','cancelado'],
+        'campos': ['falla_reportada','diagnostico']
+    },
+    'fabricacion': {
+        'label': 'Fabricación',
+        'icono': '🏭',
+        'color': '#0ea5e9',
+        'estados': ['cotizando','diseno_aprobado','materiales','bobinado','ensamble','pruebas','control_calidad','finalizado','entregado','cancelado'],
+        'campos': ['tipo_producto','capacidad','voltaje_entrada','voltaje_salida','fases','nucleo','refrigeracion','operario','fecha_inicio','fecha_estimada']
+    },
+    'instalacion': {
+        'label': 'Instalación',
+        'icono': '🚗',
+        'color': '#10b981',
+        'estados': ['agendado','en_sitio','instalando','pruebas','finalizado','facturado','cancelado'],
+        'campos': ['direccion_instalacion','tipo_cargador','potencia','requiere_obra_civil','fecha_agendada','tecnico_asignado']
+    }
+}
+
+def get_estado_inicial(tipo):
+    """Return the initial estado for a given OT type."""
+    if tipo in TIPOS_OT and TIPOS_OT[tipo]['estados']:
+        return TIPOS_OT[tipo]['estados'][0]
+    return 'recibido'
+
 def now_iso():
     return datetime.now(COL_TZ).isoformat()
 
@@ -68,9 +100,12 @@ def save_json(filename, data):
     # No-op: SQLite is the source of truth now.
     pass
 
-def export_work_orders_full(conn):
+def export_work_orders_full(conn, tipo_filter=None):
     """Export work orders with nested cliente/equipo/historial/fechas and proper types."""
-    orders = conn.execute("SELECT * FROM work_orders ORDER BY id").fetchall()
+    if tipo_filter:
+        orders = conn.execute("SELECT * FROM work_orders WHERE tipo = ? ORDER BY id", (tipo_filter,)).fetchall()
+    else:
+        orders = conn.execute("SELECT * FROM work_orders ORDER BY id").fetchall()
     result = []
     for o in orders:
         wo = dict(o)
@@ -91,10 +126,18 @@ def export_work_orders_full(conn):
             'completado': wo.pop('fecha_completado', None),
             'entregado': wo.pop('fecha_entregado', None)
         }
+        # Parse campos_extra JSON
+        try:
+            import json
+            wo['campos_extra'] = json.loads(wo.get('campos_extra', '{}') or '{}')
+        except (json.JSONDecodeError, TypeError):
+            wo['campos_extra'] = {}
         # Type conversions for JSON compatibility
         wo['activo'] = bool(wo.get('activo', 0))
         if wo.get('presupuesto') is not None:
             wo['presupuesto'] = float(wo['presupuesto'])
+        if wo.get('valor_total') is not None:
+            wo['valor_total'] = float(wo['valor_total'])
         # Load history with bool conversion
         hist_rows = conn.execute(
             "SELECT fecha, estado, descripcion, notificado FROM work_order_history WHERE wo_id = ? ORDER BY id",
@@ -168,6 +211,10 @@ def login_required(f):
     @functools.wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user' not in session:
+            # Allow localhost GET without auth (bot.js, healthchecks)
+            is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1')
+            if is_local and request.method == 'GET':
+                return f(*args, **kwargs)
             return redirect(url_for('login_page', next=request.path))
         return f(*args, **kwargs)
     return decorated_function
@@ -351,7 +398,29 @@ def api_client(client_id):
             for wo_id in wo_ids:
                 wo_detail = wo_to_dict(conn, wo_id)
                 if wo_detail:
-                    result['ordenes_detalle'].append(wo_detail)
+                    result['ordenes_detalle'].append({
+                        'id': wo_detail['id'],
+                        'tipo': wo_detail.get('tipo', 'reparacion'),
+                        'estado': wo_detail.get('estado', ''),
+                        'presupuesto': wo_detail.get('presupuesto'),
+                        'equipo_tipo': wo_detail.get('equipo', {}).get('tipo', ''),
+                        'equipo_marca': wo_detail.get('equipo', {}).get('marca', ''),
+                        'equipo_modelo': wo_detail.get('equipo', {}).get('modelo', ''),
+                        'fecha_recibido': wo_detail.get('fechas', {}).get('recibido'),
+                        'saldo_pendiente': wo_detail.get('saldo_pendiente'),
+                        'total_abonado': wo_detail.get('total_abonado', 0)
+                    })
+            result['ordenes_count'] = len(result['ordenes_detalle'])
+            result['total_facturado'] = sum((o.get('presupuesto') or 0) for o in result['ordenes_detalle'])
+            result['saldo_pendiente_total'] = sum((o.get('saldo_pendiente') or 0) for o in result['ordenes_detalle'])
+            # Load last 10 interactions from linked lead
+            result['interacciones'] = []
+            if result.get('lead_id'):
+                int_rows = conn.execute(
+                    "SELECT * FROM interactions WHERE lead_id = ? ORDER BY fecha DESC LIMIT 10",
+                    (result['lead_id'],)
+                ).fetchall()
+                result['interacciones'] = [dict(i) for i in int_rows]
             return jsonify(result)
         
         if request.method == 'DELETE':
@@ -366,7 +435,10 @@ def api_client(client_id):
         data = request.get_json()
         updates = []
         params = []
-        for key in ['nombre', 'telefono', 'fuente', 'estado', 'segmento', 'linea_interes', 'notas', 'lead_id']:
+        # All client fields including new ones from Fase 1
+        for key in ['nombre', 'telefono', 'fuente', 'estado', 'segmento', 'linea_interes', 'notas', 'lead_id',
+                    'contacto_nombre', 'direccion', 'ciudad', 'tipo_documento', 'documento', 'empresa', 'cargo',
+                    'cumpleanos', 'redes_contacto']:
             if key in data:
                 updates.append(f"{key} = ?")
                 params.append(data[key])
@@ -473,7 +545,28 @@ def api_lead(lead_id):
             return jsonify({'error': 'Lead no encontrado'}), 404
         
         if request.method == 'GET':
-            return jsonify(dict(row))
+            result = dict(row)
+            # If lead is converted to client, include client data
+            if result.get('estado') == 'cliente':
+                client_row = conn.execute(
+                    "SELECT * FROM clients WHERE lead_id = ?", (lead_id,)
+                ).fetchone()
+                if client_row:
+                    c = dict(client_row)
+                    wo_count = conn.execute(
+                        "SELECT COUNT(*) FROM work_order_client_links WHERE client_id = ?",
+                        (c['id'],)
+                    ).fetchone()[0]
+                    result['cliente_vinculado'] = {
+                        'id': c['id'],
+                        'nombre': c.get('nombre', ''),
+                        'telefono': c.get('telefono', ''),
+                        'empresa': c.get('empresa', ''),
+                        'segmento': c.get('segmento', ''),
+                        'ciudad': c.get('ciudad', ''),
+                        'ordenes_count': wo_count
+                    }
+            return jsonify(result)
         
         if request.method == 'DELETE':
             # Also delete linked client if lead was converted
@@ -567,6 +660,7 @@ def api_convert_lead(lead_id):
 
 def wo_to_dict(conn, wo_id):
     """Convert work order DB row to full nested format with proper types."""
+    import json
     row = conn.execute("SELECT * FROM work_orders WHERE id = ?", (wo_id,)).fetchone()
     if not row:
         return None
@@ -580,10 +674,17 @@ def wo_to_dict(conn, wo_id):
         'completado': wo.pop('fecha_completado', None),
         'entregado': wo.pop('fecha_entregado', None)
     }
+    # Parse campos_extra JSON
+    try:
+        wo['campos_extra'] = json.loads(wo.get('campos_extra', '{}') or '{}')
+    except (json.JSONDecodeError, TypeError):
+        wo['campos_extra'] = {}
     # Type conversions for JSON compatibility
     wo['activo'] = bool(wo.get('activo', 0))
     if wo.get('presupuesto') is not None:
         wo['presupuesto'] = float(wo['presupuesto']) if isinstance(wo['presupuesto'], int) else float(wo['presupuesto'])
+    if wo.get('valor_total') is not None:
+        wo['valor_total'] = float(wo['valor_total'])
     # Load history with bool conversion
     hist_rows = conn.execute(
         "SELECT fecha, estado, descripcion, notificado FROM work_order_history WHERE wo_id = ? ORDER BY id",
@@ -594,7 +695,50 @@ def wo_to_dict(conn, wo_id):
         entry = dict(h)
         entry['notificado'] = bool(entry.get('notificado', 0))
         wo['historial'].append(entry)
+    # Load payments
+    pay_rows = conn.execute(
+        "SELECT id, monto, tipo, metodo, referencia, fecha, notas, registrado_por FROM payments WHERE wo_id = ? ORDER BY id",
+        (wo_id,)
+    ).fetchall()
+    wo['payments'] = [dict(p) for p in pay_rows]
+    wo['total_abonado'] = sum(p['monto'] for p in pay_rows)
+    if wo.get('presupuesto'):
+        wo['saldo_pendiente'] = round(wo['presupuesto'] - wo['total_abonado'], 2)
+    else:
+        wo['saldo_pendiente'] = None
+    # Load linked client data if client_id is set
+    wo['client_id'] = wo.get('client_id')
+    wo['cliente_vinculado'] = None
+    if wo.get('client_id'):
+        client_row = conn.execute("SELECT * FROM clients WHERE id = ?", (wo['client_id'],)).fetchone()
+        if client_row:
+            c = dict(client_row)
+            # Count previous orders
+            prev_count = conn.execute(
+                "SELECT COUNT(*) FROM work_order_client_links WHERE client_id = ?",
+                (wo['client_id'],)
+            ).fetchone()[0]
+            total_fact = conn.execute(
+                "SELECT COALESCE(SUM(presupuesto), 0) FROM work_orders w JOIN work_order_client_links l ON w.id = l.wo_id WHERE l.client_id = ?",
+                (wo['client_id'],)
+            ).fetchone()[0]
+            wo['cliente_vinculado'] = {
+                'id': c['id'],
+                'nombre': c.get('nombre', ''),
+                'telefono': c.get('telefono', ''),
+                'empresa': c.get('empresa', ''),
+                'segmento': c.get('segmento', ''),
+                'ciudad': c.get('ciudad', ''),
+                'ordenes_previas': prev_count,
+                'total_facturado': float(total_fact)
+            }
     return wo
+
+@app.route('/api/work_orders/tipos')
+@login_required
+def api_wo_tipos():
+    return jsonify(TIPOS_OT)
+
 
 @app.route('/api/work_orders', methods=['GET', 'POST'])
 @login_required
@@ -602,7 +746,10 @@ def api_work_orders():
     conn = get_db()
     try:
         if request.method == 'GET':
-            return jsonify(export_work_orders_full(conn))
+            tipo_filter = request.args.get('tipo')
+            if tipo_filter and tipo_filter not in TIPOS_OT:
+                return jsonify({'error': f'Tipo inválido: {tipo_filter}'}), 400
+            return jsonify(export_work_orders_full(conn, tipo_filter))
         
         # POST
         data = request.get_json()
@@ -612,13 +759,33 @@ def api_work_orders():
         cliente = data.get('cliente', {})
         equipo = data.get('equipo', {})
         
+        # Tipo de OT
+        tipo = data.get('tipo', 'reparacion')
+        if tipo not in TIPOS_OT:
+            return jsonify({'error': f'Tipo de OT inválido: {tipo}'}), 400
+        
+        estado_inicial = get_estado_inicial(tipo)
+        
+        # Campos extra (JSON)
+        import json
+        campos_extra = data.get('campos_extra', {})
+        campos_extra_str = json.dumps(campos_extra, ensure_ascii=False) if campos_extra else '{}'
+        
+        # Historial desc
+        desc_inicial_map = {
+            'reparacion': 'Equipo recibido en taller.',
+            'fabricacion': 'Solicitud de fabricación recibida.',
+            'instalacion': 'Instalación agendada.'
+        }
+        
         conn.execute("""
-            INSERT INTO work_orders (id, cliente_nombre, cliente_telefono, equipo_tipo, equipo_marca,
+            INSERT INTO work_orders (id, tipo, cliente_nombre, cliente_telefono, equipo_tipo, equipo_marca,
                 equipo_modelo, falla_reportada, diagnostico, presupuesto, estado,
-                notas_internas, activo, fecha_recibido)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                notas_internas, activo, fecha_recibido, campos_extra, valor_total, client_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             new_id,
+            tipo,
             cliente.get('nombre', ''),
             cliente.get('telefono', ''),
             equipo.get('tipo', 'otro'),
@@ -627,10 +794,13 @@ def api_work_orders():
             data.get('falla_reportada', ''),
             None,
             data.get('presupuesto'),
-            'recibido',
+            estado_inicial,
             data.get('notas_internas', ''),
             1,
-            now
+            now,
+            campos_extra_str,
+            data.get('valor_total'),
+            data.get('client_id')
         ))
         
         conn.execute("""
@@ -639,8 +809,8 @@ def api_work_orders():
         """, (
             new_id,
             now,
-            'recibido',
-            data.get('historial_desc', 'Equipo recibido en taller.'),
+            estado_inicial,
+            data.get('historial_desc', desc_inicial_map.get(tipo, 'Orden creada.')),
             0
         ))
         
@@ -674,13 +844,37 @@ def api_work_order(wo_id):
             return jsonify({'success': True, 'message': f'Orden {wo_id} eliminada'})
         
         # PUT
+        import json
         data = request.get_json()
         updates = []
         params = []
-        for key in ['falla_reportada', 'diagnostico', 'presupuesto', 'notas_internas', 'activo']:
+        for key in ['falla_reportada', 'diagnostico', 'presupuesto', 'notas_internas', 'activo', 'valor_total']:
             if key in data:
                 updates.append(f"{key} = ?")
                 params.append(data[key])
+        
+        # Tipo — validar si viene
+        if 'tipo' in data:
+            if data['tipo'] not in TIPOS_OT:
+                return jsonify({'error': f'Tipo de OT inválido: {data["tipo"]}'}), 400
+            updates.append("tipo = ?")
+            params.append(data['tipo'])
+        
+        # client_id
+        if 'client_id' in data:
+            updates.append("client_id = ?")
+            params.append(data['client_id'])
+        
+        # Campos extra — hacer merge con existente
+        if 'campos_extra' in data:
+            existing_raw = row['campos_extra'] or '{}'
+            try:
+                existing = json.loads(existing_raw)
+            except (json.JSONDecodeError, TypeError):
+                existing = {}
+            existing.update(data['campos_extra'])
+            updates.append("campos_extra = ?")
+            params.append(json.dumps(existing, ensure_ascii=False))
         
         if 'cliente' in data:
             if 'nombre' in data['cliente']:
@@ -713,7 +907,183 @@ def api_work_order(wo_id):
     finally:
         conn.close()
 
-VALID_WO_STATUSES = ('recibido', 'diagnosticando', 'presupuestado', 'aprobado', 'reparando', 'esperando_repuestos', 'completado', 'entregado', 'cancelado')
+# ── KANBAN de Órdenes de Trabajo ──────────────────────────────
+
+@app.route('/api/work_orders/kanban')
+@login_required
+def api_wo_kanban():
+    """
+    GET /api/work_orders/kanban?tipo=X
+    Devuelve columnas dinámicas + tarjetas agrupadas por estado.
+    Sin tipo: todos los tipos mezclados (columnas = union de todos los estados).
+    Con tipo: solo columnas y OTs de ese tipo.
+    """
+    import json
+    tipo = request.args.get('tipo')
+    conn = get_db()
+    try:
+        # ── Build columnas ──
+        if tipo and tipo in TIPOS_OT:
+            t_info = TIPOS_OT[tipo]
+            columnas = [
+                {'estado': e, 'label': e.replace('_', ' ').title(),
+                 'color': t_info['color'], 'icono': t_info.get('icono', '📋')}
+                for e in t_info['estados']
+            ]
+        else:
+            # Union of all estados, preserving order per type
+            seen = set()
+            columnas = []
+            for t_key, t_info in TIPOS_OT.items():
+                for e in t_info['estados']:
+                    if e not in seen:
+                        seen.add(e)
+                        columnas.append({
+                            'estado': e,
+                            'label': e.replace('_', ' ').title(),
+                            'color': t_info['color'],
+                            'icono': t_info.get('icono', '📋')
+                        })
+
+        # ── Get OTs ──
+        orders = export_work_orders_full(conn, tipo if tipo and tipo in TIPOS_OT else None)
+
+        # ── Build tarjetas ──
+        tarjetas = {}
+        for col in columnas:
+            tarjetas[col['estado']] = []
+
+        now = now_col()
+        for o in orders:
+            estado = o.get('estado', '')
+            if estado not in tarjetas:
+                continue
+
+            # Calculate payments
+            pay_rows = conn.execute(
+                "SELECT COALESCE(SUM(monto), 0) as total FROM payments WHERE wo_id = ?",
+                (o['id'],)
+            ).fetchone()
+            total_abonado = float(pay_rows['total']) if pay_rows else 0.0
+            presupuesto = float(o.get('presupuesto') or 0)
+            saldo_pendiente = round(presupuesto - total_abonado, 2) if presupuesto else None
+            pct_pagado = round((total_abonado / presupuesto) * 100, 1) if presupuesto > 0 else 0
+
+            # Calculate days in current estado
+            hist_row = conn.execute(
+                "SELECT fecha FROM work_order_history WHERE wo_id = ? AND estado = ? ORDER BY id DESC LIMIT 1",
+                (o['id'], estado)
+            ).fetchone()
+            if hist_row and hist_row['fecha']:
+                try:
+                    entry_dt = datetime.fromisoformat(hist_row['fecha'])
+                    if entry_dt.tzinfo:
+                        dias = (now - entry_dt).days
+                    else:
+                        dias = (now.replace(tzinfo=None) - entry_dt).days
+                except (ValueError, TypeError):
+                    dias = 0
+            else:
+                # Fallback: use fecha_recibido
+                fecha_rec = o.get('fechas', {}).get('recibido')
+                if fecha_rec:
+                    try:
+                        entry_dt = datetime.fromisoformat(fecha_rec)
+                        if entry_dt.tzinfo:
+                            dias = (now - entry_dt).days
+                        else:
+                            dias = (now.replace(tzinfo=None) - entry_dt).days
+                    except (ValueError, TypeError):
+                        dias = 0
+                else:
+                    dias = 0
+
+            # Equipment description
+            equipo_desc = (o.get('equipo', {}).get('marca', '') + ' ' +
+                          o.get('equipo', {}).get('modelo', '')).strip()
+            if not equipo_desc:
+                equipo_desc = o.get('equipo', {}).get('tipo', 'Sin equipo')
+
+            tarjeta = {
+                'id': o['id'],
+                'tipo': o.get('tipo', 'reparacion'),
+                'cliente_nombre': o.get('cliente', {}).get('nombre', ''),
+                'equipo': equipo_desc,
+                'estado': estado,
+                'fecha_recibido': o.get('fechas', {}).get('recibido'),
+                'presupuesto': presupuesto,
+                'total_abonado': total_abonado,
+                'saldo_pendiente': saldo_pendiente,
+                'dias_en_estado': dias,
+                'pct_pagado': pct_pagado
+            }
+            tarjetas[estado].append(tarjeta)
+
+        return jsonify({'columnas': columnas, 'tarjetas': tarjetas})
+    finally:
+        conn.close()
+
+
+@app.route('/api/work_orders/<wo_id>/kanban', methods=['PATCH'])
+@login_required
+def api_wo_kanban_move(wo_id):
+    """
+    PATCH /api/work_orders/<id>/kanban
+    Mueve una OT a un nuevo estado vía Kanban drag-drop.
+    Igual que PUT status pero dedicado al Kanban.
+    """
+    conn = get_db()
+    try:
+        row = conn.execute("SELECT * FROM work_orders WHERE id = ?", (wo_id,)).fetchone()
+        if not row:
+            return jsonify({'error': 'Orden no encontrada'}), 404
+
+        data = request.get_json()
+        new_status = data.get('estado')
+
+        # Validate against tipo-specific estados
+        wo_tipo = row['tipo'] or 'reparacion'
+        valid_statuses = TIPOS_OT.get(wo_tipo, {}).get('estados', ['recibido'])
+        if new_status not in valid_statuses:
+            return jsonify({'error': f'Estado inválido para tipo {wo_tipo}: {new_status}'}), 400
+
+        old_status = row['estado']
+        now = now_iso()
+
+        # Update specific date fields
+        if new_status == 'diagnosticando' and not row['fecha_diagnostico']:
+            conn.execute("UPDATE work_orders SET fecha_diagnostico = ? WHERE id = ?", (now, wo_id))
+        elif new_status == 'aprobado' and not row['fecha_presupuesto_aprobado']:
+            conn.execute("UPDATE work_orders SET fecha_presupuesto_aprobado = ? WHERE id = ?", (now, wo_id))
+        elif new_status == 'completado' and not row['fecha_completado']:
+            conn.execute("UPDATE work_orders SET fecha_completado = ? WHERE id = ?", (now, wo_id))
+        elif new_status == 'entregado' and not row['fecha_entregado']:
+            conn.execute("UPDATE work_orders SET fecha_entregado = ? WHERE id = ?", (now, wo_id))
+
+        # Update status
+        conn.execute("UPDATE work_orders SET estado = ? WHERE id = ?", (new_status, wo_id))
+
+        # Add history entry
+        estado_label = new_status.replace('_', ' ').title()
+        conn.execute("""
+            INSERT INTO work_order_history (wo_id, fecha, estado, descripcion, notificado)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            wo_id,
+            now,
+            new_status,
+            data.get('descripcion', f'Movido a {estado_label} vía Kanban'),
+            1 if data.get('notificado') else 0
+        ))
+
+        conn.commit()
+        return jsonify(wo_to_dict(conn, wo_id))
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
 
 @app.route('/api/work_orders/<wo_id>/status', methods=['PUT'])
 @login_required
@@ -726,8 +1096,12 @@ def api_wo_status(wo_id):
         
         data = request.get_json()
         new_status = data.get('estado')
-        if new_status not in VALID_WO_STATUSES:
-            return jsonify({'error': 'Estado inválido'}), 400
+        
+        # Validate against tipo-specific estados
+        wo_tipo = row['tipo'] or 'reparacion'
+        valid_statuses = TIPOS_OT.get(wo_tipo, {}).get('estados', ['recibido'])
+        if new_status not in valid_statuses:
+            return jsonify({'error': f'Estado inválido para tipo {wo_tipo}: {new_status}'}), 400
         
         old_status = row['estado']
         now = now_iso()
@@ -914,12 +1288,211 @@ def api_debug():
     conn = get_db()
     try:
         tables = {}
-        for table in ['clients', 'work_orders', 'work_order_history', 'leads', 'interactions', 'work_order_client_links']:
+        for table in ['clients', 'work_orders', 'work_order_history', 'leads', 'interactions', 'work_order_client_links', 'inventario', 'inventario_movimientos']:
             count = conn.execute(f"SELECT COUNT(*) as cnt FROM {table}").fetchone()[0]
             tables[table] = count
         return jsonify(tables)
     finally:
         conn.close()
+
+
+# ── API Client Orders & Payments ──────────────────────────────────
+
+@app.route('/api/clients/<client_id>/orders', methods=['GET'])
+@login_required
+def api_client_orders(client_id):
+    """Returns all work orders for a client with summary fields."""
+    conn = get_db()
+    try:
+        client = conn.execute("SELECT * FROM clients WHERE id = ?", (client_id,)).fetchone()
+        if not client:
+            return jsonify({'error': 'Cliente no encontrado'}), 404
+        linked = conn.execute(
+            "SELECT wo_id FROM work_order_client_links WHERE client_id = ?",
+            (client_id,)
+        ).fetchall()
+        wo_ids = [l['wo_id'] for l in linked]
+        orders = []
+        for wo_id in wo_ids:
+            wo = wo_to_dict(conn, wo_id)
+            if wo:
+                orders.append({
+                    'id': wo['id'],
+                    'tipo': wo.get('tipo', 'reparacion'),
+                    'estado': wo.get('estado', ''),
+                    'fecha_recibido': wo.get('fechas', {}).get('recibido'),
+                    'presupuesto': wo.get('presupuesto'),
+                    'total_abonado': wo.get('total_abonado', 0),
+                    'saldo_pendiente': wo.get('saldo_pendiente'),
+                    'equipo_tipo': wo.get('equipo', {}).get('tipo', ''),
+                    'equipo_marca': wo.get('equipo', {}).get('marca', ''),
+                    'equipo_modelo': wo.get('equipo', {}).get('modelo', ''),
+                    'falla_reportada': wo.get('falla_reportada', ''),
+                    'cliente_nombre': wo.get('cliente', {}).get('nombre', ''),
+                    'fecha_completado': wo.get('fechas', {}).get('completado'),
+                    'fecha_entregado': wo.get('fechas', {}).get('entregado')
+                })
+        orders.sort(key=lambda o: o.get('fecha_recibido') or '', reverse=True)
+        return jsonify(orders)
+    finally:
+        conn.close()
+
+@app.route('/api/clients/<client_id>/payments', methods=['GET'])
+@login_required
+def api_client_payments(client_id):
+    """Returns all payments for a client through their work orders."""
+    conn = get_db()
+    try:
+        client = conn.execute("SELECT * FROM clients WHERE id = ?", (client_id,)).fetchone()
+        if not client:
+            return jsonify({'error': 'Cliente no encontrado'}), 404
+        linked = conn.execute(
+            "SELECT wo_id FROM work_order_client_links WHERE client_id = ?",
+            (client_id,)
+        ).fetchall()
+        wo_ids = [l['wo_id'] for l in linked]
+        if not wo_ids:
+            return jsonify([])
+        placeholders = ','.join('?' for _ in wo_ids)
+        rows = conn.execute(
+            f"SELECT p.*, w.cliente_nombre, w.presupuesto as wo_presupuesto "
+            f"FROM payments p LEFT JOIN work_orders w ON p.wo_id = w.id "
+            f"WHERE p.wo_id IN ({placeholders}) ORDER BY p.fecha DESC, p.id DESC",
+            wo_ids
+        ).fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
+# ── API Payments ───────────────────────────────────────────────────
+
+@app.route('/api/work_orders/<wo_id>/payments', methods=['GET', 'POST'])
+@login_required
+def api_wo_payments(wo_id):
+    conn = get_db()
+    try:
+        # Verify WO exists
+        wo = conn.execute("SELECT id FROM work_orders WHERE id = ?", (wo_id,)).fetchone()
+        if not wo:
+            return jsonify({'error': 'Orden no encontrada'}), 404
+        
+        if request.method == 'GET':
+            rows = conn.execute(
+                "SELECT * FROM payments WHERE wo_id = ? ORDER BY id", (wo_id,)
+            ).fetchall()
+            return jsonify([dict(r) for r in rows])
+        
+        # POST: registrar abono/pago
+        data = request.get_json()
+        monto = data.get('monto')
+        if not monto or float(monto) <= 0:
+            return jsonify({'error': 'Monto requerido y debe ser > 0'}), 400
+        
+        conn.execute("""
+            INSERT INTO payments (wo_id, monto, tipo, metodo, referencia, fecha, notas, registrado_por)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            wo_id,
+            float(monto),
+            data.get('tipo', 'abono'),
+            data.get('metodo', ''),
+            data.get('referencia', ''),
+            data.get('fecha', now_iso()),
+            data.get('notas', ''),
+            data.get('registrado_por', 'Pedro')
+        ))
+        conn.commit()
+        
+        row = conn.execute("SELECT * FROM payments WHERE rowid = last_insert_rowid()").fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@app.route('/api/work_orders/<wo_id>/payments/<int:payment_id>', methods=['DELETE'])
+@login_required
+def api_wo_payment(wo_id, payment_id):
+    conn = get_db()
+    try:
+        row = conn.execute("SELECT * FROM payments WHERE id = ? AND wo_id = ?", (payment_id, wo_id)).fetchone()
+        if not row:
+            return jsonify({'error': 'Pago no encontrado'}), 404
+        conn.execute("DELETE FROM payments WHERE id = ?", (payment_id,))
+        conn.commit()
+        return jsonify({'success': True, 'message': f'Pago {payment_id} eliminado'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+# ── API Bot Config ──────────────────────────────────────────────────
+
+@app.route('/api/bot/config', methods=['GET', 'PUT'])
+def api_bot_config():
+    # Allow localhost/bot access without auth for GET; require auth for PUT and external GET
+    is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1')
+    if request.method == 'PUT' and 'user' not in session:
+        # PUT always requires auth
+        return redirect(url_for('login_page', next=request.path))
+    if request.method == 'GET' and not is_local and 'user' not in session:
+        return redirect(url_for('login_page', next=request.path))
+    
+    conn = get_db()
+    try:
+        if request.method == 'GET':
+            rows = conn.execute("SELECT * FROM bot_config ORDER BY categoria, key").fetchall()
+            # Flat format: { key: value, ... } for easy consumption by bot.js
+            result = {}
+            meta = {}
+            for r in rows:
+                result[r['key']] = r['value']
+                meta[r['key']] = {
+                    'value': r['value'],
+                    'tipo': r['tipo'],
+                    'descripcion': r['descripcion'],
+                    'categoria': r['categoria']
+                }
+            # If client requests verbose, return full metadata
+            if request.args.get('verbose') == '1':
+                return jsonify(meta)
+            return jsonify(result)
+        
+        # PUT: bulk update
+        data = request.get_json()
+        updated = 0
+        for key, value in data.items():
+            row = conn.execute("SELECT key FROM bot_config WHERE key = ?", (key,)).fetchone()
+            if row:
+                conn.execute("UPDATE bot_config SET value = ? WHERE key = ?", (str(value), key))
+                updated += 1
+        conn.commit()
+        return jsonify({'ok': True, 'updated': updated})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@app.route('/api/bot/config/reload', methods=['POST'])
+@login_required
+def api_bot_config_reload():
+    """Notify the bot to reload its configuration from the CRM."""
+    import json as _json, urllib.request as _urllib
+    try:
+        payload = _json.dumps({'action': 'reload_config'}).encode()
+        req = _urllib.request.Request('http://localhost:18802/reload-config', data=payload,
+            headers={'Content-Type': 'application/json'}, method='POST')
+        with _urllib.request.urlopen(req, timeout=10) as resp:
+            result = _json.loads(resp.read())
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 
 # ── API Pitches ──────────────────────────────────────────────────────
@@ -1106,6 +1679,246 @@ def api_auto_backup():
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)})
 
+
+
+# ── API: WO Templates (Plantillas de Notificación) ────────────
+
+@app.route('/api/wo-templates', methods=['GET', 'POST'])
+@login_required
+def api_wo_templates():
+    conn = get_db()
+    try:
+        if request.method == 'GET':
+            tipo_filter = request.args.get('tipo_ot')
+            if tipo_filter:
+                rows = conn.execute(
+                    "SELECT * FROM wo_templates WHERE tipo_ot IN (?, '*') ORDER BY tipo_ot, estado_origen",
+                    (tipo_filter,)
+                ).fetchall()
+            else:
+                rows = conn.execute("SELECT * FROM wo_templates ORDER BY tipo_ot, estado_origen").fetchall()
+            result = []
+            for r in rows:
+                d = dict(r)
+                d['activo'] = bool(d.get('activo', 0))
+                result.append(d)
+            return jsonify(result)
+        
+        # POST
+        data = request.get_json()
+        if not data.get('nombre') or not data.get('mensaje'):
+            return jsonify({'error': 'nombre y mensaje requeridos'}), 400
+        conn.execute("""
+            INSERT INTO wo_templates (nombre, tipo_ot, estado_origen, asunto, mensaje, canal, activo)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            data.get('nombre'),
+            data.get('tipo_ot', '*'),
+            data.get('estado_origen', ''),
+            data.get('asunto', ''),
+            data.get('mensaje'),
+            data.get('canal', 'whatsapp'),
+            1 if data.get('activo', True) else 0
+        ))
+        conn.commit()
+        new_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+        row = conn.execute("SELECT * FROM wo_templates WHERE id = ?", (new_id,)).fetchone()
+        d = dict(row)
+        d['activo'] = bool(d.get('activo', 0))
+        return jsonify(d), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/wo-templates/<int:template_id>', methods=['GET', 'PUT', 'DELETE'])
+@login_required
+def api_wo_template(template_id):
+    conn = get_db()
+    try:
+        row = conn.execute("SELECT * FROM wo_templates WHERE id = ?", (template_id,)).fetchone()
+        if not row:
+            return jsonify({'error': 'Plantilla no encontrada'}), 404
+        
+        if request.method == 'GET':
+            d = dict(row)
+            d['activo'] = bool(d.get('activo', 0))
+            return jsonify(d)
+        
+        if request.method == 'DELETE':
+            conn.execute("DELETE FROM wo_templates WHERE id = ?", (template_id,))
+            conn.commit()
+            return jsonify({'success': True, 'message': f'Plantilla {template_id} eliminada'})
+        
+        # PUT
+        data = request.get_json()
+        updates = []
+        params = []
+        for key in ['nombre', 'tipo_ot', 'estado_origen', 'asunto', 'mensaje', 'canal', 'activo']:
+            if key in data:
+                updates.append(f"{key} = ?")
+                params.append(data[key] if key != 'activo' else (1 if data[key] else 0))
+        if updates:
+            params.append(template_id)
+            conn.execute(f"UPDATE wo_templates SET {', '.join(updates)} WHERE id = ?", params)
+            conn.commit()
+        
+        row = conn.execute("SELECT * FROM wo_templates WHERE id = ?", (template_id,)).fetchone()
+        d = dict(row)
+        d['activo'] = bool(d.get('activo', 0))
+        return jsonify(d)
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/work_orders/<wo_id>/notify', methods=['POST'])
+@login_required
+def api_wo_notify(wo_id):
+    import json, re, urllib.request
+    conn = get_db()
+    try:
+        # 1. Load WO
+        wo_row = conn.execute("SELECT * FROM work_orders WHERE id = ?", (wo_id,)).fetchone()
+        if not wo_row:
+            return jsonify({'ok': False, 'error': 'Orden no encontrada'}), 404
+        
+        wo = dict(wo_row)
+        
+        # Check if we have a phone number
+        telefono = wo.get('cliente_telefono', '')
+        if not telefono:
+            # Try to find from linked client
+            if wo.get('client_id'):
+                client_row = conn.execute("SELECT telefono FROM clients WHERE id = ?", (wo['client_id'],)).fetchone()
+                if client_row:
+                    telefono = client_row['telefono'] or ''
+        if not telefono:
+            return jsonify({'ok': False, 'error': 'No hay número de teléfono para el cliente'}), 400
+        
+        # 2. Find matching template
+        tipo_ot = wo.get('tipo', 'reparacion')
+        estado = wo.get('estado', '')
+        template = conn.execute(
+            "SELECT * FROM wo_templates WHERE tipo_ot = ? AND estado_origen = ? AND activo = 1",
+            (tipo_ot, estado)
+        ).fetchone()
+        if not template:
+            # Fallback: tipo_ot='*'
+            template = conn.execute(
+                "SELECT * FROM wo_templates WHERE tipo_ot = '*' AND estado_origen = ? AND activo = 1",
+                (estado,)
+            ).fetchone()
+        if not template:
+            return jsonify({'ok': False, 'error': f'No hay plantilla activa para {tipo_ot}/{estado}'}), 400
+        
+        tmpl = dict(template)
+        mensaje = tmpl['mensaje']
+        
+        # 3. Replace placeholders
+        # Parse campos_extra
+        try:
+            campos_extra = json.loads(wo.get('campos_extra', '{}') or '{}')
+        except (json.JSONDecodeError, TypeError):
+            campos_extra = {}
+        
+        # Format presupuesto as Colombian pesos
+        presupuesto = wo.get('presupuesto')
+        if presupuesto is not None:
+            presupuesto_str = f"{presupuesto:,.0f}".replace(',', '.')
+        else:
+            presupuesto_str = '0'
+        
+        from datetime import datetime
+        fecha_str = datetime.now(COL_TZ).strftime('%d/%m/%Y')
+        
+        equipo_str = ' '.join(filter(None, [
+            wo.get('equipo_tipo', ''),
+            wo.get('equipo_marca', ''),
+            wo.get('equipo_modelo', '')
+        ])).strip()
+        
+        replacements = {
+            '{id}': wo['id'],
+            '{cliente}': wo.get('cliente_nombre', ''),
+            '{equipo}': equipo_str,
+            '{estado}': estado,
+            '{presupuesto}': presupuesto_str,
+            '{fecha}': fecha_str,
+            '{diagnostico}': wo.get('diagnostico', '') or '',
+            '{tipo_producto}': campos_extra.get('tipo_producto', ''),
+            '{capacidad}': campos_extra.get('capacidad', ''),
+            '{fecha_estimada}': campos_extra.get('fecha_estimada', ''),
+            '{tipo_cargador}': campos_extra.get('tipo_cargador', ''),
+            '{potencia}': campos_extra.get('potencia', ''),
+            '{fecha_agendada}': campos_extra.get('fecha_agendada', ''),
+            '{tecnico_asignado}': campos_extra.get('tecnico_asignado', ''),
+        }
+        
+        for placeholder, value in replacements.items():
+            mensaje = mensaje.replace(placeholder, str(value))
+        
+        # 4. Send via WhatsApp bot
+        numero_limpio = re.sub(r'[^0-9]', '', telefono)
+        try:
+            payload = json.dumps({'to': numero_limpio, 'message': mensaje}).encode()
+            req = urllib.request.Request(
+                'http://localhost:18802/send',
+                data=payload,
+                headers={'Content-Type': 'application/json'},
+                method='POST'
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                result = json.loads(resp.read())
+        except Exception as e:
+            return jsonify({'ok': False, 'error': f'Bot WhatsApp no disponible: {str(e)}'}), 500
+        
+        # 5. Register interaction
+        lead_id = None
+        lead_row = conn.execute(
+            "SELECT lead_id FROM clients WHERE id = ?", (wo.get('client_id', ''),)
+        ).fetchone()
+        if lead_row:
+            lead_id = lead_row['lead_id']
+        
+        if lead_id:
+            now = now_iso()
+            conn.execute("""
+                INSERT INTO interactions (lead_id, tipo, direccion, resumen, detalle, fecha, estado)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                lead_id,
+                'whatsapp',
+                'saliente',
+                f'Notificación OT {wo_id} ({estado})',
+                mensaje[:200],
+                now,
+                'completado'
+            ))
+        
+        # 6. Mark history entry as notified
+        conn.execute("""
+            UPDATE work_order_history SET notificado = 1
+            WHERE wo_id = ? AND estado = ? AND notificado = 0
+            ORDER BY id DESC LIMIT 1
+        """, (wo_id, estado))
+        conn.commit()
+        
+        return jsonify({
+            'ok': True,
+            'message': f'Notificación enviada a {telefono}',
+            'template_id': tmpl['id'],
+            'plantilla': tmpl['nombre'],
+            'canal': 'whatsapp',
+            'result': result
+        })
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'ok': False, 'error': str(e)}), 500
+    finally:
+        conn.close()
 
 
 # ── API: PIPELINE / KANBAN ──────────────────────────────
@@ -1333,13 +2146,316 @@ def api_task(tid):
     finally:
         conn.close()
 
+# ── API Inventario ──────────────────────────────────────────────────
+
+@app.route('/api/inventario/bajo-stock', methods=['GET'])
+@login_required
+def api_inventario_bajo_stock():
+    """GET /api/inventario/bajo-stock — items con cantidad < stock_minimo"""
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM inventario WHERE cantidad < stock_minimo ORDER BY (stock_minimo - cantidad) DESC"
+        ).fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
+
+@app.route('/api/inventario', methods=['GET', 'POST'])
+@login_required
+def api_inventario():
+    if request.method == 'GET':
+        conn = get_db()
+        try:
+            categoria = request.args.get('categoria')
+            search = request.args.get('search', '').strip()
+            query = "SELECT * FROM inventario WHERE 1=1"
+            params = []
+            if categoria:
+                query += " AND categoria = ?"
+                params.append(categoria)
+            if search:
+                query += " AND (nombre LIKE ? OR codigo LIKE ?)"
+                params.extend([f'%{search}%', f'%{search}%'])
+            query += " ORDER BY categoria, nombre"
+            rows = conn.execute(query, params).fetchall()
+            return jsonify([dict(r) for r in rows])
+        finally:
+            conn.close()
+
+    # POST — crear item
+    data = request.get_json()
+    conn = get_db()
+    try:
+        conn.execute('''
+            INSERT INTO inventario (codigo, nombre, categoria, unidad, cantidad, stock_minimo, proveedor, costo_unitario, ubicacion)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            data.get('codigo', ''),
+            data.get('nombre', ''),
+            data.get('categoria', ''),
+            data.get('unidad', 'unidad'),
+            data.get('cantidad', 0),
+            data.get('stock_minimo', 0),
+            data.get('proveedor', ''),
+            data.get('costo_unitario', 0),
+            data.get('ubicacion', '')
+        ))
+        conn.commit()
+        new_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+        row = conn.execute("SELECT * FROM inventario WHERE id = ?", (new_id,)).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@app.route('/api/inventario/<int:item_id>', methods=['GET', 'PUT', 'DELETE'])
+@login_required
+def api_inventario_item(item_id):
+    conn = get_db()
+    try:
+        row = conn.execute("SELECT * FROM inventario WHERE id = ?", (item_id,)).fetchone()
+        if not row:
+            return jsonify({'error': 'Item no encontrado'}), 404
+
+        if request.method == 'GET':
+            return jsonify(dict(row))
+
+        if request.method == 'DELETE':
+            conn.execute("DELETE FROM inventario_movimientos WHERE item_id = ?", (item_id,))
+            conn.execute("DELETE FROM inventario WHERE id = ?", (item_id,))
+            conn.commit()
+            return jsonify({'success': True, 'message': f'Item {row["codigo"]} eliminado'})
+
+        # PUT — editar item
+        data = request.get_json()
+        updates = []
+        params = []
+        for key in ['codigo', 'nombre', 'categoria', 'unidad', 'cantidad', 'stock_minimo', 'proveedor', 'costo_unitario', 'ubicacion']:
+            if key in data:
+                updates.append(f"{key} = ?")
+                params.append(data[key])
+        if updates:
+            params.append(item_id)
+            conn.execute(f"UPDATE inventario SET {', '.join(updates)} WHERE id = ?", params)
+            conn.commit()
+        row = conn.execute("SELECT * FROM inventario WHERE id = ?", (item_id,)).fetchone()
+        return jsonify(dict(row))
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@app.route('/api/inventario/<int:item_id>/ajustar', methods=['POST'])
+@login_required
+def api_inventario_ajustar(item_id):
+    """POST /api/inventario/<id>/ajustar — entrada/salida de stock"""
+    data = request.get_json()
+    conn = get_db()
+    try:
+        row = conn.execute("SELECT * FROM inventario WHERE id = ?", (item_id,)).fetchone()
+        if not row:
+            return jsonify({'error': 'Item no encontrado'}), 404
+
+        tipo = data.get('tipo', 'entrada')
+        cantidad = float(data.get('cantidad', 0))
+        if cantidad <= 0:
+            return jsonify({'error': 'Cantidad debe ser > 0'}), 400
+        if tipo not in ('entrada', 'salida', 'ajuste'):
+            return jsonify({'error': 'Tipo inválido: use entrada, salida o ajuste'}), 400
+
+        # Calcular nueva cantidad
+        if tipo == 'salida':
+            nueva_cantidad = row['cantidad'] - cantidad
+        else:
+            nueva_cantidad = row['cantidad'] + cantidad
+
+        if nueva_cantidad < 0:
+            return jsonify({'error': f'Stock insuficiente. Actual: {row["cantidad"]} {row["unidad"]}'}), 400
+
+        motivo = data.get('motivo', '')
+        now = now_iso()
+
+        # Registrar movimiento
+        conn.execute('''
+            INSERT INTO inventario_movimientos (item_id, tipo, cantidad, motivo, fecha)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (item_id, tipo, cantidad, motivo, now))
+
+        # Actualizar stock
+        conn.execute("UPDATE inventario SET cantidad = ? WHERE id = ?", (nueva_cantidad, item_id))
+        conn.commit()
+
+        row = conn.execute("SELECT * FROM inventario WHERE id = ?", (item_id,)).fetchone()
+        return jsonify(dict(row))
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@app.route('/api/inventario/<int:item_id>/movimientos', methods=['GET'])
+@login_required
+def api_inventario_movimientos(item_id):
+    """GET /api/inventario/<id>/movimientos — historial de movimientos"""
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM inventario_movimientos WHERE item_id = ? ORDER BY fecha DESC LIMIT 50",
+            (item_id,)
+        ).fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
+
+@app.route('/api/inventario/categorias', methods=['GET'])
+@login_required
+def api_inventario_categorias():
+    """GET /api/inventario/categorias — lista de categorías únicas"""
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT DISTINCT categoria FROM inventario WHERE categoria IS NOT NULL AND categoria != '' ORDER BY categoria"
+        ).fetchall()
+        return jsonify([r['categoria'] for r in rows])
+    finally:
+        conn.close()
+
+
 # ── Main ─────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
     os.makedirs(os.path.join(BASE_DIR, 'templates'), exist_ok=True)
+    
+    # ── Migración: Tablas de Inventario ────────────────────────────
+    def migrate_inventario():
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA foreign_keys=ON")
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS inventario (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    codigo TEXT UNIQUE,
+                    nombre TEXT NOT NULL,
+                    categoria TEXT,
+                    unidad TEXT DEFAULT 'unidad',
+                    cantidad REAL DEFAULT 0,
+                    stock_minimo REAL DEFAULT 0,
+                    proveedor TEXT,
+                    costo_unitario REAL DEFAULT 0,
+                    ubicacion TEXT
+                )
+            ''')
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS inventario_movimientos (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    item_id INTEGER NOT NULL,
+                    tipo TEXT NOT NULL,
+                    cantidad REAL NOT NULL,
+                    motivo TEXT,
+                    fecha TEXT NOT NULL,
+                    FOREIGN KEY (item_id) REFERENCES inventario(id)
+                )
+            ''')
+            # Seeds: insertar si la tabla inventario está vacía
+            count = conn.execute("SELECT COUNT(*) FROM inventario").fetchone()[0]
+            if count == 0:
+                seeds = [
+                    ('CU-12', 'Alambre de cobre #12', 'bobinado', 'kg', 0, 5, 'Cobres del Norte', 58000, 'Estante A1'),
+                    ('CU-14', 'Alambre de cobre #14', 'bobinado', 'kg', 0, 5, 'Cobres del Norte', 48000, 'Estante A1'),
+                    ('CU-10', 'Alambre de cobre #10', 'bobinado', 'kg', 0, 3, 'Cobres del Norte', 72000, 'Estante A1'),
+                    ('NU-FE', 'Núcleo de ferrita', 'bobinado', 'unidad', 0, 2, 'Proveedor Nacional', 35000, 'Estante B2'),
+                    ('NU-SI', 'Núcleo de silicio', 'bobinado', 'unidad', 0, 2, 'Proveedor Nacional', 85000, 'Estante B2'),
+                    ('BA-01', 'Barniz aislante', 'bobinado', 'litro', 0, 2, 'Químicos del Caribe', 28000, 'Estante C1'),
+                    ('TE-01', 'Terminales de conexión', 'electronico', 'unidad', 0, 20, 'ElectroPartes Ltda', 800, 'Estante D3'),
+                    ('PR-TM', 'Protección termomagnética', 'protecciones', 'unidad', 0, 5, 'Schneider Electric', 45000, 'Estante E1'),
+                    ('PR-SP', 'Supresor de picos', 'protecciones', 'unidad', 0, 3, 'Schneider Electric', 35000, 'Estante E1'),
+                    ('GA-01', 'Gabinete metálico estándar', 'estructura', 'unidad', 0, 2, 'Metalúrgica del Norte', 120000, 'Estante F1'),
+                    ('CA-01', 'Cable AWG 10', 'electronico', 'metro', 0, 20, 'ElectroPartes Ltda', 3500, 'Estante D1'),
+                    ('CA-02', 'Cable AWG 12', 'electronico', 'metro', 0, 30, 'ElectroPartes Ltda', 2200, 'Estante D1'),
+                ]
+                conn.executemany(
+                    "INSERT INTO inventario (codigo, nombre, categoria, unidad, cantidad, stock_minimo, proveedor, costo_unitario, ubicacion) VALUES (?,?,?,?,?,?,?,?,?)",
+                    seeds
+                )
+                conn.commit()
+                print(f"  → Inventario: {len(seeds)} items semilla insertados.")
+        finally:
+            conn.close()
+    
+    migrate_inventario()
+    
     # Ensure DB exists with schema on startup
     if not os.path.exists(DB_PATH) or os.path.getsize(DB_PATH) == 0:
         print("--  DB no encontrada. Ejecuta migrate_to_sqlite.py primero.")
+    
+    # ── Seed WO Templates (only if table is empty) ──
+    seed_conn = get_db()
+    try:
+        count = seed_conn.execute("SELECT COUNT(*) FROM wo_templates").fetchone()[0]
+        if count == 0:
+            seeds = [
+                # REPARACIÓN (5)
+                ('Reparación — Recibido', 'reparacion', 'recibido', 'Tu orden en HTK',
+                 '🔧 *HTK INGENIERIA*\n\n{cliente}, recibimos tu *{equipo}*.\nTu orden es: *{id}*\n\nLo revisaremos y te enviaremos el diagnóstico.\n⏱ Tiempo estimado: 48-72h', 'whatsapp', 1),
+                ('Reparación — Presupuestado', 'reparacion', 'presupuestado', 'Diagnóstico completado',
+                 '📋 *Diagnóstico completado*\n\n{cliente}, orden *{id}*\nEquipo: {equipo}\nDiagnóstico: {diagnostico}\nPresupuesto: *${presupuesto}*\n\nResponde *APROBAR* para iniciar la reparación.', 'whatsapp', 1),
+                ('Reparación — Reparando', 'reparacion', 'reparando', 'Equipo en reparación',
+                 '🔧 *Tu equipo está en reparación*\n\n{cliente}, orden *{id}* — {equipo}\n\nEstado actual: *{estado}*\nTe avisaremos cuando esté listo. ⚡', 'whatsapp', 1),
+                ('Reparación — Esperando Repuestos', 'reparacion', 'esperando_repuestos', 'Actualización de tu orden',
+                 '⏳ *Actualización de tu orden*\n\n{cliente}, orden *{id}* — {equipo}\n\nEstamos esperando repuestos. Te avisaremos cuando lleguen.\nGracias por tu paciencia 🙏', 'whatsapp', 1),
+                ('Reparación — Completado', 'reparacion', 'completado', '¡Tu equipo está listo!',
+                 '✅ *¡Tu equipo está listo!*\n\n{cliente}, orden *{id}* — {equipo}\n\nPuedes recogerlo en nuestro taller:\n📍 Barranquilla\n💰 Total: ${presupuesto}\n\n¡Gracias por confiar en HTK! ⚡', 'whatsapp', 1),
+                # FABRICACIÓN (8)
+                ('Fabricación — Cotizando', 'fabricacion', 'cotizando', 'Cotizando tu equipo',
+                 '🏭 *HTK INGENIERIA*\n\n{cliente}, estamos cotizando tu {tipo_producto} {capacidad}.\nTe enviamos la propuesta pronto.', 'whatsapp', 1),
+                ('Fabricación — Diseño Aprobado', 'fabricacion', 'diseno_aprobado', 'Diseño aprobado',
+                 '✅ Diseño aprobado. Iniciamos fabricación de tu {tipo_producto} {capacidad}.\nOrden: *{id}*', 'whatsapp', 1),
+                ('Fabricación — Materiales', 'fabricacion', 'materiales', 'Adquiriendo materiales',
+                 '📦 Adquiriendo materiales para tu {tipo_producto}.\n{id}', 'whatsapp', 1),
+                ('Fabricación — Bobinado', 'fabricacion', 'bobinado', 'En proceso de bobinado',
+                 '🔧 En proceso de bobinado. {id} — {tipo_producto} {capacidad}.', 'whatsapp', 1),
+                ('Fabricación — Ensamble', 'fabricacion', 'ensamble', 'Ensamblando equipo',
+                 '🔩 Ensamblando tu {tipo_producto}. {id}', 'whatsapp', 1),
+                ('Fabricación — Pruebas', 'fabricacion', 'pruebas', 'Probando equipo',
+                 '⚡ Probando tu {tipo_producto}. Verificamos voltajes y protección. {id}', 'whatsapp', 1),
+                ('Fabricación — Control Calidad', 'fabricacion', 'control_calidad', 'Control de calidad aprobado',
+                 '✅ Control de calidad aprobado. {id} — {tipo_producto} listo.', 'whatsapp', 1),
+                ('Fabricación — Finalizado', 'fabricacion', 'finalizado', '¡Fabricación completada!',
+                 '🏁 *¡Fabricación completada!*\n\n{id} — {tipo_producto} {capacidad}\nTotal: ${presupuesto}\n\nGracias por confiar en HTK INGENIERIA ⚡', 'whatsapp', 1),
+                # INSTALACIÓN (6)
+                ('Instalación — Agendado', 'instalacion', 'agendado', 'Instalación agendada',
+                 '📅 Instalación agendada: {fecha_agendada}\nTécnico: {tecnico_asignado}\n{id}', 'whatsapp', 1),
+                ('Instalación — En Sitio', 'instalacion', 'en_sitio', 'Técnico en sitio',
+                 '👷 Técnico en sitio. Iniciando instalación de tu {tipo_cargador}. {id}', 'whatsapp', 1),
+                ('Instalación — Instalando', 'instalacion', 'instalando', 'Instalando cargador',
+                 '🔌 Instalando {tipo_cargador} {potencia}. {id}', 'whatsapp', 1),
+                ('Instalación — Pruebas', 'instalacion', 'pruebas', 'Realizando pruebas',
+                 '⚡ Realizando pruebas del cargador. {id}', 'whatsapp', 1),
+                ('Instalación — Finalizado', 'instalacion', 'finalizado', 'Instalación completada',
+                 '✅ Instalación completada. {id} — {tipo_cargador}. ¡Disfruta!', 'whatsapp', 1),
+                ('Instalación — Facturado', 'instalacion', 'facturado', 'Factura emitida',
+                 '📄 Factura emitida. {id} — Total: ${presupuesto}. Gracias por confiar en HTK.', 'whatsapp', 1),
+            ]
+            seed_conn.executemany(
+                "INSERT INTO wo_templates (nombre, tipo_ot, estado_origen, asunto, mensaje, canal, activo) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                seeds
+            )
+            seed_conn.commit()
+            print(f"  {len(seeds)} plantillas de notificación insertadas.")
+        else:
+            print(f"  {count} plantillas ya existen en wo_templates — seeds omitidos.")
+    finally:
+        seed_conn.close()
     
     # ── API Enviar WhatsApp (proxy al bot API) ──
     @app.route('/api/send-message', methods=['POST'])
