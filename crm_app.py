@@ -355,6 +355,8 @@ def api_client(client_id):
             return jsonify(result)
         
         if request.method == 'DELETE':
+            # Reset linked lead to 'nuevo' if client was converted from lead
+            conn.execute("UPDATE leads SET estado = 'nuevo' WHERE id IN (SELECT lead_id FROM clients WHERE id = ?) AND estado = 'cliente'", (client_id,))
             conn.execute("DELETE FROM clients WHERE id = ?", (client_id,))
             conn.execute("DELETE FROM work_order_client_links WHERE client_id = ?", (client_id,))
             conn.commit()
@@ -374,6 +376,25 @@ def api_client(client_id):
         
         if updates:
             conn.execute(f"UPDATE clients SET {', '.join(updates)} WHERE id = ?", params)
+            # Sync back to linked lead
+            if 'lead_id' not in data:
+                lead_row = conn.execute("SELECT lead_id FROM clients WHERE id = ?", (client_id,)).fetchone()
+                linked_lead_id = lead_row['lead_id'] if lead_row else None
+            else:
+                linked_lead_id = data.get('lead_id')
+            if linked_lead_id:
+                lead_updates = []
+                lead_params = []
+                sync_fields = {'nombre':'nombre', 'telefono':'telefono', 'segmento':'segmento',
+                               'linea_interes':'linea_interes', 'fuente':'fuente', 'notas':'notas',
+                               'contacto_nombre':'contacto_nombre'}
+                for client_key, lead_key in sync_fields.items():
+                    if client_key in data:
+                        lead_updates.append(f"{lead_key} = ?")
+                        lead_params.append(data[client_key])
+                if lead_updates:
+                    lead_params.append(linked_lead_id)
+                    conn.execute(f"UPDATE leads SET {', '.join(lead_updates)} WHERE id = ?", lead_params)
         
         # Update linked orders if provided
         if 'ordenes' in data:
@@ -455,6 +476,8 @@ def api_lead(lead_id):
             return jsonify(dict(row))
         
         if request.method == 'DELETE':
+            # Also delete linked client if lead was converted
+            conn.execute("DELETE FROM clients WHERE lead_id = ?", (lead_id,))
             conn.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
             conn.commit()
             return jsonify({'success': True, 'message': f'Lead {lead_id} eliminado'})
@@ -470,6 +493,23 @@ def api_lead(lead_id):
         if updates:
             params.append(lead_id)
             conn.execute(f"UPDATE leads SET {', '.join(updates)} WHERE id = ?", params)
+            # Sync to linked client if this lead was converted
+            lead_row = conn.execute("SELECT estado FROM leads WHERE id = ?", (lead_id,)).fetchone()
+            if lead_row and lead_row['estado'] == 'cliente':
+                client = conn.execute("SELECT id FROM clients WHERE lead_id = ?", (lead_id,)).fetchone()
+                if client:
+                    client_updates = []
+                    client_params = []
+                    sync_fields = {'nombre':'nombre', 'telefono':'telefono', 'segmento':'segmento', 
+                                   'linea_interes':'linea_interes', 'fuente':'fuente', 'notas':'notas',
+                                   'contacto_nombre':'contacto_nombre'}
+                    for lead_key, client_key in sync_fields.items():
+                        if lead_key in data:
+                            client_updates.append(f"{client_key} = ?")
+                            client_params.append(data[lead_key])
+                    if client_updates:
+                        client_params.append(client['id'])
+                        conn.execute(f"UPDATE clients SET {', '.join(client_updates)} WHERE id = ?", client_params)
             conn.commit()
         
         row = conn.execute("SELECT * FROM leads WHERE id = ?", (lead_id,)).fetchone()
@@ -494,21 +534,22 @@ def api_convert_lead(lead_id):
         now = now_iso()
         conn.execute("""
             INSERT INTO clients (id, telefono, nombre, fuente, primer_contacto, ultimo_contacto,
-                interacciones_totales, estado, segmento, linea_interes, lead_id, notas)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                interacciones_totales, estado, segmento, linea_interes, lead_id, notas, contacto_nombre)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             new_id,
-            lead['contacto'],
+            lead['telefono'] or lead['contacto'],
             lead['nombre'],
             lead['fuente'],
             now,
             now,
             0,
-            'lead',
+            'cliente',
             lead['segmento'],
             lead['linea_interes'],
             lead_id,
-            lead['notas'] or ''
+            lead['notas'] or '',
+            lead['contacto_nombre'] or ''
         ))
         conn.execute("UPDATE leads SET estado = 'cliente' WHERE id = ?", (lead_id,))
         conn.commit()
@@ -929,6 +970,17 @@ def api_pitches():
             json.dump(pitches, f, indent=2, ensure_ascii=False)
 
         return jsonify({'ok': True})
+
+
+@app.route('/api/segments')
+@login_required
+def api_segments():
+    conn = get_db()
+    try:
+        rows = conn.execute("SELECT key, label, color, orden FROM segmentos WHERE activo=1 ORDER BY orden").fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
 
 
 @app.route('/api/pitches/by-segment/<segment>', methods=['GET'])
