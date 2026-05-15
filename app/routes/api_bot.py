@@ -35,52 +35,54 @@ def actividad_crear(lead_id, tipo, resumen, detalle=''):
 
 @api_bot_bp.route('/api/bot/config', methods=['GET', 'PUT'])
 def api_bot_config():
-    # Allow localhost/bot access without auth for GET
+    # Allow localhost/bot access without auth for GET, or authenticated users
     is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1')
-    if request.method == 'PUT' and 'user' not in session:
-        return redirect(url_for('views.login_page', next=request.path))
-    if request.method == 'GET' and not is_local and 'user' not in session:
-        return redirect(url_for('views.login_page', next=request.path))
-
+    is_authenticated = 'user' in session
+    
     if request.method == 'GET':
+        if not is_local and not is_authenticated:
+            return jsonify({'error': 'Unauthorized'}), 401
         if request.args.get('verbose') == '1':
             return jsonify(get_bot_config_verbose())
         return jsonify(get_bot_config_flat())
 
-    # PUT: bulk update with type casting
-    data = request.get_json()
-    conn = get_db()
-    try:
-        updated = 0
-        for key, value in data.items():
-            row = conn.execute(
-                "SELECT key, tipo FROM bot_config WHERE key = ?", (key,)
-            ).fetchone()
-            if row:
-                tipo = row['tipo']
-                casted_value = cast_config_value(value, tipo)
-                # Store as string in SQLite (all config values are TEXT)
-                store_value = str(casted_value) if not isinstance(casted_value, str) else casted_value
-                if tipo == 'bool':
-                    store_value = '1' if casted_value else '0'
-                elif tipo == 'int':
-                    store_value = str(int(casted_value))
-                elif tipo == 'float':
-                    store_value = str(float(casted_value))
-                else:
-                    store_value = str(casted_value)
-                conn.execute(
-                    "UPDATE bot_config SET value = ? WHERE key = ?",
-                    (store_value, key)
-                )
-                updated += 1
-        conn.commit()
-        return jsonify({'ok': True, 'updated': updated})
-    except Exception as e:
-        conn.rollback()
-        return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
+    if request.method == 'PUT':
+        if not is_authenticated:
+            return jsonify({'error': 'Unauthorized'}), 401
+        # PUT: bulk update with type casting
+        data = request.get_json()
+        conn = get_db()
+        try:
+            updated = 0
+            for key, value in data.items():
+                row = conn.execute(
+                    "SELECT key, tipo FROM bot_config WHERE key = ?", (key,)
+                ).fetchone()
+                if row:
+                    tipo = row['tipo']
+                    casted_value = cast_config_value(value, tipo)
+                    # Store as string in SQLite (all config values are TEXT)
+                    store_value = str(casted_value) if not isinstance(casted_value, str) else casted_value
+                    if tipo == 'bool':
+                        store_value = '1' if casted_value else '0'
+                    elif tipo == 'int':
+                        store_value = str(int(casted_value))
+                    elif tipo == 'float':
+                        store_value = str(float(casted_value))
+                    else:
+                        store_value = str(casted_value)
+                    conn.execute(
+                        "UPDATE bot_config SET value = ? WHERE key = ?",
+                        (store_value, key)
+                    )
+                    updated += 1
+            conn.commit()
+            return jsonify({'ok': True, 'updated': updated})
+        except Exception as e:
+            conn.rollback()
+            return jsonify({'error': str(e)}), 500
+        finally:
+            conn.close()
 
 
 @api_bot_bp.route('/api/bot/config/reload', methods=['POST'])

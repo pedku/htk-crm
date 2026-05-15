@@ -1375,12 +1375,12 @@
 
  <!-- Sub-tabs internas -->
  <div class="client-profile-tabs mb-3" id="configSubtabs">
-  <button class="client-profile-tab active" data-config-tab="general" onclick="switchConfigTab('general')"><i class="bi bi-gear"></i> General</button>
-  <button class="client-profile-tab" data-config-tab="bot" onclick="switchConfigTab('bot')"><i class="bi bi-robot"></i> Bot WhatsApp</button>
-  <button class="client-profile-tab" data-config-tab="templates" onclick="switchConfigTab('templates')"><i class="bi bi-chat-square-text"></i> Plantillas OT</button>
-  <button class="client-profile-tab" data-config-tab="prices" onclick="switchConfigTab('prices')"><i class="bi bi-tags"></i> Precios</button>
-  <button class="client-profile-tab" data-config-tab="segments" onclick="switchConfigTab('segments')"><i class="bi bi-diagram-3"></i> Segmentos</button>
-  <button class="client-profile-tab" data-config-tab="usuarios" onclick="switchConfigTab('usuarios')"><i class="bi bi-people-fill"></i> Usuarios</button>
+  <button type="button" class="client-profile-tab active" data-config-tab="general" onclick="switchConfigTab('general')"><i class="bi bi-gear"></i> General</button>
+  <button type="button" class="client-profile-tab" data-config-tab="bot" onclick="switchConfigTab('bot')"><i class="bi bi-robot"></i> Bot WhatsApp</button>
+  <button type="button" class="client-profile-tab" data-config-tab="templates" onclick="switchConfigTab('templates')"><i class="bi bi-chat-square-text"></i> Plantillas OT</button>
+  <button type="button" class="client-profile-tab" data-config-tab="prices" onclick="switchConfigTab('prices')"><i class="bi bi-tags"></i> Precios</button>
+  <button type="button" class="client-profile-tab" data-config-tab="segments" onclick="switchConfigTab('segments')"><i class="bi bi-diagram-3"></i> Segmentos</button>
+  <button type="button" class="client-profile-tab" data-config-tab="usuarios" onclick="switchConfigTab('usuarios')"><i class="bi bi-people-fill"></i> Usuarios</button>
  </div>
 
  <!-- General Sub-tab -->
@@ -1740,6 +1740,75 @@
  </div>
 </div>
 
+<!-- ===== MODAL EDITOR DE PLANTILLAS OT ===== -->
+<div class="modal fade" id="templateEditorModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="templateEditorTitle">Nueva Plantilla</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="tmplEditId">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="tmplEditName">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Tipo OT</label>
+            <select class="form-select" id="tmplEditTipo" onchange="onTmplTipoChange()">
+              <option value="*">Todos</option>
+              <option value="reparacion">Reparación</option>
+              <option value="fabricacion">Fabricación</option>
+              <option value="instalacion">Instalación</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Estado origen</label>
+            <select class="form-select" id="tmplEditEstado"></select>
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">Asunto</label>
+            <input type="text" class="form-control" id="tmplEditAsunto">
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">Mensaje</label>
+            <textarea class="form-control" id="tmplEditMensaje" rows="6" oninput="updateTemplatePreview()"></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Canal</label>
+            <select class="form-select" id="tmplEditCanal">
+              <option value="whatsapp">WhatsApp</option>
+              <option value="email">Email</option>
+            </select>
+          </div>
+          <div class="col-md-6 d-flex align-items-end">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="tmplEditActivo" checked>
+              <label class="form-check-label" for="tmplEditActivo">Activo</label>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <strong>Placeholders disponibles</strong>
+          </div>
+          <div id="tmplPlaceholderChips" class="d-flex flex-wrap gap-2"></div>
+        </div>
+        <div class="mt-4">
+          <strong>Vista previa</strong>
+          <div id="tmplPreviewContent" class="p-3 mt-2" style="background:rgba(255,255,255,0.05);border-radius:12px;min-height:120px;white-space:pre-wrap;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-htk" onclick="saveTemplate()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 
@@ -1911,7 +1980,7 @@ document.querySelectorAll('.sidebar .nav-link[data-tab]').forEach(link => {
     if (tab === 'leads') loadLeads();
     if (tab === 'interactions') loadInteractions();
     if (tab === 'inventario') loadInventario();
-    if (tab === 'config') { loadGeneralConfig(); }
+    if (tab === 'config') { switchConfigTab('general'); }
   });
 });
 document.querySelectorAll('.mobile-nav-link[data-tab]').forEach(link => {
@@ -1932,7 +2001,7 @@ document.querySelectorAll('.mobile-nav-link[data-tab]').forEach(link => {
  if (tab === 'leads') loadLeads();
  if (tab === 'interactions') loadInteractions();
  if (tab === 'inventario') loadInventario();
- if (tab === 'config') { loadGeneralConfig(); }
+ if (tab === 'config') { switchConfigTab('general'); }
  });
 });
 
@@ -4830,18 +4899,43 @@ const PLACEHOLDERS = {
 };
 
 function switchConfigTab(tab) {
+  const validTabs = ['general','bot','templates','prices','segments','usuarios'];
+  if (!validTabs.includes(tab)) tab = 'general';
+
   document.querySelectorAll('#configSubtabs .client-profile-tab').forEach(b => b.classList.remove('active'));
   const tabBtn = document.querySelector(`[data-config-tab="${tab}"]`);
   if (tabBtn) tabBtn.classList.add('active');
-  document.querySelectorAll('.config-subtab').forEach(s => s.style.display = 'none');
+
+  document.querySelectorAll('.config-subtab').forEach(s => {
+    s.style.display = 'none';
+    s.classList.remove('active');
+  });
   const tabDiv = document.getElementById('config-tab-' + tab);
-  if (tabDiv) tabDiv.style.display = 'block';
+  if (tabDiv) {
+    tabDiv.style.display = 'block';
+    tabDiv.classList.add('active');
+  }
+
   if (tab === 'general') loadGeneralConfig();
-  if (tab === 'bot') loadBotConfig();
-  if (tab === 'templates') loadTemplates();
-  if (tab === 'prices') loadPricesTab();
-  if (tab === 'segments') loadSegmentsTab();
-  if (tab === 'usuarios') { /* placeholder */ }
+  else if (tab === 'bot') loadBotConfig();
+  else if (tab === 'templates') loadTemplates();
+  else if (tab === 'prices') loadPricesTab();
+  else if (tab === 'segments') loadSegmentsTab();
+  else if (tab === 'usuarios') { /* placeholder */ }
+}
+
+window.switchConfigTab = switchConfigTab;
+
+function initConfigSubtabs() {
+  const container = document.getElementById('configSubtabs');
+  if (!container) return;
+  container.addEventListener('click', function(event) {
+    const button = event.target.closest('.client-profile-tab');
+    if (!button || !container.contains(button)) return;
+    event.preventDefault();
+    const tab = button.dataset.configTab;
+    if (tab) switchConfigTab(tab);
+  });
 }
 
 // ══════════════════════════════════════════════════
@@ -4863,6 +4957,10 @@ async function loadBotConfig() {
   document.getElementById('botCfgForm').style.display = 'none';
   try {
     const config = await fetchJSON('/api/bot/config?verbose=1');
+    if (config.error) {
+      document.getElementById('botCfgLoading').innerHTML = '<div class="alert alert-warning">⚠️ ' + config.error + '. Por favor, inicia sesión.</div>';
+      return;
+    }
     // Fill form fields
     for (const key of BOT_CONFIG_KEYS) {
       const val = config[key];
@@ -5001,9 +5099,16 @@ async function loadTemplates() {
   try {
     const tipo = document.getElementById('templateFilterType').value;
     const url = tipo ? `/api/wo-templates?tipo_ot=${tipo}` : '/api/wo-templates';
-    woTemplates = await fetchJSON(url);
+    const response = await fetchJSON(url);
+    if (response.error) {
+      woTemplates = [];
+      showToast('⚠️ ' + response.error + ' - Por favor, inicia sesión.', 'warning');
+      return;
+    }
+    woTemplates = response;
     renderTemplatesTable();
   } catch (e) {
+    woTemplates = [];
     showToast('Error cargando plantillas: ' + e.message, 'danger');
   }
 }
@@ -5313,6 +5418,10 @@ async function loadPricesTab() {
   try {
     const prices = await fetchJSON('/api/prices');
     const container = document.getElementById('pricesTabContent');
+    if (prices.error) {
+      container.innerHTML = '<div class="alert alert-warning">⚠️ ' + prices.error + ' - Por favor, inicia sesión.</div>';
+      return;
+    }
     if (!prices.length) {
       container.innerHTML = '<div class="text-center text-muted py-4">No hay precios registrados.</div>';
       return;
@@ -5335,6 +5444,8 @@ async function loadPricesTab() {
       </div>`;
   } catch(e) {
     console.error('Error loading prices:', e);
+    const container = document.getElementById('pricesTabContent');
+    container.innerHTML = '<div class="alert alert-danger">Error al cargar precios: ' + e.message + '</div>';
   }
 }
 
@@ -5347,6 +5458,7 @@ document.addEventListener('DOMContentLoaded', async function() {
  TIPOS_OT = await tiposResp.json();
  } catch(e) { console.warn('No se pudieron cargar tipos OT, usando defaults'); }
  await populateSegmentSelects();
+ initConfigSubtabs();
  loadDashboard();
  loadClients();
  loadWorkOrders();
@@ -5370,7 +5482,7 @@ document.addEventListener('DOMContentLoaded', async function() {
  else if (tabParam === 'workorders') loadWorkOrders();
  else if (tabParam === 'kanban') loadKanban();
  else if (tabParam === 'interactions') loadInteractions();
- else if (tabParam === 'config') { loadGeneralConfig(); }
+ else if (tabParam === 'config') { switchConfigTab('general'); }
  // Limpiar URL para evitar que el tab quede "linkeado" al recargar
  window.history.replaceState({}, '', '/');
  }
