@@ -5,3 +5,4 @@ __pycache__/
 backups/
 .env
 .crm_env
+templates/index.html.bak
