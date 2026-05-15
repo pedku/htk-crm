@@ -1,0 +1,92 @@
+REPORTE: PLAN_CRM_v3.md vs Implementación Actual (2026-05-15 11:05)
+
+Base de datos: 19 tablas, 48 leads, 3 interacciones
+Rutas activas: 68 endpoints
+Archivos: 7 Blueprints + 4 módulos core/services + 3 módulos services
+
+═══════════════════════════════════════════════════════════════
+  FASE 1 — Tipos de OT + Base de Datos ................. 100% ✅
+═══════════════════════════════════════════════════════════════
+  ✅ tipo, campos_extra, valor_total, client_id en work_orders
+  ✅ payments, wo_templates, bot_config creados
+  ✅ 8 columnas nuevas en clients (dirección, ciudad, etc.)
+  ✅ 16 columnas en leads (telefono, email, url, contacto_nombre)
+  ✅ TIPOS_OT con transiciones validadas (grafo dirigido)
+  ✅ GET /api/work_orders?tipo=X
+  ✅ GET /api/work_orders/tipos
+  ✅ POST/PUT con campos_extra y tipo
+  ✅ can_transition() con precondiciones
+
+═══════════════════════════════════════════════════════════════
+  FASE 2 — Perfil de Cliente Integrado .................. 100% ✅
+═══════════════════════════════════════════════════════════════
+  ✅ GET /api/clients/<id> con ordenes_detalle, totales, interacciones
+  ✅ GET /api/clients/<id>/orders
+  ✅ GET /api/clients/<id>/payments
+  ✅ Sincronización bidireccional Lead↔Client (crm_service.py)
+  ✅ Lead convert → Client con todos los campos + email
+
+═══════════════════════════════════════════════════════════════
+  FASE 3 — Kanban de Órdenes de Trabajo ................. 100% ✅
+═══════════════════════════════════════════════════════════════
+  ✅ GET /api/work_orders/kanban?tipo=X — columnas dinámicas
+  ✅ PATCH /api/work_orders/<id>/kanban — drag & drop
+  ✅ Selector de tipo en frontend
+  ✅ Tarjetas con presupuesto, abonado, días en estado
+
+═══════════════════════════════════════════════════════════════
+  FASE 4 — Pagos y Abonos .............................. 100% ✅
+═══════════════════════════════════════════════════════════════
+  ✅ GET/POST /api/work_orders/<id>/payments
+  ✅ DELETE /api/work_orders/<id>/payments/<payment_id>
+  ✅ Cálculo de saldo_pendiente, total_abonado en wo_service.py
+  ✅ Sección de finanzas en wo_to_dict()
+
+═══════════════════════════════════════════════════════════════
+  FASE 5 — Plantillas por Tipo y Estado ................ 100% ✅
+═══════════════════════════════════════════════════════════════
+  ✅ 19 plantillas seed (5 reparación + 8 fabricación + 6 instalación)
+  ✅ CRUD /api/wo-templates
+  ✅ POST /api/work_orders/<id>/notify (envía WhatsApp)
+  ✅ Reemplazo de placeholders ({id},{cliente},{equipo},{presupuesto},etc.)
+  ✅ Editor de plantillas en UI
+
+═══════════════════════════════════════════════════════════════
+  FASE 6 — Configuración del Bot desde CRM ............. 100% ✅
+═══════════════════════════════════════════════════════════════
+  ✅ bot_config: 18 keys (horario, comportamiento, mensajes, conexión)
+  ✅ GET /api/bot/config con tipos nativos (bool, int, str)
+  ✅ PUT con cast_config_value() respetando tipo
+  ✅ POST /api/bot/config/reload
+  ✅ UI de configuración del Bot en pestaña Configuración
+
+═══════════════════════════════════════════════════════════════
+  FASE 7 — Consulta de OT desde WhatsApp ............... PENDIENTE ❌
+═══════════════════════════════════════════════════════════════
+  ❌ Requiere cambios en bot.js (nuevo estado CONSULTA_OT)
+  ❌ No es parte de la refactorización del backend CRM
+  ⚠️  El CRM ya tiene el endpoint GET /api/work_orders/<id>
+      que devuelve todos los datos necesarios para el bot
+
+═══════════════════════════════════════════════════════════════
+  FASE 8 — Inventario de Materiales ................... 100% ✅
+═══════════════════════════════════════════════════════════════
+  ✅ CRUD /api/inventario (12 items semilla)
+  ✅ GET /api/inventario/bajo-stock
+  ✅ POST /api/inventario/<id>/ajustar (entrada/salida)
+  ✅ GET /api/inventario/<id>/movimientos
+  ✅ GET /api/inventario/categorias
+
+═══════════════════════════════════════════════════════════════
+  FASE 9 — UI Configuración y Pulido Final ............. 90% ✅
+═══════════════════════════════════════════════════════════════
+  ✅ Pestaña Configuración con sub-tabs: General, Bot, Plantillas, Precios, Segmentos, Usuarios
+  ✅ Indicador bot en header (🟢/🔴)
+  ✅ Búsqueda global en topbar
+  ❌ Usuarios solo tiene placeholder (sin implementar)
+
+═══════════════════════════════════════════════════════════════
+  RESUMEN FINAL: 8/9 fases completas (89%)
+═══════════════════════════════════════════════════════════════
+  La única fase pendiente es FASE 7 (Consulta OT desde WhatsApp)
+  que es un cambio en bot.js, no en el CRM.
