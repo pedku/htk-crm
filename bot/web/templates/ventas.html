@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Ventas — HTK CRM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-cash-stack"></i> Ventas</h4>
+  <button class="btn btn-primary btn-sm" onclick="nuevaVenta()"><i class="bi bi-plus-lg"></i> Nueva</button>
+</div>
+
+<div class="row g-3 mb-3">
+  {% set estados = ['Cotizado','Aprobado','En fabricación','Entregado','Cancelado'] %}
+  <div class="col-auto">
+    <select id="filterEstado" class="form-select form-select-sm" onchange="loadVentas(1)">
+      <option value="">Todos los estados</option>
+      {% for e in estados %}
+      <option value="{{ e }}">{{ e }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% for e in estados[:-1] %}
+  <div class="col text-center p-2 rounded" style="background:{{ {'Cotizado':'#eff6ff','Aprobado':'#f0fdf4','En fabricación':'#fffbeb','Entregado':'#f0fdf4'}[e] }}">
+    <div class="small text-muted">{{ e }}</div>
+    <div class="fw-bold" id="count-{{ e }}">0</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card card-table">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>#</th><th>Cliente</th><th>Producto</th><th>Capacidad</th><th>Cotizado</th><th>Vendido</th><th>Estado</th><th>Depósito</th><th></th></tr></thead>
+      <tbody id="ventasTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+  <small class="text-muted" id="pageInfo"></small>
+  <div>
+    <button class="btn btn-outline-secondary btn-sm" id="prevBtn" onclick="prevPage()"><i class="bi bi-chevron-left"></i></button>
+    <button class="btn btn-outline-secondary btn-sm" id="nextBtn" onclick="nextPage()"><i class="bi bi-chevron-right"></i></button>
+  </div>
+</div>
+
+<div class="modal fade" id="modalVenta" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header border-0"><h5 class="modal-title" id="modalVentaTitle">Nueva venta</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-2">
+          <div class="col-6"><label class="form-label small">Cliente</label><input class="form-control form-control-sm" id="vCliente"></div>
+          <div class="col-6"><label class="form-label small">Producto</label><input class="form-control form-control-sm" id="vProducto"></div>
+          <div class="col-4"><label class="form-label small">Capacidad</label><input class="form-control form-control-sm" id="vCapacidad"></div>
+          <div class="col-4"><label class="form-label small">Valor cotizado</label><input type="number" class="form-control form-control-sm" id="vCotizado"></div>
+          <div class="col-4"><label class="form-label small">Estado</label>
+            <select class="form-select form-select-sm" id="vEstado">
+              <option>Cotizado</option><option>Aprobado</option><option>En fabricación</option><option>Entregado</option><option>Cancelado</option>
+            </select></div>
+          <div class="col-4"><label class="form-label small">Valor vendido</label><input type="number" class="form-control form-control-sm" id="vVendido"></div>
+          <div class="col-4"><label class="form-label small">Depósito 50%</label><input type="number" class="form-control form-control-sm" id="vDeposito"></div>
+          <div class="col-4"><label class="form-label small">Saldo 50%</label><input type="number" class="form-control form-control-sm" id="vSaldo"></div>
+          <div class="col-6"><label class="form-label small">Inicio fabricación</label><input type="date" class="form-control form-control-sm" id="vFabInicio"></div>
+          <div class="col-6"><label class="form-label small">Fecha entrega</label><input type="date" class="form-control form-control-sm" id="vEntrega"></div>
+          <div class="col-12"><label class="form-label small">Notas</label><textarea class="form-control form-control-sm" id="vNotas" rows="2"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="guardarVenta()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let ventas=[], page=1, perPage=50, editVid=null;
+
+async function loadVentas(p) {
+  page=p||1;
+  const estado=document.getElementById('filterEstado').value;
+  let url=`/api/ventas?limit=${perPage}&offset=${(page-1)*perPage}`;
+  if(estado) url+=`&estado=${estado}`;
+  const r=await fetch(url);const res=await r.json();
+  ventas=res.data;
+
+  document.getElementById('ventasTable').innerHTML=ventas.length?ventas.map(v=>{
+    const color={'Cotizado':'#eff6ff','Aprobado':'#dcfce7','En fabricación':'#fef3c7','Entregado':'#16a34a','Cancelado':'#fee2e2'}[v.estado]||'#f1f5f9';
+    const text={'Cotizado':'#2563eb','Aprobado':'#166534','En fabricación':'#92400e','Entregado':'#fff','Cancelado':'#991b1b'}[v.estado]||'#475569';
+    return `<tr>
+      <td class="text-muted small">VTA-${String(v.id).padStart(3,'0')}</td>
+      <td><span class="fw-medium">${v.cliente_nombre||'-'}</span></td>
+      <td>${v.producto||'-'}</td>
+      <td>${v.capacidad||'-'}</td>
+      <td>$${(v.valor_cotizado||0).toLocaleString()}</td>
+      <td class="fw-bold">$${(v.valor_vendido||0).toLocaleString()}</td>
+      <td><span class="badge" style="background:${color};color:${text}">${v.estado}</span></td>
+      <td>${v.deposito_50?`$${(v.deposito_50||0).toLocaleString()}`:'-'}</td>
+      <td><button class="btn btn-outline-primary btn-sm" onclick="editarVenta(${v.id})"><i class="bi bi-pencil"></i></button></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="9" class="text-center text-muted py-4"><i class="bi bi-inbox"></i> No hay ventas</td></tr>';
+
+  const tp=Math.max(1,Math.ceil(res.total/perPage));
+  document.getElementById('pageInfo').textContent=`Página ${page} de ${tp} — ${res.total} ventas`;
+  document.getElementById('prevBtn').disabled=page<=1;
+  document.getElementById('nextBtn').disabled=page>=tp;
+
+  // Contadores
+  ['Cotizado','Aprobado','En fabricación','Entregado'].forEach(e=>{
+    document.getElementById('count-'+e).textContent=res.data.filter(v=>v.estado===e).length;
+  });
+}
+function prevPage(){if(page>1){page--;loadVentas(page);}}
+function nextPage(){loadVentas(page+1);}
+
+function nuevaVenta(){
+  editVid=null;
+  document.getElementById('modalVentaTitle').textContent='Nueva venta';
+  ['vCliente','vProducto','vCapacidad','vCotizado','vVendido','vDeposito','vSaldo','vFabInicio','vEntrega','vNotas'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('vEstado').value='Cotizado';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalVenta')).show();
+}
+
+function editarVenta(id){
+  const v=ventas.find(x=>x.id===id);if(!v)return;
+  editVid=id;
+  document.getElementById('modalVentaTitle').textContent='Editar venta';
+  document.getElementById('vCliente').value=v.cliente_nombre||'';
+  document.getElementById('vProducto').value=v.producto||'';
+  document.getElementById('vCapacidad').value=v.capacidad||'';
+  document.getElementById('vCotizado').value=v.valor_cotizado||'';
+  document.getElementById('vVendido').value=v.valor_vendido||'';
+  document.getElementById('vDeposito').value=v.deposito_50||'';
+  document.getElementById('vSaldo').value=v.saldo_50||'';
+  document.getElementById('vFabInicio').value=v.fecha_inicio_fab||'';
+  document.getElementById('vEntrega').value=v.fecha_entrega||'';
+  document.getElementById('vEstado').value=v.estado||'Cotizado';
+  document.getElementById('vNotas').value=v.notas||'';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalVenta')).show();
+}
+
+async function guardarVenta(){
+  const data={
+    cliente_nombre:document.getElementById('vCliente').value,
+    producto:document.getElementById('vProducto').value,
+    capacidad:document.getElementById('vCapacidad').value,
+    valor_cotizado:parseInt(document.getElementById('vCotizado').value)||0,
+    valor_vendido:parseInt(document.getElementById('vVendido').value)||0,
+    estado:document.getElementById('vEstado').value,
+    deposito_50:parseInt(document.getElementById('vDeposito').value)||0,
+    saldo_50:parseInt(document.getElementById('vSaldo').value)||0,
+    fecha_inicio_fab:document.getElementById('vFabInicio').value,
+    fecha_entrega:document.getElementById('vEntrega').value,
+    notas:document.getElementById('vNotas').value,
+  };
+
+  if(editVid){
+    await fetch(`/api/ventas/${editVid}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  } else {
+    await fetch('/api/ventas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  }
+  bootstrap.Modal.getInstance(document.getElementById('modalVenta')).hide();
+  mostrarConfirm(editVid?'✅ Venta actualizada':'✅ Venta creada');
+  loadVentas(page);
+}
+loadVentas(1);
+</script>
+{% endblock %}

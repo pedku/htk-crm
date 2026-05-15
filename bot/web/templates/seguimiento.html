@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Seguimiento — HTK CRM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-list-check"></i> Seguimiento</h4>
+  <button class="btn btn-primary btn-sm" onclick="nuevaTarea()"><i class="bi bi-plus-lg"></i> Nueva tarea</button>
+</div>
+
+<div class="row g-2 mb-3">
+  <div class="col-auto">
+    <select id="filterEstado" class="form-select form-select-sm" onchange="loadTareas(1)">
+      <option value="todas">Todas</option>
+      <option value="Pendiente">Pendiente</option>
+      <option value="En proceso">En proceso</option>
+      <option value="Completada">Completada</option>
+      <option value="Cancelada">Cancelada</option>
+    </select>
+  </div>
+</div>
+
+<div class="row g-3">
+  {% for col in ['Pendiente','En proceso','Completada','Cancelada'] %}
+  <div class="col-md-3">
+    <div class="card card-table p-3">
+      <h6 class="text-muted mb-3 text-center">{{ col }} <span class="badge bg-secondary" id="count-{{ col }}">0</span></h6>
+      <div id="col-{{ col }}" class="min-vh-50"></div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="modal fade" id="modalTarea" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header border-0"><h5 class="modal-title" id="modalTareaTitle">Nueva tarea</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-2"><label class="form-label small">Tarea</label><input class="form-control form-control-sm" id="tTarea"></div>
+        <div class="mb-2"><label class="form-label small">Cliente / Lead</label><input class="form-control form-control-sm" id="tCliente"></div>
+        <div class="row g-2">
+          <div class="col-6"><label class="form-label small">Vence</label><input type="date" class="form-control form-control-sm" id="tVence"></div>
+          <div class="col-6"><label class="form-label small">Prioridad</label>
+            <select class="form-select form-select-sm" id="tPrioridad">
+              <option>Alta</option><option selected>Media</option><option>Baja</option>
+            </select></div>
+        </div>
+        <div class="mb-2 mt-2"><label class="form-label small">Estado</label>
+          <select class="form-select form-select-sm" id="tEstado">
+            <option>Pendiente</option><option>En proceso</option><option>Completada</option><option>Cancelada</option>
+          </select></div>
+        <div class="mb-2"><label class="form-label small">Notas</label><textarea class="form-control form-control-sm" id="tNotas" rows="2"></textarea></div>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="guardarTarea()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let tareas=[], editTid=null;
+
+async function loadTareas(){
+  const estado=document.getElementById('filterEstado').value;
+  let url='/api/tareas?limit=200';
+  if(estado!=='todas') url+=`&estado=${estado}`;
+  const r=await fetch(url);const res=await r.json();
+  tareas=res.data;
+
+  const cols={Pendiente:[],'En proceso':[],Completada:[],Cancelada:[]};
+  tareas.forEach(t=>{if(cols[t.estado])cols[t.estado].push(t);});
+
+  Object.keys(cols).forEach(col=>{
+    document.getElementById('count-'+col).textContent=cols[col].length;
+    const prio={'Alta':'priority-high','Media':'priority-medium','Baja':'priority-low'};
+    document.getElementById('col-'+col).innerHTML=cols[col].length?cols[col].map(t=>
+      `<div class="card mb-2 ${prio[t.prioridad]||''}" style="border-left:3px solid ${t.prioridad==='Alta'?'#dc2626':t.prioridad==='Media'?'#d97706':'#16a34a'}">
+        <div class="card-body p-2">
+          <div class="fw-medium small">${t.tarea||'Sin título'}</div>
+          <div class="text-muted" style="font-size:.75rem">${t.cliente_lead?`👤 ${t.cliente_lead}`:''} ${t.vence?`📅 ${t.vence}`:''}</div>
+          <div class="mt-1">
+            <button class="btn btn-outline-secondary btn-sm py-0 px-1" onclick="editarTarea(${t.id})" style="font-size:.7rem"><i class="bi bi-pencil"></i></button>
+          </div>
+        </div>
+      </div>`
+    ).join(''):'<div class="text-center text-muted py-3 small"><i class="bi bi-inbox"></i> Vacío</div>';
+  });
+}
+
+function nuevaTarea(){
+  editTid=null;
+  document.getElementById('modalTareaTitle').textContent='Nueva tarea';
+  ['tTarea','tCliente','tVence','tNotas'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('tPrioridad').value='Media';
+  document.getElementById('tEstado').value='Pendiente';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalTarea')).show();
+}
+
+function editarTarea(id){
+  const t=tareas.find(x=>x.id===id);if(!t)return;
+  editTid=id;document.getElementById('modalTareaTitle').textContent='Editar tarea';
+  document.getElementById('tTarea').value=t.tarea||'';
+  document.getElementById('tCliente').value=t.cliente_lead||'';
+  document.getElementById('tVence').value=t.vence||'';
+  document.getElementById('tPrioridad').value=t.prioridad||'Media';
+  document.getElementById('tEstado').value=t.estado||'Pendiente';
+  document.getElementById('tNotas').value=t.notas||'';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalTarea')).show();
+}
+
+async function guardarTarea(){
+  const data={
+    tarea:document.getElementById('tTarea').value,
+    cliente_lead:document.getElementById('tCliente').value,
+    vence:document.getElementById('tVence').value,
+    prioridad:document.getElementById('tPrioridad').value,
+    estado:document.getElementById('tEstado').value,
+    notas:document.getElementById('tNotas').value,
+  };
+  if(editTid){
+    await fetch(`/api/tareas/${editTid}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  } else {
+    await fetch('/api/tareas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  }
+  bootstrap.Modal.getInstance(document.getElementById('modalTarea')).hide();
+  loadTareas();
+}
+loadTareas();
+</script>
+{% endblock %}

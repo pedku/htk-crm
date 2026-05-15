@@ -2577,7 +2577,7 @@ if __name__ == '__main__':
     @app.route('/api/bot/log')
     @login_required
     def api_bot_log():
-        log_path = '/home/peku/htk-whatsapp-bot/bot.log'
+        log_path = os.path.join(BASE_DIR, 'bot', 'bot.log')
         try:
             if os.path.exists(log_path):
                 with open(log_path) as f:

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Kanban — HTK CRM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-columns-gap"></i> Pipeline Kanban</h4>
+  <div>
+    <span class="text-muted small me-2" id="leadTotal"></span>
+    <a href="/leads" class="btn btn-outline-primary btn-sm"><i class="bi bi-table"></i> Vista Tabla</a>
+  </div>
+</div>
+
+<div id="kanbanContainer" class="d-flex gap-3 overflow-auto pb-3" style="min-height:70vh;scrollbar-width:thin">
+  <div class="text-center text-muted py-5 w-100">Cargando kanban...</div>
+</div>
+
+<script>
+// ─── DRAG & DROP ─────────────────────────────────────
+let draggedId = null;
+
+function allowDrop(ev) { ev.preventDefault(); }
+
+function dragStart(ev) {
+  draggedId = ev.target.closest('.kanban-card').dataset.leadId;
+  ev.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => ev.target.closest('.kanban-card').classList.add('dragging'), 0);
+}
+
+function dragEnd(ev) {
+  ev.target.closest('.kanban-card')?.classList.remove('dragging');
+}
+
+function dropOnColumn(ev, etapaClave) {
+  ev.preventDefault();
+  if (!draggedId) return;
+  const card = document.querySelector(`[data-lead-id="${draggedId}"]`);
+  if (card) {
+    const columna = document.querySelector(`[data-columna="${etapaClave}"] .kanban-cuerpo`);
+    if (columna) columna.appendChild(card);
+  }
+  // Actualizar en BD
+  fetch(`/api/leads/${draggedId}/etapa`, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({etapa: etapaClave})
+  });
+  draggedId = null;
+  actualizarContadores();
+}
+
+function actualizarContadores() {
+  document.querySelectorAll('.kanban-columna').forEach(col => {
+    const cards = col.querySelectorAll('.kanban-card').length;
+    col.querySelector('.kanban-count').textContent = cards;
+  });
+  const total = document.querySelectorAll('.kanban-card').length;
+  document.getElementById('leadTotal').textContent = `${total} leads`;
+}
+
+// ─── LIMITAR CARDS VISIBLES ──────────────────────────
+function toggleLeads(btn) {
+  const col = btn.closest('.kanban-columna');
+  const ocultos = col.querySelectorAll('.kanban-card-extra');
+  const mostrandoOcultos = btn.dataset.mostrando === 'true';
+  ocultos.forEach(c => c.style.display = mostrandoOcultos ? 'none' : '');
+  btn.dataset.mostrando = mostrandoOcultos ? 'false' : 'true';
+  btn.innerHTML = mostrandoOcultos ? `<i class="bi bi-plus-circle"></i> ${ocultos.length} más` : `<i class="bi bi-dash-circle"></i> Mostrar menos`;
+}
+
+// ─── CARGAR KANBAN ────────────────────────────────────
+async function cargarKanban() {
+  const res = await (await fetch('/api/leads/kanban')).json();
+  const container = document.getElementById('kanbanContainer');
+  const colWidth = Math.max(220, Math.min(280, Math.floor((window.innerWidth - 80) / res.length)));
+
+  container.innerHTML = res.map(col => {
+    const e = col.etapa;
+    const leads = col.leads;
+    const mostrar = leads.slice(0, 15);
+    const extras = leads.slice(15);
+
+    return `<div class="kanban-columna" data-columna="${e.clave}" style="min-width:${colWidth}px;max-width:${colWidth}px"
+          ondragover="allowDrop(event)" ondrop="dropOnColumn(event,'${e.clave}')">
+      <div class="card card-table h-100">
+        <div class="card-header bg-white border-0 pt-2 px-2 d-flex justify-content-between align-items-center"
+            style="border-bottom:3px solid ${e.color}">
+          <div><span class="fw-bold small">${e.nombre}</span>
+            <span class="badge kanban-count ms-1" style="background:${e.color}20;color:${e.color}">${leads.length}</span>
+          </div>
+          <span class="small text-muted">${e.probabilidad}%</span>
+        </div>
+        <div class="kanban-cuerpo p-2" style="min-height:200px;overflow-y:auto;max-height:calc(100vh - 200px)">
+          ${mostrar.map(l => {
+            const fecha = l.fecha ? new Date(l.fecha).toLocaleDateString('es-CO') : '';
+            const tel = (l.numero||'').replace(/@c\.us|@lid/g,'').slice(0,25);
+            const emailMatch = (l.numero||'').match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
+            const telMatch = (l.numero||'').match(/3\d{9}/);
+            return `<div class="kanban-card card mb-2" data-lead-id="${l.id}" draggable="true"
+                  ondragstart="dragStart(event)" ondragend="dragEnd(event)"
+                  onclick="window.location='/leads/${l.id}'" style="cursor:pointer">
+              <div class="card-body p-2">
+                <div class="d-flex justify-content-between">
+                  <strong class="small">${l.nombre||'Sin nombre'}</strong>
+                </div>
+                <div class="small text-muted">${tel || emailMatch?.[0] || '-'}</div>
+                <div class="small text-muted">${l.opcion||''}</div>
+                <div class="d-flex gap-1 mt-1">
+                  ${telMatch ? `<a href="https://wa.me/57${telMatch[0]}?text=${encodeURIComponent('Hola, soy Pedro de HTK INGENIERÍA.')}" target="_blank" class="btn btn-success btn-sm py-0 px-1" style="font-size:.7rem" onclick="event.stopPropagation()"><i class="bi bi-whatsapp"></i></a>` : ''}
+                  ${emailMatch ? `<a href="mailto:${emailMatch[0]}" class="btn btn-primary btn-sm py-0 px-1" style="font-size:.7rem" onclick="event.stopPropagation()"><i class="bi bi-envelope"></i></a>` : ''}
+                </div>
+                <div class="small text-muted mt-1">${fecha}</div>
+              </div>
+            </div>`;
+          }).join('')}
+          ${extras.length ? `<button class="btn btn-outline-secondary btn-sm w-100 mt-1" data-mostrando="false" onclick="toggleLeads(this)"><i class="bi bi-plus-circle"></i> ${extras.length} más</button>
+            ${extras.map(l => `<div class="kanban-card kanban-card-extra card mb-2" data-lead-id="${l.id}" draggable="true" style="display:none;cursor:pointer"
+                  ondragstart="dragStart(event)" ondragend="dragEnd(event)"
+                  onclick="window.location='/leads/${l.id}'">
+              <div class="card-body p-2">
+                <strong class="small">${l.nombre||'Sin nombre'}</strong>
+                <div class="small text-muted">${(l.numero||'').slice(0,25)}</div>
+              </div>
+            </div>`).join('')}` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  actualizarContadores();
+}
+
+cargarKanban();
+</script>
+{% endblock %}

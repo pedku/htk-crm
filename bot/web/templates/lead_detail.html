@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+{% block title %}{{ lead.nombre }} — HTK CRM{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/leads">Leads</a></li>
+    <li class="breadcrumb-item active">{{ lead.nombre }}</li>
+  </ol>
+</nav>
+
+<div class="row g-3">
+  <!-- Columna izquierda: Info del lead -->
+  <div class="col-md-4">
+    <div class="card card-table mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h5 class="fw-bold mb-0">{{ lead.nombre }}</h5>
+          <span class="badge" style="background:{{ lead.etapa_color or '#94a3b8' }}20;color:{{ lead.etapa_color or '#94a3b8' }};border:1px solid {{ lead.etapa_color or '#94a3b8' }}40">
+            {{ lead.etapa_nombre or lead.etapa or 'Nuevo' }}
+          </span>
+        </div>
+        <hr>
+        <div class="mb-2"><small class="text-muted">Contacto</small><br>
+          <span id="leadContacto">{{ lead.numero or '—' }}</span>
+        </div>
+        <div class="mb-2"><small class="text-muted">Opción / Segmento</small><br>
+          {{ lead.opcion or '—' }} {% if lead.segmento %}· {{ lead.segmento }}{% endif %}
+        </div>
+        <div class="mb-2"><small class="text-muted">Fuente</small><br>{{ lead.fuente or '—' }}</div>
+        <div class="mb-2"><small class="text-muted">Fecha</small><br>{{ lead.fecha[:10] if lead.fecha else '—' }}</div>
+        <hr>
+        <!-- Botones de acción -->
+        <div class="d-grid gap-2">
+          <button class="btn btn-success btn-sm" onclick="abrirContactoWA()" id="btnDetalleWA" style="display:none">
+            <i class="bi bi-whatsapp"></i> WhatsApp
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="abrirContactoEmail()" id="btnDetalleEmail" style="display:none">
+            <i class="bi bi-envelope"></i> Email
+          </button>
+          <button class="btn btn-outline-info btn-sm" onclick="copiarContacto()">
+            <i class="bi bi-clipboard"></i> Copiar contacto
+          </button>
+          <button class="btn btn-outline-success btn-sm" onclick="cambiarEtapa()" data-bs-toggle="modal" data-bs-target="#modalEtapa">
+            <i class="bi bi-arrow-right-circle"></i> Cambiar etapa
+          </button>
+          {% if not lead.convertido_cliente %}
+          <button class="btn btn-outline-primary btn-sm" onclick="convertirACliente()">
+            <i class="bi bi-person-plus"></i> Convertir a cliente
+          </button>
+          {% endif %}
+          <button class="btn btn-outline-danger btn-sm" onclick="eliminarLead()">
+            <i class="bi bi-trash"></i> Eliminar lead
+          </button>
+        </div>
+        <!-- Detalle / Notas -->
+        <hr>
+        <small class="text-muted fw-bold">Detalle</small>
+        <p class="small mt-1">{{ lead.detalle or 'Sin detalle' }}</p>
+        <small class="text-muted fw-bold">Notas</small>
+        <div class="small mt-1">
+          <textarea id="notasLead" class="form-control form-control-sm" rows="3" style="font-size:.8125rem">{{ lead.notas or '' }}</textarea>
+          <button class="btn btn-primary btn-sm mt-1" onclick="guardarNotas()">Guardar notas</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tareas del lead -->
+    <div class="card card-table">
+      <div class="card-header bg-white border-0 pt-2 px-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-list-check"></i> Tareas</h6>
+      </div>
+      <div class="card-body p-2">
+        <div id="tareasLead">
+          {% if tareas %}
+          {% for t in tareas %}
+          <div class="d-flex align-items-center gap-2 p-2 border-bottom">
+            <input type="checkbox" onchange="completarTarea({{ t.id }}, this.checked)" {{ 'checked' if t.completada else '' }}>
+            <div class="flex-grow-1">
+              <div class="small {{ 'text-decoration-line-through text-muted' if t.completada else '' }}">{{ t.tarea }}</div>
+              <small class="text-muted">{{ t.vence or '' }}</small>
+            </div>
+            <span class="badge {{ 'bg-warning' if t.prioridad=='Alta' else 'bg-info' if t.prioridad=='Media' else 'bg-secondary' }}" style="font-size:.6rem">{{ t.prioridad }}</span>
+            <button class="btn btn-outline-danger btn-sm py-0 px-1" onclick="eliminarTarea({{ t.id }})" title="Eliminar tareajaxa"><i class="bi bi-x"></i></button>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="text-center text-muted small py-3">Sin tareas</div>
+          {% endif %}
+        </div>
+        <button class="btn btn-outline-primary btn-sm w-100 mt-2" data-bs-toggle="modal" data-bs-target="#modalTarea">
+          <i class="bi bi-plus"></i> Agregar tarea
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Columna derecha: Timeline -->
+  <div class="col-md-8">
+    <div class="card card-table mb-3">
+      <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center pt-2 px-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-clock-history"></i> Línea de Tiempo</h6>
+        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalActividad">
+          <i class="bi bi-plus-lg"></i> Registrar actividad
+        </button>
+      </div>
+      <div class="card-body p-3" style="max-height:500px;overflow-y:auto">
+        <div id="timelineLead">
+          {% if actividades %}
+          {% for a in actividades %}
+          {% set iconos = {'llamada': 'bi-telephone text-success', 'whatsapp': 'bi-whatsapp text-success', 'email': 'bi-envelope text-primary', 'nota': 'bi-journal-text text-muted', 'etapa': 'bi-arrow-right-circle text-warning', 'tarea': 'bi-check2-circle text-info', 'sistema': 'bi-gear text-secondary'} %}
+          {% set icono = iconos.get(a.tipo, 'bi-circle text-muted') %}
+          <div class="d-flex gap-3 mb-3" data-actividad-id="{{ a.id }}">
+            <div class="d-flex flex-column align-items-center" style="width:24px">
+              <i class="bi {{ icono }}"></i>
+              <div class="flex-grow-1" style="width:2px;background:#e2e8f0;min-height:24px"></div>
+            </div>
+            <div class="flex-grow-1">
+              <div class="small">{{ a.descripcion }}</div>
+              {% if a.detalle %}<div class="small text-muted">{{ a.detalle[:100] }}</div>{% endif %}
+              <small class="text-muted">{{ a.created_at[:16] if a.created_at else '' }} · {{ a.usuario }}</small>
+            </div>
+            <button class="btn btn-outline-danger btn-sm py-0 px-1" style="visibility:hidden" 
+                    onmouseover="this.style.visibility='visible'" 
+                    onclick="eliminarActividad({{ a.id }})" title="Eliminar">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="text-center text-muted py-4"><i class="bi bi-inbox"></i> Sin actividad registrada</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Cambiar etapa -->
+<div class="modal fade" id="modalEtapa" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0"><h6 class="modal-title"><i class="bi bi-arrow-right-circle"></i> Cambiar etapa</h6>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="d-grid gap-2" id="etapasLista">
+          <div class="text-center text-muted py-2">Cargando...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nueva actividad -->
+<div class="modal fade" id="modalActividad" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0"><h6 class="modal-title"><i class="bi bi-plus-lg"></i> Registrar actividad</h6>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <label class="form-label small">Tipo</label>
+          <select id="actTipo" class="form-select form-select-sm">
+            <option value="nota">📝 Nota</option>
+            <option value="llamada">📞 Llamada</option>
+            <option value="whatsapp">💬 WhatsApp</option>
+            <option value="email">✉️ Email</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Descripción</label>
+          <textarea id="actDescripcion" class="form-control form-control-sm" rows="3" placeholder="¿Qué pasó?"></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm w-100" onclick="guardarActividad()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nueva tarea -->
+<div class="modal fade" id="modalTarea" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0"><h6 class="modal-title"><i class="bi bi-plus-lg"></i> Nueva tarea</h6>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <label class="form-label small">Tarea</label>
+          <input id="tarTarea" class="form-control form-control-sm" placeholder="¿Qué hay que hacer?">
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col">
+            <label class="form-label small">Vence</label>
+            <input id="tarVence" type="date" class="form-control form-control-sm">
+          </div>
+          <div class="col">
+            <label class="form-label small">Prioridad</label>
+            <select id="tarPrioridad" class="form-select form-select-sm">
+              <option>Alta</option>
+              <option selected>Media</option>
+              <option>Baja</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm w-100" onclick="guardarTarea()">Guardar tarea</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const LEAD_ID = {{ lead.id }};
+const LEAD_NOMBRE = '{{ lead.nombre|escapejs }}';
+const LEAD_CONTACTO = '{{ lead.numero|escapejs }}';
+
+// ─── CONTACTO ────────────────────────────────────────
+function extraerTel(t) { const m = t.match(/3\d{9}/); return m ? '57' + m[0] : null; }
+function extraerEmail(t) { const m = t.match(/[\w.+-]+@[\w-]+\.[\w.-]+/); return m ? m[0] : null; }
+const tel = extraerTel(LEAD_CONTACTO);
+const email = extraerEmail(LEAD_CONTACTO);
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (tel) document.getElementById('btnDetalleWA').style.display = 'block';
+  if (email) document.getElementById('btnDetalleEmail').style.display = 'block';
+});
+
+function abrirContactoWA() {
+  const msg = encodeURIComponent(`Buenos días,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\n`);
+  window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+  registrarActividad('whatsapp', '📤 Mensaje de WhatsApp enviado');
+}
+
+function abrirContactoEmail() {
+  window.open(`mailto:${email}`, '_blank');
+  registrarActividad('email', '📤 Email enviado');
+}
+
+function copiarContacto() {
+  navigator.clipboard.writeText(LEAD_CONTACTO);
+  mostrarConfirm('✅ Contacto copiado');
+}
+
+// ─── ETAPAS ──────────────────────────────────────────
+async function cargarEtapas() {
+  const res = await (await fetch('/api/etapas')).json();
+  const container = document.getElementById('etapasLista');
+  container.innerHTML = res.map(e => `
+    <button class="btn btn-outline-secondary btn-sm text-start" onclick="setEtapa('${e.clave}')">
+      ${e.nombre}
+    </button>
+  `).join('');
+}
+cargarEtapas();
+
+async function setEtapa(clave) {
+  await fetch(`/api/leads/${LEAD_ID}/etapa`, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({etapa: clave})
+  });
+  bootstrap.Modal.getInstance(document.getElementById('modalEtapa')).hide();
+  mostrarConfirm('✅ Etapa actualizada');
+  setTimeout(() => location.reload(), 800);
+}
+
+// ─── ACTIVIDADES ──────────────────────────────────────
+async function registrarActividad(tipo, descripcion, detalle='') {
+  await fetch(`/api/leads/${LEAD_ID}/actividades`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({tipo, descripcion, detalle})
+  });
+}
+
+async function guardarActividad() {
+  const tipo = document.getElementById('actTipo').value;
+  const desc = document.getElementById('actDescripcion').value.trim();
+  if (!desc) { mostrarConfirm('⚠️ Escribe una descripción'); return; }
+  await registrarActividad(tipo, desc);
+  bootstrap.Modal.getInstance(document.getElementById('modalActividad')).hide();
+  mostrarConfirm('✅ Actividad registrada');
+  setTimeout(() => location.reload(), 800);
+}
+
+// ─── TAREAS ──────────────────────────────────────────
+async function guardarTarea() {
+  const tarea = document.getElementById('tarTarea').value.trim();
+  if (!tarea) { mostrarConfirm('⚠️ Escribe la tarea'); return; }
+  await fetch('/api/tareas', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      tarea, lead_id: LEAD_ID, cliente_lead: LEAD_NOMBRE,
+      vence: document.getElementById('tarVence').value,
+      prioridad: document.getElementById('tarPrioridad').value,
+    })
+  });
+  bootstrap.Modal.getInstance(document.getElementById('modalTarea')).hide();
+  mostrarConfirm('✅ Tarea creada');
+  setTimeout(() => location.reload(), 800);
+}
+
+async function completarTarea(tid, checked) {
+  await fetch(`/api/tareas/${tid}`, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({completada: checked ? 1 : 0})
+  });
+}
+
+// ─── NOTAS ───────────────────────────────────────────
+async function guardarNotas() {
+  const notas = document.getElementById('notasLead').value;
+  await fetch(`/api/leads/${LEAD_ID}`, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({notas})
+  });
+  mostrarConfirm('✅ Notas guardadas');
+}
+
+// ─── CONVERTIR A CLIENTE ────────────────────────────
+async function convertirACliente() {
+  if (!confirm('¿Convertir este lead en cliente?')) return;
+  const r = await fetch(`/api/leads/${LEAD_ID}/convertir`, { method: 'POST' });
+  const res = await r.json();
+  if (res.error) { mostrarConfirm('⚠️ ' + res.error); return; }
+  mostrarConfirm('✅ Cliente creado');
+  setTimeout(() => location.reload(), 800);
+}
+
+// ─── ELIMINAR ───────────────────────────────────────
+async function eliminarLead() {
+  if (!confirm('⚠️ ¿Eliminar este lead y TODA su actividad?\n\nEsta acción NO se puede deshacer.')) return;
+  await fetch(`/api/leads/${LEAD_ID}`, { method: 'DELETE' });
+  window.location.href = '/leads';
+}
+
+async function eliminarActividad(aid) {
+  if (!confirm('¿Eliminar esta actividad?')) return;
+  await fetch(`/api/leads/${LEAD_ID}/actividades/${aid}`, { method: 'DELETE' });
+  document.querySelector(`[data-actividad-id="${aid}"]`).remove();
+  mostrarConfirm('🗑️ Actividad eliminada');
+}
+
+async function eliminarTarea(tid) {
+  if (!confirm('¿Eliminar esta tarea?')) return;
+  await fetch(`/api/tareas/${tid}`, { method: 'DELETE' });
+  setTimeout(() => location.reload(), 500);
+}
+</script>
+{% endblock %}

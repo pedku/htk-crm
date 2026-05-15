@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}Precios — HTK CRM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-tags-fill"></i> Precios</h4>
+  <button class="btn btn-primary btn-sm" onclick="nuevoPrecio()"><i class="bi bi-plus-lg"></i> Nuevo</button>
+</div>
+
+<div class="row g-2 mb-3">
+  <div class="col-md-4">
+    <input type="text" id="searchInput" class="form-control form-control-sm search-input" placeholder="🔍 Buscar..." oninput="debounceSearch()">
+  </div>
+  <div class="col-md-2">
+    <select id="filterCategoria" class="form-select form-select-sm" onchange="loadPrecios()">
+      <option value="">Todas</option>
+    </select>
+  </div>
+</div>
+
+<div class="card card-table">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr>
+        <th>Producto</th><th>Categoría</th><th>Tipo</th><th>Capacidad</th>
+        <th>P. Base</th><th>P. Venta</th><th>Plazo</th><th>Garantía</th>
+        <th>Inst.</th><th>Notas</th><th class="text-end">Acción</th>
+      </tr></thead>
+      <tbody id="preciosTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Precio -->
+<div class="modal fade" id="modalPrecio" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h6 class="modal-title"><i class="bi bi-tags-fill"></i> <span id="modalPrecioTitulo">Nuevo Precio</span></h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="precioId">
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label small">Categoría</label>
+            <input id="precioCategoria" class="form-control form-control-sm" placeholder="Ej: Cargadores EV">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Tipo</label>
+            <input id="precioTipo" class="form-control form-control-sm" placeholder="Ej: AC Residencial">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Producto</label>
+            <input id="precioProducto" class="form-control form-control-sm" placeholder="Nombre del producto">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Capacidad</label>
+            <input id="precioCapacidad" class="form-control form-control-sm" placeholder="Ej: 7kW / 22kW">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Precio Base ($)</label>
+            <input id="precioBase" type="number" class="form-control form-control-sm" placeholder="0" step="1000">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Precio Venta ($)</label>
+            <input id="precioVenta" type="number" class="form-control form-control-sm" placeholder="0" step="1000">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Plazo Fabricación</label>
+            <input id="precioPlazo" class="form-control form-control-sm" placeholder="Ej: 15 días">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Garantía</label>
+            <input id="precioGarantia" class="form-control form-control-sm" placeholder="Ej: 5 años">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">¿Incluye instalación?</label>
+            <select id="precioInstalacion" class="form-select form-select-sm">
+              <option value="0">No</option>
+              <option value="1">Sí</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Disponible</label>
+            <select id="precioDisponible" class="form-select form-select-sm">
+              <option value="1">Sí</option>
+              <option value="0">No</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label small">Notas</label>
+            <textarea id="precioNotas" class="form-control form-control-sm" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="guardarPrecio()"><i class="bi bi-check-lg"></i> Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let searchTimer, allPrecios = [];
+
+function debounceSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(loadPrecios, 300); }
+
+async function loadPrecios() {
+  const q = document.getElementById('searchInput').value;
+  let url = '/api/precios';
+  if (q) url += '?q=' + encodeURIComponent(q);
+  allPrecios = await(await fetch(url)).json();
+
+  // Actualizar filtro categorías
+  const cats = [...new Set(allPrecios.map(p => p.categoria).filter(Boolean))].sort();
+  const sel = document.getElementById('filterCategoria');
+  const catFiltro = sel.value;
+  sel.innerHTML = '<option value="">Todas</option>' + cats.map(c => `<option>${c}</option>`).join('');
+  sel.value = catFiltro;
+
+  const filtrados = catFiltro ? allPrecios.filter(p => p.categoria === catFiltro) : allPrecios;
+
+  document.getElementById('preciosTable').innerHTML = filtrados.length ? filtrados.map(p => {
+    const base = Number(p.precio_base||0).toLocaleString('es-CO');
+    const venta = Number(p.precio_venta||0).toLocaleString('es-CO');
+    const inst = p.incluye_instalacion == 1 ? '✅' : '—';
+    const dispo = p.disponible == 0 ? 'style="opacity:0.5;text-decoration:line-through"' : '';
+    return `<tr ${dispo}>
+      <td class="fw-medium">${p.producto||'-'}</td>
+      <td><span class="badge badge-blue">${p.categoria||'-'}</span></td>
+      <td>${p.tipo||'-'}</td>
+      <td>${p.capacidad||'-'}</td>
+      <td>$${base}</td>
+      <td class="fw-bold text-success">$${venta}</td>
+      <td>${p.plazo_fabricacion||'-'}</td>
+      <td>${p.garantia||'-'}</td>
+      <td>${inst}</td>
+      <td class="small text-muted" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(p.notas||'').replace(/"/g,'&quot;')}">${p.notas||''}</td>
+      <td class="text-end">
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-primary btn-sm" onclick="editarPrecio(${JSON.stringify(p).replace(/'/g,&quot;\\&apos;&quot;).replace(/"/g,'&quot;')})"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-outline-danger btn-sm" onclick="eliminarPrecio(${p.id})"><i class="bi bi-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="11" class="text-center text-muted py-4"><i class="bi bi-inbox"></i> No hay precios</td></tr>';
+}
+
+function nuevoPrecio() {
+  document.getElementById('precioId').value = '';
+  document.getElementById('modalPrecioTitulo').textContent = 'Nuevo Precio';
+  ['Categoria','Tipo','Producto','Capacidad','Plazo','Garantia','Notas'].forEach(f => document.getElementById('precio'+f).value = '');
+  ['Base','Venta'].forEach(f => document.getElementById('precio'+f).value = '');
+  document.getElementById('precioInstalacion').value = '0';
+  document.getElementById('precioDisponible').value = '1';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPrecio')).show();
+}
+
+function editarPrecio(p) {
+  document.getElementById('precioId').value = p.id;
+  document.getElementById('modalPrecioTitulo').textContent = 'Editar Precio';
+  document.getElementById('precioCategoria').value = p.categoria||'';
+  document.getElementById('precioTipo').value = p.tipo||'';
+  document.getElementById('precioProducto').value = p.producto||'';
+  document.getElementById('precioCapacidad').value = p.capacidad||'';
+  document.getElementById('precioBase').value = p.precio_base||0;
+  document.getElementById('precioVenta').value = p.precio_venta||0;
+  document.getElementById('precioPlazo').value = p.plazo_fabricacion||'';
+  document.getElementById('precioGarantia').value = p.garantia||'';
+  document.getElementById('precioInstalacion').value = p.incluye_instalacion||0;
+  document.getElementById('precioDisponible').value = p.disponible||1;
+  document.getElementById('precioNotas').value = p.notas||'';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPrecio')).show();
+}
+
+async function guardarPrecio() {
+  const id = document.getElementById('precioId').value;
+  const data = {
+    categoria: document.getElementById('precioCategoria').value,
+    tipo: document.getElementById('precioTipo').value,
+    producto: document.getElementById('precioProducto').value,
+    capacidad: document.getElementById('precioCapacidad').value,
+    precio_base: Number(document.getElementById('precioBase').value),
+    precio_venta: Number(document.getElementById('precioVenta').value),
+    plazo_fabricacion: document.getElementById('precioPlazo').value,
+    garantia: document.getElementById('precioGarantia').value,
+    incluye_instalacion: Number(document.getElementById('precioInstalacion').value),
+    disponible: Number(document.getElementById('precioDisponible').value),
+    notas: document.getElementById('precioNotas').value,
+  };
+  const method = id ? 'PATCH' : 'POST';
+  const url = id ? `/api/precios/${id}` : '/api/precios';
+  await fetch(url, { method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+  bootstrap.Modal.getInstance(document.getElementById('modalPrecio')).hide();
+  mostrarConfirm(id ? '✅ Precio actualizado' : '✅ Precio creado');
+  loadPrecios();
+}
+
+async function eliminarPrecio(id) {
+  if (!confirm('¿Eliminar este precio? Esta acción no se puede deshacer.')) return;
+  await fetch(`/api/precios/${id}`, { method:'DELETE' });
+  mostrarConfirm('🗑️ Precio eliminado');
+  loadPrecios();
+}
+
+loadPrecios();
+</script>
+{% endblock %}

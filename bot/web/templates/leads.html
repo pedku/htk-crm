@@ -1,0 +1,588 @@
+{% extends "base.html" %}
+{% block title %}Leads — HTK CRM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-people-fill"></i> Leads</h4>
+  <div>
+    <button class="btn btn-primary btn-sm" onclick="abrirNuevoLead()"><i class="bi bi-plus-lg"></i> Nuevo Lead</button>
+    <a href="/api/export" class="btn btn-outline-success btn-sm"><i class="bi bi-download"></i> CSV</a>
+  </div>
+</div>
+
+<div class="row g-2 mb-3">
+  <div class="col-md-4">
+    <input type="text" id="searchInput" class="form-control form-control-sm search-input" placeholder="🔍 Buscar..." oninput="debounceSearch()">
+  </div>
+  <div class="col-md-2">
+    <select id="filterOpcion" class="form-select form-select-sm" onchange="loadLeads(1)">
+      <option value="">Todas</option>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <select id="filterAtendido" class="form-select form-select-sm" onchange="loadLeads(1)">
+      <option value="">Todos</option>
+      <option value="no">Pendientes</option>
+      <option value="si">Atendidos</option>
+    </select>
+  </div>
+  <div class="col-md-1">
+    <button class="btn btn-outline-secondary btn-sm w-100" onclick="limpiarFiltros()">✕</button>
+  </div>
+</div>
+
+<div class="card card-table">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr>
+        <th>Fecha</th><th>Nombre</th><th>Contacto</th><th>Opción</th><th>Etapa</th><th>Estado</th><th>Acción</th>
+      </tr></thead>
+      <tbody id="leadsTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+  <small class="text-muted" id="pageInfo"></small>
+  <div>
+    <button class="btn btn-outline-secondary btn-sm" id="prevBtn" onclick="prevPage()"><i class="bi bi-chevron-left"></i></button>
+    <button class="btn btn-outline-secondary btn-sm" id="nextBtn" onclick="nextPage()"><i class="bi bi-chevron-right"></i></button>
+  </div>
+</div>
+
+<!-- Modal Nuevo Lead -->
+<div class="modal fade" id="modalNuevoLead" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title"><i class="bi bi-person-plus-fill text-primary"></i> Nuevo Lead</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formNuevoLead" onsubmit="return guardarNuevoLead(event)">
+          <div class="mb-2">
+            <label class="form-label small fw-bold">Nombre / Empresa *</label>
+            <input type="text" class="form-control form-control-sm" id="nlNombre" required placeholder="Ej: Hotel Ejemplo">
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-bold">Teléfono</label>
+            <input type="text" class="form-control form-control-sm" id="nlTelefono" placeholder="+573001234567">
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-bold">Email</label>
+            <input type="email" class="form-control form-control-sm" id="nlEmail" placeholder="contacto@ejemplo.com">
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col">
+              <label class="form-label small fw-bold">Opción</label>
+              <select class="form-select form-select-sm" id="nlOpcion">
+                <option value="automatización">automatización</option>
+                <option value="cargadores EV">cargadores EV</option>
+                <option value="energía solar">energía solar</option>
+                <option value="hoteles">hoteles</option>
+                <option value="mantenimiento">mantenimiento</option>
+                <option value="restaurantes">restaurantes</option>
+              </select>
+            </div>
+            <div class="col">
+              <label class="form-label small fw-bold">Segmento</label>
+              <select class="form-select form-select-sm" id="nlSegmento">
+                <option value="">—</option>
+                <option value="B2B fábrica">B2B fábrica</option>
+                <option value="B2B taller">B2B taller</option>
+                <option value="B2B comercio">B2B comercio</option>
+                <option value="distribuidor cargadores">distribuidor cargadores</option>
+                <option value="energía solar">energía solar</option>
+                <option value="hoteles">hoteles</option>
+                <option value="restaurantes">restaurantes</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-bold">Notas</label>
+            <textarea class="form-control form-control-sm" id="nlNotas" rows="2"></textarea>
+          </div>
+          <div class="d-flex gap-2 justify-content-end mt-3">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i> Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Contactar -->
+<div class="modal fade" id="modalContactar" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title"><i class="bi bi-send-fill text-success"></i> Contactar <span id="contactNombre" class="fw-bold"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <!-- Info de contacto -->
+          <div class="col-md-5">
+            <div class="card bg-light border-0">
+              <div class="card-body">
+                <h6 class="card-title fw-bold"><i class="bi bi-info-circle"></i> Datos</h6>
+                <p class="mb-1"><strong>Empresa:</strong> <span id="contactEmpresa"></span></p>
+                <p class="mb-1"><strong>Tel/Email:</strong> <span id="contactInfo"></span></p>
+                <p class="mb-1"><strong>Segmento:</strong> <span id="contactSegmento"></span></p>
+                <p class="mb-0"><strong>Notas:</strong> <span id="contactNotas"></span></p>
+                <hr>
+                <div class="d-grid gap-2">
+                  <a id="btnWhatsApp" href="#" target="_blank" class="btn btn-success btn-sm" style="display:none">
+                    <i class="bi bi-whatsapp"></i> WhatsApp
+                  </a>
+                  <a id="btnEmail" href="#" class="btn btn-primary btn-sm" style="display:none">
+                    <i class="bi bi-envelope"></i> Enviar Email
+                  </a>
+                  <a id="btnWeb" href="#" target="_blank" class="btn btn-outline-secondary btn-sm" style="display:none">
+                    <i class="bi bi-globe"></i> Abrir Web
+                  </a>
+                  <button id="btnCopiarTel" class="btn btn-outline-info btn-sm" style="display:none" onclick="copiarAlPortapapeles(document.getElementById('telefonoLimpio').value)">
+                    <i class="bi bi-clipboard"></i> Copiar número
+                  </button>
+                  <button class="btn btn-outline-success btn-sm" onclick="marcarContactadoDesdeModal()">
+                    <i class="bi bi-check-lg"></i> Marcar como contactado
+                  </button>
+                </div>
+                <input type="hidden" id="leadIdContactar">
+                <input type="hidden" id="telefonoLimpio">
+              </div>
+            </div>
+          </div>
+          <!-- Mensaje predefinido -->
+          <div class="col-md-7">
+            <div class="card border-0" style="background:#f8fafc">
+              <div class="card-body">
+                <h6 class="fw-bold"><i class="bi bi-chat-dots"></i> Mensaje sugerido</h6>
+                <textarea id="mensajePitch" class="form-control mb-2" rows="12" style="font-size:.8125rem;background:#fff;font-family:monospace" oninput="actualizarLinks()"></textarea>
+                <div class="d-flex gap-2 flex-wrap">
+                  <button class="btn btn-outline-primary btn-sm" onclick="copiarMensaje()">
+                    <i class="bi bi-clipboard"></i> Copiar mensaje
+                  </button>
+                  <a class="btn btn-success btn-sm" id="btnWAMensaje" style="display:none" target="_blank">
+                    <i class="bi bi-whatsapp"></i> Enviar WhatsApp
+                  </a>
+                  <a class="btn btn-primary btn-sm" id="btnEmailMensaje" style="display:none" target="_blank">
+                    <i class="bi bi-envelope"></i> Enviar Email
+                  </a>
+                  <span class="text-muted small align-self-center"><i class="bi bi-pencil"></i> Edita el mensaje antes de enviar</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── PITCHES POR SEGMENTO ───────────────────────────
+const PITCHES = {
+  'Cargadores': `Buenos días, ¿cómo está?
+
+Soy Pedro Castro, ingeniero, de HTK INGENIERÍA
+en Barranquilla.
+
+Le escribo porque veo que ustedes comercializan
+cargadores para vehículos eléctricos y quiero
+proponerle algo.
+
+Usted vende el equipo, nosotros instalamos.
+Trabajamos como su brazo técnico en Barranquilla
+y la Costa: hacemos la visita, la instalación,
+la puesta en marcha y le garantizamos al cliente
+final una experiencia completa.
+
+El beneficio para usted es claro: puede ofrecer
+un servicio llave en mano sin tener que montar
+un equipo de instalación propio. El cliente
+compra el cargador con usted y nosotros nos
+encargamos de que quede funcionando
+correctamente.
+
+¿Le interesaría conversar para alinear cómo
+podemos trabajar juntos?`,
+
+  'Mantenimiento': `Buenos días, ¿cómo está?
+
+Soy Pedro Castro, ingeniero, de HTK INGENIERÍA
+en Barranquilla.
+
+Le comento por qué le escribo: usted recibe
+equipos todo el tiempo y estoy seguro de que
+en más de una ocasión le ha llegado uno con
+la tarjeta electrónica dañada — un inversor,
+un mini-split, un VRF — y conseguir esa
+tarjeta o repararla no es fácil.
+
+Justo ahí podemos ayudarle. Nosotros nos
+encargamos de esas tarjetas, las revisamos
+sin costo y si tienen reparación, le damos
+respuesta en el menor tiempo posible.
+
+Cuente con nosotros para eso, ¿qué le parece?`,
+
+  'Automatizacion': `Buenos días, ¿cómo está?
+
+Soy Pedro Castro, ingeniero, de HTK INGENIERÍA
+en Barranquilla.
+
+Le escribo porque usted tiene máquinas con
+control electrónico en producción — PLCs,
+variadores, tarjetas de control — y cuando
+una de esas falla, cada hora que pasa
+representa una pérdida en productividad.
+
+Nosotros ayudamos a que eso no se extienda.
+Reparamos componentes electrónicos industriales
+con respuesta ágil, para que una tarjeta dañada
+no les pare la producción por días.
+
+¿Ha tenido alguna situación donde una tarjeta
+se daña y no consigue quién la repare a tiempo?`
+};
+
+const PITCH_DEFAULT = PITCHES['Cargadores'];
+
+// Añadir pitches para hoteles y restaurantes
+PITCHES['Hoteles'] = `Buenos días, soy Pedro Castro de HTK INGENIERIA.
+
+Sabemos que en un hotel como el suyo, el control de clima, la seguridad y el consumo energético son prioridad. Ofrecemos:
+• Mantenimiento de aires acondicionados y sistemas eléctricos
+• Sistemas CCTV y control de acceso
+• Automatización de iluminación para ahorro energético
+• Cargadores para vehículos eléctricos (diferenciador para huéspedes)
+
+Sin contratos largos ni burocracia. ¿Coordinamos una llamada de 10 min para conocer sus necesidades?`;
+
+PITCHES['Restaurantes'] = `Buenos días, soy Pedro Castro de HTK INGENIERIA.
+
+Trabajamos con restaurantes ofreciendo:
+• Mantenimiento de neveras, congeladores y equipos de cocina
+• Instalación de cámaras de seguridad
+• Automatización de iluminación y clima
+
+Servicio rápido, precios justos, sin contratos largos. ¿Le sirve que le cuente más?`;
+
+// ─── EXTRACCIÓN DE CONTACTO ─────────────────────────
+function extraerTelefono(texto) {
+  // Busca números colombianos: 3xx xxx xxxx o +57 3xx xxx xxxx
+  const match = texto.match(/(\+?57)?\s*3\d{9}/);
+  if (match) {
+    let num = match[0].replace(/[\s\+]/g, '');
+    if (num.length === 10) num = '57' + num;
+    if (num.startsWith('57') && num.length === 12) return num;
+  }
+  // También busca 3\d{9} directo
+  const match2 = texto.match(/3\d{9}/);
+  if (match2) return '57' + match2[0];
+  return null;
+}
+
+function extraerEmail(texto) {
+  const match = texto.match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
+  return match ? match[0] : null;
+}
+
+function extraerWeb(texto) {
+  const match = texto.match(/(?:https?:\/\/)?(?:www\.)?[\w-]+\.[\w.-]+\.?[a-z]{2,}/gi);
+  return match ? match[0] : null;
+}
+
+function detectarSegmento(opcion) {
+  const o = (opcion || '').toLowerCase();
+  if (o.includes('cargador')) return 'Cargadores';
+  if (o.includes('mantenimiento') || o.includes('reparación') || o.includes('reparacion')) return 'Mantenimiento';
+  if (o.includes('autom')) return 'Automatizacion';
+  if (o.includes('hotel')) return 'Hoteles';
+  if (o.includes('restaurante') || o.includes('catering')) return 'Restaurantes';
+  return 'Cargadores';
+}
+
+function codificarMensajeWA(texto) {
+  return encodeURIComponent(texto);
+}
+
+// ─── MODAL CONTACTAR ─────────────────────────────────
+let _contactTel = null, _contactEmail = null, _contactWeb = null;
+
+function abrirContactar(lead) {
+  document.getElementById('leadIdContactar').value = lead.id;
+  document.getElementById('contactEmpresa').textContent = lead.nombre || '—';
+  document.getElementById('contactInfo').textContent = lead.numero || '—';
+  document.getElementById('contactSegmento').textContent = lead.opcion || '—';
+  document.getElementById('contactNotas').textContent = lead.notas || '—';
+
+  const pitch = PITCHES[detectarSegmento(lead.opcion)] || PITCH_DEFAULT;
+  document.getElementById('mensajePitch').value = pitch;
+  document.getElementById('contactNombre').textContent = lead.nombre || '';
+
+  // Detectar contacto (guardar para actualizarLinks)
+  const contactoStr = lead.numero || '';
+  _contactTel = extraerTelefono(contactoStr);
+  _contactEmail = extraerEmail(contactoStr);
+  _contactWeb = extraerWeb(contactoStr);
+
+  // Ocultar todos primero
+  document.getElementById('btnWhatsApp').style.display = 'none';
+  document.getElementById('btnEmail').style.display = 'none';
+  document.getElementById('btnWeb').style.display = 'none';
+  document.getElementById('btnCopiarTel').style.display = 'none';
+  document.getElementById('btnWAMensaje').style.display = 'none';
+  document.getElementById('btnEmailMensaje').style.display = 'none';
+
+  if (_contactTel) {
+    document.getElementById('telefonoLimpio').value = _contactTel;
+    document.getElementById('btnCopiarTel').style.display = 'block';
+    document.getElementById('btnWAMensaje').style.display = 'inline-block';
+  }
+
+  if (_contactEmail) {
+    document.getElementById('btnEmailMensaje').style.display = 'inline-block';
+  }
+
+  if (_contactWeb) {
+    let url = _contactWeb;
+    if (!url.startsWith('http')) url = 'https://' + url;
+    document.getElementById('btnWeb').href = url;
+    document.getElementById('btnWeb').style.display = 'block';
+  }
+
+  actualizarLinks();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalContactar')).show();
+}
+
+function actualizarLinks() {
+  const msg = document.getElementById('mensajePitch').value;
+  const subject = encodeURIComponent('Consulta — HTK INGENIERÍA');
+  const body = encodeURIComponent(msg);
+
+  // WhatsApp directo (columna izquierda)
+  if (_contactTel) {
+    const waLink = `https://wa.me/${_contactTel}?text=${codificarMensajeWA(msg)}`;
+    document.getElementById('btnWhatsApp').href = waLink;
+    document.getElementById('btnWhatsApp').style.display = 'block';
+  }
+
+  // WhatsApp desde el mensaje (columna derecha)
+  if (_contactTel) {
+    const waLink = `https://wa.me/${_contactTel}?text=${codificarMensajeWA(msg)}`;
+    document.getElementById('btnWAMensaje').href = waLink;
+  }
+
+  // Email desde el mensaje (columna derecha)
+  if (_contactEmail) {
+    document.getElementById('btnEmailMensaje').href = `mailto:${_contactEmail}?subject=${subject}&body=${body}`;
+  }
+
+  // Email directo (columna izquierda)
+  if (_contactEmail) {
+    document.getElementById('btnEmail').href = `mailto:${_contactEmail}?subject=${subject}&body=${body}`;
+    document.getElementById('btnEmail').style.display = 'block';
+  }
+}
+
+function copiarMensaje() {
+  const msg = document.getElementById('mensajePitch').value;
+  navigator.clipboard.writeText(msg).then(() => {
+    mostrarConfirm('✅ Mensaje copiado al portapapeles');
+  }).catch(() => {
+    // Fallback
+    const ta = document.getElementById('mensajePitch');
+    ta.select();
+    document.execCommand('copy');
+    mostrarConfirm('✅ Mensaje copiado');
+  });
+}
+
+function copiarAlPortapapeles(texto) {
+  navigator.clipboard.writeText('+' + texto).then(() => {
+    mostrarConfirm('✅ Número copiado: +' + texto);
+  });
+}
+
+function abrirWhatsAppConMensaje() {
+  const btn = document.getElementById('btnWhatsApp');
+  if (btn.style.display !== 'none') {
+    window.open(btn.href, '_blank');
+  }
+}
+
+async function marcarContactadoDesdeModal() {
+  const id = document.getElementById('leadIdContactar').value;
+  await fetch(`/api/leads/${id}`, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({atendido: true, contactado_fecha: new Date().toISOString().slice(0,16).replace('T',' ')})
+  });
+  mostrarConfirm('✅ Marcado como contactado');
+  bootstrap.Modal.getInstance(document.getElementById('modalContactar')).hide();
+  loadLeads(page);
+}
+
+// ─── TABLA DE LEADS ──────────────────────────────────
+let allLeads = [], page = 1, perPage = 50, editIdx = -1;
+let searchTimer;
+
+function debounceSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(() => loadLeads(1), 300); }
+
+async function loadLeads(p) {
+  page = p || 1;
+  const q = document.getElementById('searchInput').value;
+  const opcion = document.getElementById('filterOpcion').value;
+  const atendido = document.getElementById('filterAtendido').value;
+  let url = `/api/leads?limit=${perPage}&offset=${(page-1)*perPage}`;
+  if (q) url += `&q=${encodeURIComponent(q)}`;
+  if (opcion) url += `&opcion=${encodeURIComponent(opcion)}`;
+  if (atendido) url += `&atendido=${atendido}`;
+
+  const r = await fetch(url);
+  const res = await r.json();
+  allLeads = res.data;
+
+  const telExtraidos = {};
+  allLeads.forEach(l => {
+    const tel = extraerTelefono(l.numero || '');
+    if (tel) telExtraidos[l.id] = tel;
+  });
+
+  document.getElementById('leadsTable').innerHTML = allLeads.length ? allLeads.map(l => {
+    const fecha = l.fecha ? new Date(l.fecha).toLocaleString('es-CO').slice(0,14) : '';
+    const contactoStr = (l.numero || '').slice(0,60);
+    const badge = l.opcion === 'URGENTE' ? 'badge-urgent' : l.atendido ? 'badge-done' : 'badge-pending';
+    const estado = l.atendido ? 'Atendido' : l.opcion === 'URGENTE' ? '¡Urgente!' : 'Pendiente';
+    const tel = telExtraidos[l.id];
+    const email = extraerEmail(l.numero || '');
+    const waIcon = tel ? '<i class="bi bi-whatsapp text-success"></i>' : (email ? '<i class="bi bi-envelope text-primary"></i>' : '<i class="bi bi-globe text-secondary"></i>');
+    return `<tr class="${l.atendido ? '' : 'priority-medium'}">
+      <td class="text-muted small">${fecha}</td>
+      <td><a href="/leads/${l.id}" class="text-decoration-none fw-medium">${l.nombre||'Desconocido'}</a></td>
+      <td class="text-muted small" style="max-width:200px;word-break:break-word">${waIcon} ${contactoStr}</td>
+      <td><span class="badge badge-blue">${l.opcion||'-'}</span></td>
+      <td><span class="badge" style="background:${l.etapa_color||'#94a3b8'}20;color:${l.etapa_color||'#94a3b8'};border:1px solid ${l.etapa_color||'#94a3b8'}40">${l.etapa_nombre||l.etapa||'Nuevo'}</span></td>
+      <td><span class="badge ${badge}">${estado}</span></td>
+      <td>
+        <div class="btn-group btn-group-sm">
+          ${tel ? `<a href="https://wa.me/${tel}?text=${codificarMensajeWA(PITCHES[detectarSegmento(l.opcion)]||PITCH_DEFAULT)}" target="_blank" class="btn btn-success" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>` : ''}
+          ${email ? `<a href="mailto:${email}" class="btn btn-primary" title="Email"><i class="bi bi-envelope"></i></a>` : ''}
+          <button class="btn btn-outline-info" onclick="abrirContactar(${JSON.stringify(l).replace(/"/g,"'")})" title="Contactar"><i class="bi bi-send"></i></button>
+          ${l.convertido_cliente ? `<span class="badge badge-done d-flex align-items-center"><i class="bi bi-check"></i></span>` :
+            `<button class="btn btn-outline-success" onclick="convertirCliente(${l.id})" title="Convertir a cliente"><i class="bi bi-person-plus"></i></button>`}
+          ${!l.atendido ? `<button class="btn btn-outline-success" onclick="marcarAtendido(${l.id})" title="Atender"><i class="bi bi-check-lg"></i></button>` : ''}
+          <button class="btn btn-outline-primary" onclick="abrirNotas(${l.id},'${(l.notas||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')" title="Notas"><i class="bi bi-journal-text"></i></button>
+          <button class="btn btn-outline-danger" onclick="eliminarLead(${l.id},'${(l.nombre||'Lead').replace(/'/g,"\\'")}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-inbox"></i> No hay leads</td></tr>';
+
+  const tp = Math.max(1, Math.ceil(res.total/perPage));
+  document.getElementById('pageInfo').textContent = `Página ${page} de ${tp} — ${res.total} leads`;
+  document.getElementById('prevBtn').disabled = page <= 1;
+  document.getElementById('nextBtn').disabled = page >= tp;
+}
+
+function prevPage() { if(page>1){page--;loadLeads(page);} }
+function nextPage() { loadLeads(page+1); }
+
+function limpiarFiltros() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filterOpcion').value = '';
+  document.getElementById('filterAtendido').value = '';
+  loadLeads(1);
+}
+
+async function marcarAtendido(id) {
+  await fetch(`/api/leads/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({atendido:true}) });
+  mostrarConfirm('✅ Lead marcado como atendido');
+  loadLeads(page);
+}
+
+async function convertirCliente(id) {
+  const r = await fetch(`/api/leads/${id}/convertir`, { method:'POST' });
+  const res = await r.json();
+  if (res.error) { mostrarConfirm('⚠️ ' + res.error); return; }
+  mostrarConfirm('✅ Cliente creado exitosamente');
+  loadLeads(page);
+}
+
+async function eliminarLead(id, nombre) {
+  if (!confirm(`⚠️ ¿Eliminar a "${nombre}" y TODA su actividad?\n\nEsta acción NO se puede deshacer.`)) return;
+  await fetch(`/api/leads/${id}`, { method:'DELETE' });
+  mostrarConfirm('🗑️ Lead eliminado');
+  loadLeads(page);
+}
+
+function abrirNotas(id, notas) {
+  editIdx = id;
+  document.getElementById('notasInput').value = notas;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalNotas')).show();
+}
+
+async function guardarNotas() {
+  await fetch(`/api/leads/${editIdx}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({notas:document.getElementById('notasInput').value}) });
+  bootstrap.Modal.getInstance(document.getElementById('modalNotas')).hide();
+  loadLeads(page);
+}
+
+// ─── NUEVO LEAD ────────────────────────────────────
+function abrirNuevoLead() {
+  document.getElementById('formNuevoLead').reset();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalNuevoLead')).show();
+}
+
+async function guardarNuevoLead(event) {
+  event.preventDefault();
+  const nombre = document.getElementById('nlNombre').value.trim();
+  if (!nombre) return;
+
+  const telefono = document.getElementById('nlTelefono').value.trim();
+  const email = document.getElementById('nlEmail').value.trim();
+  const contacto = [telefono, email].filter(Boolean).join(' | ');
+  const opcion = document.getElementById('nlOpcion').value;
+  const segmento = document.getElementById('nlSegmento').value;
+  const notas = document.getElementById('nlNotas').value.trim();
+
+  const data = {
+    nombre: nombre,
+    numero: contacto,
+    opcion: opcion,
+    segmento: segmento,
+    detalle: notas,
+    fuente: 'Manual',
+    canal: 'Web',
+    etapa: 'nuevo'
+  };
+
+  try {
+    const r = await fetch('/api/leads', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    const res = await r.json();
+    if (res.ok) {
+      mostrarConfirm('✅ Lead creado exitosamente');
+      bootstrap.Modal.getInstance(document.getElementById('modalNuevoLead')).hide();
+      loadLeads(1);
+    } else {
+      mostrarConfirm('⚠️ Error: ' + (res.error || 'desconocido'));
+    }
+  } catch(e) {
+    mostrarConfirm('⚠️ Error de conexión');
+  }
+  return false;
+}
+
+// Cargar opciones de filtro
+fetch('/api/opciones').then(r=>r.json()).then(opts => {
+  document.getElementById('filterOpcion').innerHTML = '<option value="">Todas</option>' + opts.map(o => `<option>${o}</option>`).join('');
+  loadLeads(1);
+});
+</script>
+{% endblock %}

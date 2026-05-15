@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}HTK CRM{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root { --sidebar-bg: #0f172a; --sidebar-hover: #1e293b; }
+    body { background: #f1f5f9; font-size: .875rem; }
+    .sidebar { background: var(--sidebar-bg); min-height: 100vh; position: sticky; top: 0; }
+    .sidebar .brand { padding: 1.25rem 1.25rem .75rem; font-size: 1.125rem; }
+    .sidebar .nav-link { color: #94a3b8; padding: .625rem 1rem; border-radius: .5rem; margin: .125rem .5rem; transition: all .15s; }
+    .sidebar .nav-link:hover, .sidebar .nav-link.active { background: var(--sidebar-hover); color: #fff; }
+    .sidebar .nav-link i { margin-right: .625rem; width: 1.25rem; text-align: center; }
+    .sidebar .badge-nav { float: right; font-size: .6875rem; }
+    .stat-card { border: none; border-radius: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.06); transition: transform .15s; }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; }
+    .card-table { border: none; border-radius: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    .card-table .table { margin-bottom: 0; }
+    .card-table .table th { background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: .75rem; text-transform: uppercase; color: #64748b; padding: .75rem 1rem; }
+    .card-table .table td { padding: .625rem 1rem; vertical-align: middle; }
+    .badge-urgent { background: #fef2f2; color: #dc2626; }
+    .badge-pending { background: #fffbeb; color: #d97706; }
+    .badge-done { background: #f0fdf4; color: #16a34a; }
+    .badge-blue { background: #eff6ff; color: #2563eb; }
+    .badge-gray { background: #f1f5f9; color: #475569; }
+    .search-input { border-radius: .5rem; border: 1px solid #e2e8f0; padding: .5rem .75rem; font-size: .875rem; }
+    .search-input:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+    .detail-cell { max-width: 280px; white-space: normal; word-break: break-word; }
+    .priority-high { border-left: 3px solid #dc2626; }
+    .priority-medium { border-left: 3px solid #d97706; }
+    .priority-low { border-left: 3px solid #16a34a; }
+    .table-hover tbody tr { transition: background .1s; }
+    @media (max-width: 768px) {
+      .sidebar { min-height: auto; position: static; }
+      .sidebar nav { display: flex; flex-wrap: nowrap; overflow-x: auto; }
+      .sidebar .nav-link { white-space: nowrap; }
+    }
+    .fade-in { animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="col-md-2 p-0 sidebar d-none d-md-block">
+        <div class="brand text-white d-flex align-items-center gap-2">
+          <i class="bi bi-lightning-fill" style="color:#2563eb"></i>
+          <span class="fw-bold">HTK CRM</span>
+        </div>
+        <nav class="nav flex-column mt-2">
+          <a class="nav-link {% if active == 'dashboard' %}active{% endif %}" href="/">
+            <i class="bi bi-grid-1x2-fill"></i> Dashboard
+          </a>
+          <a class="nav-link {% if active == 'leads' %}active{% endif %}" href="/leads">
+            <i class="bi bi-people-fill"></i> Leads
+            <span class="badge bg-danger badge-nav" id="nav-urgentes">0</span>
+          </a>
+          <a class="nav-link {% if active == 'kanban' %}active{% endif %}" href="/leads/kanban">
+            <i class="bi bi-columns-gap"></i> Pipeline
+          </a>
+          <a class="nav-link {% if active == 'clientes' %}active{% endif %}" href="/clientes">
+            <i class="bi bi-person-badge-fill"></i> Clientes
+          </a>
+          <a class="nav-link {% if active == 'ventas' %}active{% endif %}" href="/ventas">
+            <i class="bi bi-cash-stack"></i> Ventas
+          </a>
+          <a class="nav-link {% if active == 'seguimiento' %}active{% endif %}" href="/seguimiento">
+            <i class="bi bi-list-check"></i> Seguimiento
+          </a>
+          <a class="nav-link {% if active == 'precios' %}active{% endif %}" href="/precios">
+            <i class="bi bi-tags-fill"></i> Precios
+          </a>
+          <a class="nav-link {% if active == 'metricas' %}active{% endif %}" href="/metricas">
+            <i class="bi bi-bar-chart-fill"></i> Métricas
+          </a>
+          <hr class="text-secondary mx-3 my-2">
+          <a class="nav-link" onclick="if(confirm('Recargar leads desde JSON?'))fetch('/api/leads',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})" style="cursor:pointer">
+            <i class="bi bi-arrow-repeat"></i> Sincronizar
+          </a>
+        </nav>
+      </div>
+
+      <!-- Mobile nav -->
+      <div class="col-12 d-md-none p-2" style="background:var(--sidebar-bg)">
+        <div class="d-flex align-items-center gap-2" style="overflow-x:auto">
+          <span class="text-white fw-bold me-2"><i class="bi bi-lightning-fill" style="color:#2563eb"></i></span>
+          <a href="/" class="btn btn-sm text-white {% if active == 'dashboard' %}btn-primary{% endif %}">Dashboard</a>
+          <a href="/leads" class="btn btn-sm text-white {% if active == 'leads' %}btn-primary{% endif %}">Leads</a>
+          <a href="/clientes" class="btn btn-sm text-white {% if active == 'clientes' %}btn-primary{% endif %}">Clientes</a>
+          <a href="/ventas" class="btn btn-sm text-white {% if active == 'ventas' %}btn-primary{% endif %}">Ventas</a>
+          <a href="/seguimiento" class="btn btn-sm text-white {% if active == 'seguimiento' %}btn-primary{% endif %}">Tareas</a>
+          <a href="/precios" class="btn btn-sm text-white {% if active == 'precios' %}btn-primary{% endif %}">Precios</a>
+          <a href="/metricas" class="btn btn-sm text-white {% if active == 'metricas' %}btn-primary{% endif %}">📊</a>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <main class="col-md-10 p-4">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <!-- Modales globales -->
+  <div class="modal fade" id="modalNotas" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0"><h5 class="modal-title"><i class="bi bi-journal-text"></i> Notas</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <textarea id="notasInput" class="form-control" rows="4" placeholder="Agregar notas..."></textarea>
+        </div>
+        <div class="modal-footer border-0">
+          <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary btn-sm" onclick="guardarNotas()">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalConfirm" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-body text-center py-4">
+          <i class="bi bi-check-circle text-success" style="font-size:2.5rem"></i>
+          <p class="mt-2 mb-0" id="modalConfirmMsg">Operación exitosa</p>
+        </div>
+        <div class="modal-footer border-0 justify-content-center">
+          <button class="btn btn-primary btn-sm" data-bs-dismiss="modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Notificaciones de sidebar
+    fetch('/api/stats').then(r=>r.json()).then(s=>{
+      const el = document.getElementById('nav-urgentes');
+      if(el && s.urgentes > 0) el.textContent = s.urgentes;
+      else if(el) el.style.display = 'none';
+    });
+
+    // Modal de confirmación rápido
+    function mostrarConfirm(msg) {
+      document.getElementById('modalConfirmMsg').textContent = msg;
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('modalConfirm')).show();
+    }
+  </script>
+</body>
+</html>

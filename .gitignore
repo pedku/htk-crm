@@ -6,3 +6,10 @@ backups/
 .env
 .crm_env
 templates/index.html.bak
+
+# Bot
+bot/node_modules/
+bot/session-data/
+bot/.wwebjs_cache/
+bot/bot.log
+bot/qr-code.png

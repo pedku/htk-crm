@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Métricas — HTK CRM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-bar-chart-fill"></i> Métricas</h4>
+</div>
+
+<!-- Resumen del mes -->
+<div class="card card-table p-3 mb-3">
+  <h6 class="text-muted mb-3"><i class="bi bi-speedometer2"></i> Resumen del mes</h6>
+  <div class="row g-3" id="metricCards"></div>
+</div>
+
+<!-- Top productos -->
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <div class="card card-table p-3">
+      <h6 class="text-muted mb-3"><i class="bi bi-trophy"></i> Top 5 productos</h6>
+      <div id="topProductos">
+        <div class="text-center text-muted py-3"><i class="bi bi-hourglass-split"></i> Cargando...</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card card-table p-3">
+      <h6 class="text-muted mb-3"><i class="bi bi-graph-up"></i> Leads por mes</h6>
+      <canvas id="chartMonthly" height="180"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Tabla histórica -->
+<div class="card card-table p-3">
+  <h6 class="text-muted mb-3"><i class="bi bi-table"></i> Historial mensual</h6>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Mes</th><th>Leads</th><th>Atendidos</th><th>Tasa atención</th></tr></thead>
+      <tbody id="historicoTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+async function loadMetricas() {
+  const m = await(await fetch('/api/metricas')).json();
+
+  const cards = [
+    { label: 'Leads del mes', val: m.leads, color: '#2563eb' },
+    { label: 'Cotizados', val: m.cotizados, color: '#7c3aed' },
+    { label: 'Vendidos', val: m.vendidos, color: '#16a34a' },
+    { label: 'Ingresos', val: '$' + (m.ingresos || 0).toLocaleString(), color: '#059669' },
+    { label: 'Tasa conversión', val: m.conversion + '%', color: m.conversion > 20 ? '#16a34a' : m.conversion > 10 ? '#d97706' : '#dc2626' },
+  ];
+
+  document.getElementById('metricCards').innerHTML = cards.map(c =>
+    `<div class="col-6 col-md">
+      <div class="card stat-card p-3 text-center">
+        <div class="fs-4 fw-bold" style="color:${c.color}">${c.val}</div>
+        <small class="text-muted">${c.label}</small>
+      </div>
+    </div>`
+  ).join('');
+
+  // Top productos
+  const top = m.top_productos || [];
+  document.getElementById('topProductos').innerHTML = top.length ? top.map((p,i) =>
+    `<div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+      <div><span class="badge bg-secondary me-2">${i+1}</span> <span class="fw-medium">${p.producto||'Sin nombre'}</span></div>
+      <div><span class="badge badge-blue">${p.count} vendidos</span> <span class="fw-bold text-success">$${parseInt(p.total).toLocaleString()}</span></div>
+    </div>`
+  ).join('') : '<div class="text-center text-muted py-3"><i class="bi bi-inbox"></i> Sin ventas registradas</div>';
+
+  // Chart mensual
+  const hist = await(await fetch('/api/metricas-historicas')).json();
+  const labels = hist.map(h => h.mes).reverse();
+  const values = hist.map(h => h.leads).reverse();
+
+  new Chart(document.getElementById('chartMonthly'), {
+    type: 'line',
+    data: { labels: labels.length ? labels : ['Ene','Feb','Mar','Abr','May'],
+            datasets: [{
+              label: 'Leads',
+              data: values.length ? values : [0,0,0,0,0],
+              borderColor: '#2563eb',
+              backgroundColor: 'rgba(37,99,235,.1)',
+              fill: true,
+              tension: .4,
+              pointRadius: 4,
+            }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } },
+               scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+  });
+
+  // Tabla
+  document.getElementById('historicoTable').innerHTML = hist.map(h => {
+    const atencion = h.leads > 0 ? Math.round(h.atendidos / h.leads * 100) : 0;
+    return `<tr><td class="fw-medium">${h.mes}</td><td>${h.leads}</td><td>${h.atendidos}</td><td>${atencion}%</td></tr>`;
+  }).join('');
+}
+loadMetricas();
+</script>
+{% endblock %}

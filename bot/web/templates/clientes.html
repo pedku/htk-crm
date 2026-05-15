@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Clientes — HTK CRM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-person-badge-fill"></i> Clientes</h4>
+</div>
+
+<div class="row g-2 mb-3">
+  <div class="col-md-4">
+    <input type="text" id="searchInput" class="form-control form-control-sm search-input" placeholder="🔍 Buscar nombre o teléfono..." oninput="debounceSearch()">
+  </div>
+</div>
+
+<div class="card card-table">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Clasificación</th><th>Compras</th><th>Total</th><th></th></tr></thead>
+      <tbody id="clientesTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+  <small class="text-muted" id="pageInfo"></small>
+  <div>
+    <button class="btn btn-outline-secondary btn-sm" id="prevBtn" onclick="prevPage()"><i class="bi bi-chevron-left"></i></button>
+    <button class="btn btn-outline-secondary btn-sm" id="nextBtn" onclick="nextPage()"><i class="bi bi-chevron-right"></i></button>
+  </div>
+</div>
+
+<div class="modal fade" id="modalCliente" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header border-0"><h5 class="modal-title"><i class="bi bi-pencil"></i> Editar cliente</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-2"><label class="form-label small">Nombre</label><input class="form-control form-control-sm" id="editNombre"></div>
+        <div class="mb-2"><label class="form-label small">Teléfono</label><input class="form-control form-control-sm" id="editTelefono"></div>
+        <div class="mb-2"><label class="form-label small">Email</label><input class="form-control form-control-sm" id="editEmail"></div>
+        <div class="mb-2"><label class="form-label small">Dirección</label><input class="form-control form-control-sm" id="editDireccion"></div>
+        <div class="mb-2"><label class="form-label small">Ciudad</label><input class="form-control form-control-sm" id="editCiudad"></div>
+        <div class="mb-2"><label class="form-label small">Clasificación</label>
+          <select class="form-select form-select-sm" id="editClasificacion">
+            <option>Regular</option><option>Frecuente</option><option>VIP</option>
+          </select></div>
+        <div class="mb-2"><label class="form-label small">Notas</label><textarea class="form-control form-control-sm" id="editNotas" rows="3"></textarea></div>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="guardarCliente()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let allClientes = [], page = 1, perPage = 50, editCid = null;
+let searchTimer;
+function debounceSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(() => loadClientes(1), 300); }
+
+async function loadClientes(p) {
+  page = p || 1;
+  const q = document.getElementById('searchInput').value;
+  let url = `/api/clientes?limit=${perPage}&offset=${(page-1)*perPage}`;
+  if (q) url += `&q=${encodeURIComponent(q)}`;
+  const r = await fetch(url);
+  const res = await r.json();
+  allClientes = res.data;
+
+  document.getElementById('clientesTable').innerHTML = allClientes.length ? allClientes.map(c => {
+    const badge = c.clasificacion === 'VIP' ? 'badge-urgent' : c.clasificacion === 'Frecuente' ? 'badge-pending' : 'badge-gray';
+    return `<tr>
+      <td class="text-muted small">CLI-${String(c.id).padStart(3,'0')}</td>
+      <td><span class="fw-medium">${c.nombre||'Sin nombre'}</span></td>
+      <td class="text-muted small">${c.telefono||'-'}</td>
+      <td class="text-muted small">${c.email||'-'}</td>
+      <td><span class="badge ${badge}">${c.clasificacion||'Regular'}</span></td>
+      <td>${c.num_compras||0}</td>
+      <td class="fw-medium">$${(c.total_compras||0).toLocaleString()}</td>
+      <td><button class="btn btn-outline-primary btn-sm" onclick="editarCliente(${c.id})"><i class="bi bi-pencil"></i></button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-inbox"></i> No hay clientes</td></tr>';
+
+  const tp = Math.max(1, Math.ceil(res.total/perPage));
+  document.getElementById('pageInfo').textContent = `Página ${page} de ${tp} — ${res.total} clientes`;
+  document.getElementById('prevBtn').disabled = page <= 1;
+  document.getElementById('nextBtn').disabled = page >= tp;
+}
+
+function prevPage() { if(page>1){page--;loadClientes(page);} }
+function nextPage() { loadClientes(page+1); }
+
+function editarCliente(id) {
+  const c = allClientes.find(x => x.id === id);
+  if (!c) return;
+  editCid = id;
+  document.getElementById('editNombre').value = c.nombre||'';
+  document.getElementById('editTelefono').value = c.telefono||'';
+  document.getElementById('editEmail').value = c.email||'';
+  document.getElementById('editDireccion').value = c.direccion||'';
+  document.getElementById('editCiudad').value = c.ciudad||'';
+  document.getElementById('editClasificacion').value = c.clasificacion||'Regular';
+  document.getElementById('editNotas').value = c.notas||'';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCliente')).show();
+}
+
+async function guardarCliente() {
+  await fetch(`/api/clientes/${editCid}`, {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      nombre: document.getElementById('editNombre').value,
+      telefono: document.getElementById('editTelefono').value,
+      email: document.getElementById('editEmail').value,
+      direccion: document.getElementById('editDireccion').value,
+      ciudad: document.getElementById('editCiudad').value,
+      clasificacion: document.getElementById('editClasificacion').value,
+      notas: document.getElementById('editNotas').value,
+    })
+  });
+  bootstrap.Modal.getInstance(document.getElementById('modalCliente')).hide();
+  mostrarConfirm('✅ Cliente actualizado');
+  loadClientes(page);
+}
+loadClientes(1);
+</script>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — HTK CRM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-speedometer2"></i> Dashboard</h4>
+  <div>
+    <span class="text-muted small" id="fechaActual"></span>
+  </div>
+</div>
+
+<div class="row g-3 mb-4" id="statsCards">
+  <div class="col-6 col-md-3">
+    <div class="card stat-card p-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#eff6ff;color:#2563eb"><i class="bi bi-people"></i></div>
+        <div><small class="text-muted d-block">Total Leads</small><span class="fs-5 fw-bold" id="stat-total">-</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card p-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#fef2f2;color:#dc2626"><i class="bi bi-exclamation-triangle"></i></div>
+        <div><small class="text-muted d-block">Pendientes</small><span class="fs-5 fw-bold" id="stat-pendientes">-</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card p-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#f0fdf4;color:#16a34a"><i class="bi bi-person-badge"></i></div>
+        <div><small class="text-muted d-block">Clientes</small><span class="fs-5 fw-bold" id="stat-clientes">-</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card p-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#fffbeb;color:#d97706"><i class="bi bi-list-check"></i></div>
+        <div><small class="text-muted d-block">Tareas Vencidas</small><span class="fs-5 fw-bold" id="stat-vencidas">-</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <!-- Pipeline Funnel -->
+  <div class="col-md-8">
+    <div class="card card-table">
+      <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center pt-3 px-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-funnel"></i> Pipeline de Ventas</h6>
+        <a href="/leads/kanban" class="btn btn-outline-primary btn-sm"><i class="bi bi-columns-gap"></i> Kanban</a>
+      </div>
+      <div class="card-body px-3" id="pipelineFunnel">
+        <div class="text-center text-muted py-4">Cargando...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actividad Reciente -->
+  <div class="col-md-4">
+    <div class="card card-table">
+      <div class="card-header bg-white border-0 pt-3 px-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-activity"></i> Actividad Reciente</h6>
+      </div>
+      <div class="card-body px-3" id="actividadReciente" style="max-height:400px;overflow-y:auto">
+        <div class="text-center text-muted py-4">Cargando...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Leads por Etapa -->
+<div class="card card-table mb-4">
+  <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center pt-3 px-3">
+    <h6 class="fw-bold mb-0"><i class="bi bi-table"></i> Últimos Leads</h6>
+    <a href="/leads" class="btn btn-outline-primary btn-sm">Ver todos</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Fecha</th><th>Nombre</th><th>Contacto</th><th>Opción</th><th>Etapa</th><th>Acción</th></tr></thead>
+      <tbody id="ultimosLeads"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ─── CARGAR DATOS ────────────────────────────────────
+async function cargarDashboard() {
+  const stats = await (await fetch('/api/stats')).json();
+  document.getElementById('stat-total').textContent = stats.total || 0;
+  document.getElementById('stat-pendientes').textContent = stats.pendientes || 0;
+  document.getElementById('stat-clientes').textContent = stats.clientes || 0;
+  document.getElementById('stat-vencidas').textContent = stats.tareas_vencidas || 0;
+  document.getElementById('fechaActual').textContent = new Date().toLocaleDateString('es-CO', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  // Pipeline
+  if (stats.etapas && stats.pipeline) {
+    const container = document.getElementById('pipelineFunnel');
+    const maxCount = Math.max(1, ...stats.etapas.map(e => stats.pipeline[e.clave] || 0));
+    container.innerHTML = stats.etapas.map(e => {
+      const count = stats.pipeline[e.clave] || 0;
+      const pct = Math.round(count / maxCount * 100);
+      return `<div class="d-flex align-items-center gap-2 mb-2">
+        <div style="width:120px;font-size:.8125rem;white-space:nowrap">${e.nombre}</div>
+        <div class="progress flex-grow-1" style="height:28px;border-radius:6px">
+          <div class="progress-bar" style="width:${pct}%;background:${e.color};font-size:.75rem;line-height:28px">${count}</div>
+        </div>
+        <span class="fw-bold small" style="width:50px;text-align:right">${count}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Actividad reciente
+  const act = await (await fetch('/api/actividades/recientes')).json();
+  const actEl = document.getElementById('actividadReciente');
+  if (act.length) {
+    actEl.innerHTML = act.map(a => {
+      const iconos = { llamada:'bi-telephone text-success', whatsapp:'bi-whatsapp text-success', email:'bi-envelope text-primary', nota:'bi-journal-text text-muted', etapa:'bi-arrow-right-circle text-warning', tarea:'bi-check2-circle text-info', sistema:'bi-gear text-secondary' };
+      const icono = iconos[a.tipo] || 'bi-circle text-muted';
+      const fecha = a.created_at ? new Date(a.created_at+'Z').toLocaleString('es-CO').slice(0,14) : '';
+      return `<div class="d-flex gap-2 mb-2 pb-2 border-bottom">
+        <i class="bi ${icono} mt-1"></i>
+        <div class="small"><strong>${a.lead_nombre||'Lead'}</strong><br>${a.descripcion}<br><span class="text-muted">${fecha}</span></div>
+      </div>`;
+    }).join('');
+  } else {
+    actEl.innerHTML = '<div class="text-center text-muted py-4"><i class="bi bi-inbox"></i> Sin actividad reciente</div>';
+  }
+}
+
+// Últimos leads
+async function cargarUltimosLeads() {
+  const res = await (await fetch('/api/leads?limit=10')).json();
+  const tb = document.getElementById('ultimosLeads');
+  if (!res.data || !res.data.length) {
+    tb.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox"></i> Sin leads</td></tr>';
+    return;
+  }
+  tb.innerHTML = res.data.map(l => {
+    const fecha = l.fecha ? new Date(l.fecha).toLocaleDateString('es-CO') : '';
+    const tel = (l.numero||'').replace(/@c\.us|@lid/g,'').slice(0,30);
+    const etapaColor = l.etapa_color || '#94a3b8';
+    const etapaNombre = l.etapa_nombre || l.etapa || 'Nuevo';
+    return `<tr>
+      <td class="text-muted small">${fecha}</td>
+      <td><a href="/leads/${l.id}" class="text-decoration-none fw-medium">${l.nombre||'Desconocido'}</a></td>
+      <td class="text-muted small">${tel}</td>
+      <td><span class="badge badge-blue">${l.opcion||'-'}</span></td>
+      <td><span class="badge" style="background:${etapaColor}20;color:${etapaColor};border:1px solid ${etapaColor}40">${etapaNombre}</span></td>
+      <td><a href="/leads/${l.id}" class="btn btn-outline-primary btn-sm"><i class="bi bi-eye"></i></a></td>
+    </tr>`;
+  }).join('');
+}
+
+cargarDashboard();
+cargarUltimosLeads();
+</script>
+{% endblock %}
