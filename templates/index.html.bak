@@ -773,9 +773,6 @@
       <a class="nav-link mobile-nav-link" href="#" data-tab="automation" onclick="toggleMobileMenu()">
         <i class="bi bi-gear-wide-connected"></i> Automatización
       </a>
-      <a class="nav-link mobile-nav-link" href="#" data-tab="inventario" onclick="toggleMobileMenu()">
-        <i class="bi bi-box-seam"></i> Inventario
-      </a>
       <a class="nav-link mobile-nav-link" href="#" data-tab="config" onclick="toggleMobileMenu()">
         <i class="bi bi-sliders"></i> Configuración
       </a>
@@ -832,7 +829,6 @@
         <a class="nav-link" href="#" data-tab="leads"><i class="bi bi-graph-up-arrow"></i> Prospectos</a>
         <a class="nav-link" href="#" data-tab="interactions"><i class="bi bi-chat-dots"></i> Interacciones</a>
         <a class="nav-link" href="#" data-tab="automation"><i class="bi bi-gear-wide-connected"></i> Automatización</a>
-        <a class="nav-link" href="#" data-tab="inventario"><i class="bi bi-box-seam"></i> Inventario</a>
         <a class="nav-link" href="#" data-tab="config"><i class="bi bi-sliders"></i> Configuración</a>
         <a class="nav-link" href="/bot-whatsapp"><i class="bi bi-robot"></i> Bot WhatsApp</a>
         <hr style="border-color:rgba(255,255,255,0.06);margin-top:auto;">
@@ -857,7 +853,7 @@
  <div class="search-results-dropdown" id="searchDropdown"></div>
  </div>
  <div class="d-flex align-items-center gap-2" id="topNotifications">
-  <span id="botStatusIndicator" class="badge" style="font-size:0.75rem;" title="Estado del Bot WhatsApp">🔄 Verificando...</span>
+ <!-- Notification indicators injected by JS -->
  </div>
  </div>
 
@@ -905,45 +901,6 @@
  <div class="label mt-1">Entregadas</div>
  </div>
  </div>
- </div>
- <!-- OT Financial Stats -->
- <div class="row g-3 mt-3">
-  <div class="col-md-3">
-   <div class="stat-card">
-    <div class="d-flex justify-content-between align-items-center">
-     <div><span class="number" id="statsOtActivas">—</span></div>
-     <i class="bi bi-tools icon"></i>
-    </div>
-    <div class="label mt-1">Órdenes Activas</div>
-   </div>
-  </div>
-  <div class="col-md-3">
-   <div class="stat-card">
-    <div class="d-flex justify-content-between align-items-center">
-     <div><span class="number" id="statsPresupuestado">$0</span></div>
-     <i class="bi bi-calculator icon"></i>
-    </div>
-    <div class="label mt-1">Total Presupuestado</div>
-   </div>
-  </div>
-  <div class="col-md-3">
-   <div class="stat-card">
-    <div class="d-flex justify-content-between align-items-center">
-     <div><span class="number" id="statsAbonado">$0</span></div>
-     <i class="bi bi-cash-coin icon"></i>
-    </div>
-    <div class="label mt-1">Total Abonado</div>
-   </div>
-  </div>
-  <div class="col-md-3">
-   <div class="stat-card">
-    <div class="d-flex justify-content-between align-items-center">
-     <div><span class="number" id="statsPendiente">$0</span></div>
-     <i class="bi bi-hourglass-split icon"></i>
-    </div>
-    <div class="label mt-1">Saldo Pendiente</div>
-   </div>
-  </div>
  </div>
  <div class="row g-3 mt-2">
  <div class="col-md-6">
@@ -1153,7 +1110,7 @@
  </div>
  <div style="overflow-x:auto;">
  <table class="table table-hover">
- <thead><tr><th>ID</th><th>Tipo</th><th>Cliente</th><th>Teléfono</th><th>Equipo</th><th>Falla</th><th>Presupuesto</th><th>Estado</th><th>Recibido</th><th>Acciones</th></tr></thead>
+ <thead><tr><th>ID</th><th>Cliente</th><th>Teléfono</th><th>Equipo</th><th>Falla</th><th>Presupuesto</th><th>Estado</th><th>Recibido</th><th>Acciones</th></tr></thead>
  <tbody id="woBody"></tbody>
  </table>
  </div>
@@ -1186,14 +1143,6 @@
  <option value="ganado">Ganado</option>
  <option value="perdido">Perdido</option>
  <option value="cliente">Cliente</option>
- </select>
- <select class="form-select" id="leadServicioFilter" onchange="renderLeads()" style="width:180px;">
- <option value="">Todos los servicios</option>
- <option value="automatizacion">Automatización</option>
- <option value="iot">IoT</option>
- <option value="mantenimiento">Mantenimiento</option>
- <option value="cargadores">Cargadores</option>
- <option value="varios">Varios</option>
  </select>
  <select class="form-select" id="leadSegmentFilter" onchange="renderLeads()" style="width:180px;" data-segments="true" data-placeholder="Todos los segmentos"></select>
  </div>
@@ -1369,359 +1318,8 @@
  </div>
  </div>
 
- <!-- ===================== CONFIGURACIÓN ===================== -->
- <div id="tab-config" class="tab-content">
- <h3 class="page-title"><i class="bi bi-sliders"></i> Configuración</h3>
-
- <!-- Sub-tabs internas -->
- <div class="client-profile-tabs mb-3" id="configSubtabs">
-  <button class="client-profile-tab active" data-config-tab="general" onclick="switchConfigTab('general')"><i class="bi bi-gear"></i> General</button>
-  <button class="client-profile-tab" data-config-tab="bot" onclick="switchConfigTab('bot')"><i class="bi bi-robot"></i> Bot WhatsApp</button>
-  <button class="client-profile-tab" data-config-tab="templates" onclick="switchConfigTab('templates')"><i class="bi bi-chat-square-text"></i> Plantillas OT</button>
-  <button class="client-profile-tab" data-config-tab="prices" onclick="switchConfigTab('prices')"><i class="bi bi-tags"></i> Precios</button>
-  <button class="client-profile-tab" data-config-tab="segments" onclick="switchConfigTab('segments')"><i class="bi bi-diagram-3"></i> Segmentos</button>
-  <button class="client-profile-tab" data-config-tab="usuarios" onclick="switchConfigTab('usuarios')"><i class="bi bi-people-fill"></i> Usuarios</button>
- </div>
-
- <!-- General Sub-tab -->
- <div id="config-tab-general" class="config-subtab active" style="display:block;">
-  <div class="row g-3">
-   <div class="col-md-6">
-    <div class="card">
-     <div class="card-body">
-      <h5 class="card-title"><i class="bi bi-info-circle"></i> Información del Sistema</h5>
-      <table class="table table-sm mt-3 mb-0">
-       <tbody>
-        <tr><td class="text-muted" style="width:160px;">Versión CRM</td><td><strong>v2.2 — CRM Integrado</strong></td></tr>
-        <tr><td class="text-muted">Base de datos</td><td><strong id="dbInfoPath">SQLite (crm.db)</strong></td></tr>
-        <tr><td class="text-muted">Servidor</td><td><strong>Flask + Waitress</strong></td></tr>
-        <tr><td class="text-muted">Puerto</td><td><strong>18800</strong></td></tr>
-        <tr><td class="text-muted">Bot WhatsApp</td><td><strong>localhost:18802</strong></td></tr>
-        <tr><td class="text-muted">Último backup</td><td><strong id="cfgLastBackup">—</strong></td></tr>
-       </tbody>
-      </table>
-      <h6 class="mt-3 mb-2" style="color:rgba(255,255,255,0.5);">📊 Estadísticas</h6>
-      <table class="table table-sm mb-0">
-       <tbody id="cfgSystemStats">
-        <tr><td class="text-muted">Cargando...</td><td></td></tr>
-       </tbody>
-      </table>
-     </div>
-    </div>
-   </div>
-   <div class="col-md-6">
-    <div class="card">
-     <div class="card-body">
-      <h5 class="card-title"><i class="bi bi-shield-check"></i> Respaldo de Base de Datos</h5>
-      <p class="card-text small text-muted">Genera un backup comprimido de la base de datos. Los backups se conservan 14 días.</p>
-      <div class="d-flex gap-2 mb-2">
-       <button class="btn btn-sm btn-outline-htk" onclick="runAuto('backup',{})">
-        <i class="bi bi-cloud-arrow-up"></i> Backup ahora
-       </button>
-       <button class="btn btn-sm btn-outline-secondary" onclick="showBackupList()">
-        <i class="bi bi-archive"></i> Ver backups
-       </button>
-     </div>
-    </div>
-   </div>
-  </div>
- </div><!-- /config-tab-general -->
-
- <!-- Bot WhatsApp Sub-tab -->
- <div id="config-tab-bot" class="config-subtab" style="display:none;">
-  <div class="row">
-   <div class="col-lg-8">
-    <div id="botCfgLoading" class="text-center py-4"><span class="spinner-border spinner-border-sm"></span> Cargando configuración...</div>
-    <div id="botCfgForm" style="display:none;">
-     <div class="accordion" id="botConfigAccordion">
-
-      <!-- ⏰ Horario -->
-      <div class="accordion-item">
-       <h2 class="accordion-header">
-        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#cfgHorario">
-         ⏰ Horario Laboral
-        </button>
-       </h2>
-       <div id="cfgHorario" class="accordion-collapse collapse show" data-bs-parent="#botConfigAccordion">
-        <div class="accordion-body">
-         <div class="row g-3">
-          <div class="col-6 col-md-3">
-           <label class="form-label">Lun-Vie inicio</label>
-           <input type="number" class="form-control" id="cfg_horario_semana_inicio" min="0" max="23">
-          </div>
-          <div class="col-6 col-md-3">
-           <label class="form-label">Lun-Vie fin</label>
-           <input type="number" class="form-control" id="cfg_horario_semana_fin" min="0" max="23">
-          </div>
-          <div class="col-6 col-md-3">
-           <label class="form-label">Sábado inicio</label>
-           <input type="number" class="form-control" id="cfg_horario_sabado_inicio" min="0" max="23">
-          </div>
-          <div class="col-6 col-md-3">
-           <label class="form-label">Sábado fin</label>
-           <input type="number" class="form-control" id="cfg_horario_sabado_fin" min="0" max="23">
-          </div>
-         </div>
-        </div>
-       </div>
-      </div>
-
-      <!-- 🔧 Comportamiento -->
-      <div class="accordion-item">
-       <h2 class="accordion-header">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cfgComportamiento">
-         🔧 Comportamiento
-        </button>
-       </h2>
-       <div id="cfgComportamiento" class="accordion-collapse collapse" data-bs-parent="#botConfigAccordion">
-        <div class="accordion-body">
-         <div class="row g-3">
-          <div class="col-md-6">
-           <label class="form-label">Timeout sin actividad (ms)</label>
-           <input type="number" class="form-control" id="cfg_reset_timeout_ms">
-           <small class="text-muted">Tiempo antes de resetear sesión inactiva (default: 1800000 = 30 min)</small>
-          </div>
-          <div class="col-md-6">
-           <label class="form-label">Máx mensajes automáticos</label>
-           <input type="number" class="form-control" id="cfg_max_auto_mensajes">
-           <small class="text-muted">Intentos sin respuesta clara antes de derivar</small>
-          </div>
-          <div class="col-md-6">
-           <label class="form-label">Silenciar lead (minutos)</label>
-           <input type="number" class="form-control" id="cfg_silenciar_lead_minutos">
-           <small class="text-muted">Silencio tras derivar a ingeniero</small>
-          </div>
-          <div class="col-md-6">
-           <label class="form-label">Silenciar pitch (días)</label>
-           <input type="number" class="form-control" id="cfg_silenciar_pitch_dias">
-           <small class="text-muted">Silencio tras prospección outbound</small>
-          </div>
-          <div class="col-12"><hr></div>
-          <div class="col-md-4">
-           <label class="form-label">Auto-respuesta activa</label>
-           <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="cfg_auto_respuesta_activa">
-            <label class="form-check-label" for="cfg_auto_respuesta_activa">Responder mensajes entrantes</label>
-           </div>
-          </div>
-          <div class="col-md-4">
-           <label class="form-label">Derivar sin respuesta</label>
-           <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="cfg_derivar_sin_respuesta">
-            <label class="form-check-label" for="cfg_derivar_sin_respuesta">Derivar si no se entiende</label>
-           </div>
-          </div>
-          <div class="col-md-4">
-           <label class="form-label">Menú consulta OT</label>
-           <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="cfg_consulta_ot_activa">
-            <label class="form-check-label" for="cfg_consulta_ot_activa">Activar consulta de OT</label>
-           </div>
-          </div>
-         </div>
-        </div>
-       </div>
-      </div>
-
-      <!-- 📝 Mensajes -->
-      <div class="accordion-item">
-       <h2 class="accordion-header">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cfgMensajes">
-         📝 Mensajes
-        </button>
-       </h2>
-       <div id="cfgMensajes" class="accordion-collapse collapse" data-bs-parent="#botConfigAccordion">
-        <div class="accordion-body">
-         <div class="row g-3">
-          <div class="col-md-6">
-           <label class="form-label">📩 Presentación</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_presentacion" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_presentacion" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
-          </div>
-          <div class="col-md-6">
-           <label class="form-label">👋 Bienvenida</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_bienvenida" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_bienvenida" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
-          </div>
-          <div class="col-md-6">
-           <label class="form-label">🕐 Fuera de horario</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_fuera_horario" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_fuera_horario" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
-          </div>
-          <div class="col-md-6">
-           <label class="form-label">🙌 Derivar a ingeniero</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_derivar" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_derivar" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
-          </div>
-          <div class="col-md-6">
-           <label class="form-label">✅ Despedida</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_despedida" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_despedida" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
-          </div>
-         </div>
-        </div>
-       </div>
-      </div>
-
-      <!-- 🔌 Conexión -->
-      <div class="accordion-item">
-       <h2 class="accordion-header">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cfgConexion">
-         🔌 Conexión
-        </button>
-       </h2>
-       <div id="cfgConexion" class="accordion-collapse collapse" data-bs-parent="#botConfigAccordion">
-        <div class="accordion-body">
-         <div class="row g-3 align-items-end">
-          <div class="col-md-8">
-           <label class="form-label">URL del CRM</label>
-           <input type="text" class="form-control" id="cfg_crm_api_url" placeholder="http://localhost:18800">
-          </div>
-          <div class="col-md-4">
-           <label class="form-label">Estado del Bot</label>
-           <div><span id="cfgBotStatus" class="badge bg-secondary">⏳ Verificando...</span></div>
-          </div>
-         </div>
-        </div>
-       </div>
-      </div>
-
-     </div><!-- /accordion -->
-
-     <div class="d-flex gap-2 mt-4">
-      <button class="btn btn-htk" onclick="guardarConfigBot()">
-       <i class="bi bi-cloud-upload"></i> 💾 Guardar configuración
-      </button>
-      <button class="btn btn-outline-htk" onclick="recargarConfigBot()">
-       <i class="bi bi-arrow-repeat"></i> 🔄 Recargar en el bot
-      </button>
-     </div>
-     <div id="cfgSaveResult" class="mt-2"></div>
-    </div><!-- /botCfgForm -->
-   </div>
-
-   <!-- Preview panel -->
-   <div class="col-lg-4">
-    <div class="card">
-     <div class="card-header d-flex align-items-center gap-2">
-      <i class="bi bi-phone"></i> Preview WhatsApp
-     </div>
-     <div class="card-body" style="background:#0d1b2a; border-radius:0 0 8px 8px; max-height:500px; overflow-y:auto;">
-      <div id="waPreview" style="font-size:0.8em; line-height:1.5;">
-       <small class="text-muted">Escribe en los mensajes para ver el preview aquí...</small>
-      </div>
-     </div>
-    </div>
-   </div>
-  </div>
- </div><!-- /config-tab-bot -->
-
- <!-- Templates Sub-tab -->
- <div id="config-tab-templates" class="config-subtab" style="display:none;">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-   <div class="d-flex align-items-center gap-2">
-    <select class="form-select form-select-sm" id="templateFilterType" style="width:180px;" onchange="loadTemplates()">
-     <option value="">Todos los tipos</option>
-     <option value="reparacion">🔧 Reparación</option>
-     <option value="fabricacion">🏭 Fabricación</option>
-     <option value="instalacion">🚗 Instalación</option>
-    </select>
-   </div>
-   <button class="btn btn-sm btn-htk" onclick="showTemplateEditor()"><i class="bi bi-plus-lg"></i> Nueva plantilla</button>
-  </div>
-  <div class="table-container">
-   <table class="table table-hover mb-0">
-    <thead>
-     <tr>
-      <th>Tipo OT</th>
-      <th>Estado</th>
-      <th>Nombre</th>
-      <th style="max-width:300px;">Preview</th>
-      <th style="width:60px;">Activo</th>
-      <th style="width:80px;">Acciones</th>
-     </tr>
-    </thead>
-    <tbody id="templatesTableBody">
-     <tr><td colspan="6" class="text-center text-muted py-4">Cargando plantillas...</td></tr>
-    </tbody>
-   </table>
-  </div>
- </div>
-
- <!-- Prices Sub-tab -->
- <div id="config-tab-prices" class="config-subtab" style="display:none;">
-  <div class="text-center text-muted py-5">
-   <i class="bi bi-tags" style="font-size:3em;"></i>
-   <p class="mt-3">Gestión de precios — disponible en la tabla de precios existente.</p>
-  </div>
-  <div id="pricesTabContent"></div>
- </div>
-
- <!-- Segments Sub-tab -->
- <div id="config-tab-segments" class="config-subtab" style="display:none;">
-  <div class="text-center py-5">
-   <span class="spinner-border spinner-border-sm"></span> Cargando segmentos...
-  </div>
- </div>
-
- <!-- Usuarios Sub-tab -->
- <div id="config-tab-usuarios" class="config-subtab" style="display:none;">
-  <div class="text-center text-muted py-5">
-   <i class="bi bi-people-fill" style="font-size:3em;"></i>
-   <p class="mt-3">Gestión de usuarios — próximamente.</p>
-   <p class="small">Administración de cuentas, roles y permisos para el equipo HTK.</p>
-  </div>
- </div>
-
- </div>
-
  </div>
  </div>
-</div>
-
-
-<!-- ══════════════════════════════════════════════════════════════════ -->
-<!-- TAB: INVENTARIO -->
-<!-- ══════════════════════════════════════════════════════════════════ -->
- <div id="tab-inventario" class="tab-content">
-
- <div class="d-flex justify-content-between align-items-center mb-3">
-  <div>
-   <h3 class="page-title mb-0"><i class="bi bi-box-seam"></i> Inventario</h3>
-   <small id="invBajoStockBadge" style="display:none;" class="badge bg-danger mt-1"></small>
-  </div>
-  <div class="d-flex gap-2 align-items-center">
-   <input type="text" id="invSearch" class="search-box" style="width:200px;" placeholder="Buscar..." oninput="loadInventario()">
-   <select id="invCategoriaFilter" class="form-select" style="width:140px;" onchange="loadInventario()">
-    <option value="">Todas categorías</option>
-   </select>
-   <button class="btn btn-htk" onclick="showInventarioModal()"><i class="bi bi-plus-lg"></i> Nuevo item</button>
-  </div>
- </div>
-
- <div class="table-container">
-  <div class="table-responsive">
-   <table class="table table-hover align-middle mb-0">
-    <thead>
-     <tr>
-      <th>Código</th>
-      <th>Nombre</th>
-      <th>Categoría</th>
-      <th>Stock</th>
-      <th>Stock Mín</th>
-      <th>Proveedor</th>
-      <th>Costo Unit.</th>
-      <th>Ubicación</th>
-      <th style="width:120px;">Acciones</th>
-     </tr>
-    </thead>
-    <tbody id="invTableBody">
-     <tr><td colspan="9" class="text-center py-4"><span class="spinner-border spinner-border-sm"></span> Cargando...</td></tr>
-    </tbody>
-   </table>
-  </div>
- </div>
-
 </div>
 
 <!-- ===== MODAL GENÉRICO ===== -->
@@ -1743,6 +1341,16 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 
+
+<div id="tab-kanban" class="tab-content">
+<div class="d-flex justify-content-between align-items-center mb-3">
+ <h3 class="page-title mb-0"><i class="bi bi-columns-gap"></i> Pipeline Kanban</h3>
+ <div><span class="text-muted small me-2" id="kanbanLeadTotal"></span><button class="btn btn-sm btn-outline-htk" onclick="loadKanban()"><i class="bi bi-arrow-repeat"></i> Refrescar</button></div>
+</div>
+<div id="kanbanContainer" class="d-flex gap-3 overflow-auto pb-3" style="min-height:60vh;scrollbar-width:thin">
+ <div class="text-center text-muted py-5 w-100">Cargando kanban...</div>
+</div>
+</div>
 
 <script>
 // Globals 
@@ -1910,10 +1518,10 @@ document.querySelectorAll('.sidebar .nav-link[data-tab]').forEach(link => {
     if (tab === 'workorders') loadWorkOrders();
     if (tab === 'leads') loadLeads();
     if (tab === 'interactions') loadInteractions();
-    if (tab === 'inventario') loadInventario();
-    if (tab === 'config') { loadGeneralConfig(); }
   });
 });
+
+// Mobile Nav Links 
 document.querySelectorAll('.mobile-nav-link[data-tab]').forEach(link => {
  link.addEventListener('click', function(e) {
  e.preventDefault();
@@ -1931,8 +1539,6 @@ document.querySelectorAll('.mobile-nav-link[data-tab]').forEach(link => {
  if (tab === 'workorders') loadWorkOrders();
  if (tab === 'leads') loadLeads();
  if (tab === 'interactions') loadInteractions();
- if (tab === 'inventario') loadInventario();
- if (tab === 'config') { loadGeneralConfig(); }
  });
 });
 
@@ -2041,8 +1647,13 @@ function handleGlobalSearchBlur() {
 // Notifications 
 function updateNotifications() {
  const newLeads = leads.filter(l => l.estado === 'nuevo').length;
- // Update kanban badge with active OTs
- loadOTNotifBadges();
+ const kanbanBadge = document.getElementById('kanbanNotif');
+ if (newLeads > 0) {
+ kanbanBadge.classList.remove('d-none');
+ kanbanBadge.textContent = newLeads;
+ } else {
+ kanbanBadge.classList.add('d-none');
+ }
  
  // Top bar notification indicators
  const topNotifs = document.getElementById('topNotifications');
@@ -2059,27 +1670,6 @@ function updateNotifications() {
  </div>`;
  }
  topNotifs.innerHTML = notifHTML;
-}
-
-async function loadOTNotifBadges() {
-  try {
-    const resp = await fetch('/api/work_orders/kanban');
-    const data = await resp.json();
-    const todas = Object.values(data.tarjetas || {}).flat();
-    const totalActivas = todas.filter(
-      t => !['entregado','cancelado','finalizado','facturado'].includes(t.estado)
-    ).length;
-    
-    const badge = document.getElementById('kanbanNotif');
-    if (badge) {
-      if (totalActivas > 0) {
-        badge.classList.remove('d-none');
-        badge.textContent = totalActivas;
-      } else {
-        badge.classList.add('d-none');
-      }
-    }
-  } catch(e) { /* silencioso */ }
 }
 
 // Data Loading 
@@ -2191,6 +1781,58 @@ function escapeHtml(text) {
 }
 
 
+// ─── KANBAN ────────────────────────────────────────────
+let _dragLeadId = null;
+
+async function loadKanban() {
+  if (!container) return;
+  container.innerHTML = '<div class="text-center py-5 w-100"><span class="spinner-border spinner-border-sm"></span></div>';
+  try {
+    const data = await fetchJSON('/api/leads/kanban');
+    document.getElementById('kanbanLeadTotal').textContent = Object.values(data).reduce((a,c)=>a+c.leads.length,0)+' leads';
+    let html = '';
+    for (const [key, col] of Object.entries(data)) {
+      html += `<div class="kanban-col flex-shrink-0" style="width:240px;" ondrop="kanbanDrop(event,'${key}')" ondragover="allowDrop(event)" ondragleave="kanbanDragLeave(event)">
+        <div class="kanban-col-header" style="background:${col.color||'#3b82f6'};color:#fff;padding:8px 12px;border-radius:10px 10px 0 0;font-weight:600;font-size:0.85em;display:flex;justify-content:space-between;">
+          ${col.label} <span class="badge bg-dark">${col.leads.length}</span>
+        </div>
+        <div class="kanban-col-body" style="background:rgba(255,255,255,0.03);border-radius:0 0 10px 10px;padding:8px;min-height:100px;max-height:55vh;overflow-y:auto;">`;
+      col.leads.forEach(l => {
+        html += `<div class="kanban-card" draggable="true" id="kcard_${l.id}" ondragstart="kanbanDragStart(event,'${l.id}')" ondragend="kanbanDragEnd(event)" style="background:rgba(255,255,255,0.06);border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:grab;border-left:3px solid ${col.color||'#3b82f6'}">
+          <div style="font-size:0.85em;font-weight:600;color:#fff;">${escHtml(l.nombre||l.id)}</div>
+          <div style="font-size:0.75em;color:rgba(255,255,255,0.4);">${escHtml(l.segmento||'')} ${l.telefono?'· '+l.telefono:''}</div>
+          <div class="mt-1 d-flex gap-1">
+            <button class="btn btn-sm p-0" style="color:var(--htk-primary);font-size:0.7em;" onclick="showLeadDetail('${l.id}')" title="Ver perfil"><i class="bi bi-eye"></i></button>
+            ${l.telefono||(l.contacto||'').replace(/[^\d+]/g,'').length>5?`<button class="btn btn-sm p-0" style="color:#25D366;font-size:0.7em;" onclick="window.open('https://wa.me/${(()=>{let p=(l.telefono||l.contacto||'').replace(/[^\d+]/g,'');if(p&&!p.startsWith('+'))p='+57'+p.replace(/^57/,'');return p.replace(/\+/g,'')})()}','_blank')" title="WhatsApp"><i class="bi bi-whatsapp"></i></button>`:''}
+          </div>
+        </div>`;
+      });
+      html += '</div></div>';
+    }
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = '<div class="text-center py-4 text-danger">Error al cargar kanban</div>';
+  }
+}
+
+function kanbanDragStart(ev, id) { _dragLeadId = id; ev.dataTransfer.effectAllowed = 'move'; ev.target.style.opacity = '0.5'; }
+function kanbanDragEnd(ev) { ev.target.style.opacity = '1'; }
+function allowDrop(ev) { ev.preventDefault(); ev.currentTarget.classList.add('kanban-hover'); }
+function kanbanDragLeave(ev) { ev.currentTarget.classList.remove('kanban-hover'); }
+
+async function kanbanDrop(ev, etapa) {
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('kanban-hover');
+  if (!_dragLeadId) return;
+  try {
+    await fetchJSON('/api/leads/'+_dragLeadId+'/etapa', {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({etapa})});
+    const l = leads.find(x => x.id === _dragLeadId);
+    if (l) l.estado = etapa;
+    loadKanban();
+    showToast(' Lead movido a ' + etapa);
+  } catch(e) { showToast('Error al mover lead', 'danger'); }
+}
+
 // ─── PIPELINE FUNNEL (Dashboard) ───────────────────────
 async function loadPipeline() {
   const container = document.getElementById('pipelineFunnel');
@@ -2281,30 +1923,9 @@ async function loadDashboard() {
  // Render upcoming followups from leads data
  renderUpcomingFollowups();
  
- // OT Financial Stats
- loadOTFinancialStats(orders);
- 
  hideLoading('dashboardLoading','dashboardContent');
  } catch(e) { showToast('Error al cargar dashboard', 'danger'); hideLoading('dashboardLoading','dashboardContent'); }
 };
-
-function loadOTFinancialStats(orders) {
-  const todas = orders || [];
-  const activas = todas.filter(o => !['entregado','cancelado','finalizado','facturado'].includes(o.estado)).length;
-  const totalPresupuestado = todas.reduce((s, o) => s + (o.presupuesto || 0), 0);
-  const totalAbonado = todas.reduce((s, o) => s + (o.total_abonado || 0), 0);
-  const totalPendiente = todas.reduce((s, o) => s + (o.saldo_pendiente || 0), 0);
-  
-  const elActivas = document.getElementById('statsOtActivas');
-  const elPresup = document.getElementById('statsPresupuestado');
-  const elAbonado = document.getElementById('statsAbonado');
-  const elPendiente = document.getElementById('statsPendiente');
-  
-  if (elActivas) elActivas.textContent = activas;
-  if (elPresup) elPresup.textContent = '$' + totalPresupuestado.toLocaleString('es-CO');
-  if (elAbonado) elAbonado.textContent = '$' + totalAbonado.toLocaleString('es-CO');
-  if (elPendiente) elPendiente.textContent = '$' + totalPendiente.toLocaleString('es-CO');
-}
 
 function escHtml(s) {
  if (!s) return '';
@@ -2593,7 +2214,6 @@ function renderWorkOrders() {
  const tipoInfo = TIPOS_OT[o.tipo] || {};
  return `<tr>
  <td><strong>${o.id}</strong></td>
- <td><span class="badge" style="background:${tipoInfo.color||'#f97316'};color:#fff;font-size:0.75em;">${tipoInfo.icono||'🔧'} ${tipoInfo.label||'Reparación'}</span></td>
  <td><span title="${tipoInfo.label||o.tipo||'Reparación'}">${tipoInfo.icono||'🔧'}</span> ${escHtml(o.cliente?.nombre || '-')}</td>
  <td>${escHtml(o.cliente?.telefono || '-')}</td>
  <td>${escHtml(o.equipo?.marca || '')} ${escHtml(o.equipo?.modelo || '')} <small class="text-secondary">(${escHtml(o.equipo?.tipo||'')})</small></td>
@@ -2757,12 +2377,8 @@ async function showWODetail(id) {
  <div class="col-md-4"><small>Completado:</small><br><strong>${formatDateTime(o.fechas?.completado)||'Pendiente'}</strong></div>
  </div>`;
 
- setModal('🔧 Detalle OT: ' + o.id, detailHTML, 
- `<div class="d-flex gap-2">
-  <button class="btn btn-sm btn-outline-light" onclick="copyToClipboard('${o.id}','copyWO_${o.id}')"><i class="bi bi-clipboard"></i> Copiar ID</button>
-  <button class="btn btn-sm btn-outline-success" onclick="notifyClient('${o.id}')"><i class="bi bi-whatsapp"></i> Notificar</button>
-  <button class="btn btn-sm btn-outline-htk" onclick="showStatusModal('${o.id}')"><i class="bi bi-arrow-right-circle"></i> Cambiar Estado</button>
- </div>`
+ setModal('Detalle: ' + o.id, detailHTML, 
+ `<button class="btn btn-sm btn-outline-htk" onclick="showStatusModal('${o.id}')"><i class="bi bi-arrow-right-circle"></i> Cambiar Estado</button>`
  );
  modalInstance.show();
 }
@@ -2803,18 +2419,6 @@ function showStatusModal(id) {
  `<button class="btn btn-htk" onclick="updateStatus('${id}')"><i class="bi bi-check-lg"></i> Actualizar Estado</button>`
  );
  modalInstance.show();
-}
-
-async function notifyClient(woId) {
-  const o = workOrders.find(x => x.id === woId);
-  if (!o) return;
-  const phone = (o.cliente?.telefono || '').replace(/[^\d+]/g, '');
-  if (!phone) { showToast('No hay teléfono del cliente', 'warning'); return; }
-  let p = phone;
-  if (!p.startsWith('+')) p = '+57' + p.replace(/^57/, '');
-  const msg = encodeURIComponent('Hola ' + (o.cliente?.nombre || '') + ', te escribimos de HTK INGENIERIA sobre tu orden ' + woId + '. Estado actual: ' + (ESTADOS_WO[o.estado]?.label || o.estado) + '.');
-  window.open('https://wa.me/' + p.replace(/\+/g, '') + '?text=' + msg, '_blank');
-  showToast('Abriendo WhatsApp para notificar...');
 }
 
 async function updateStatus(id) {
@@ -2922,11 +2526,9 @@ function renderLeads() {
  const q = (document.getElementById('leadSearch')?.value || '').toLowerCase();
  const seg = document.getElementById('leadSegmentFilter')?.value || '';
  const est = document.getElementById('leadEstadoFilter')?.value || '';
- const svc = document.getElementById('leadServicioFilter')?.value || '';
  const filtered = leads.filter(l => {
  if (seg && l.segmento !== seg) return false;
  if (est && (l.estado || 'nuevo') !== est) return false;
- if (svc && (l.linea_interes || '') !== svc) return false;
  return (l.nombre || '').toLowerCase().includes(q) || (l.contacto || '').toLowerCase().includes(q) || (l.id || '').toLowerCase().includes(q);
  });
  document.getElementById('leadsBody').innerHTML = filtered.map(l => {
@@ -4795,549 +4397,6 @@ async function savePitchTemplate(leadId) {
  }
 }
 
-
-// ═══════════════════════════════════════════════════════════════
-// CONFIGURACIÓN: Plantillas OT
-// ═══════════════════════════════════════════════════════════════
-
-let woTemplates = [];
-const templateEditorModal = new bootstrap.Modal(document.getElementById('templateEditorModal'));
-
-// Placeholder definitions per tipo
-const PLACEHOLDERS = {
-  comun: [
-    {key:'{id}', label:'ID Orden'},
-    {key:'{cliente}', label:'Nombre Cliente'},
-    {key:'{equipo}', label:'Equipo'},
-    {key:'{estado}', label:'Estado Actual'},
-    {key:'{presupuesto}', label:'Presupuesto'},
-    {key:'{fecha}', label:'Fecha Actual'}
-  ],
-  reparacion: [
-    {key:'{diagnostico}', label:'Diagnóstico'}
-  ],
-  fabricacion: [
-    {key:'{tipo_producto}', label:'Tipo Producto'},
-    {key:'{capacidad}', label:'Capacidad'},
-    {key:'{fecha_estimada}', label:'Fecha Estimada'}
-  ],
-  instalacion: [
-    {key:'{tipo_cargador}', label:'Tipo Cargador'},
-    {key:'{potencia}', label:'Potencia'},
-    {key:'{fecha_agendada}', label:'Fecha Agendada'},
-    {key:'{tecnico_asignado}', label:'Técnico Asignado'}
-  ]
-};
-
-function switchConfigTab(tab) {
-  document.querySelectorAll('#configSubtabs .client-profile-tab').forEach(b => b.classList.remove('active'));
-  const tabBtn = document.querySelector(`[data-config-tab="${tab}"]`);
-  if (tabBtn) tabBtn.classList.add('active');
-  document.querySelectorAll('.config-subtab').forEach(s => s.style.display = 'none');
-  const tabDiv = document.getElementById('config-tab-' + tab);
-  if (tabDiv) tabDiv.style.display = 'block';
-  if (tab === 'general') loadGeneralConfig();
-  if (tab === 'bot') loadBotConfig();
-  if (tab === 'templates') loadTemplates();
-  if (tab === 'prices') loadPricesTab();
-  if (tab === 'segments') loadSegmentsTab();
-  if (tab === 'usuarios') { /* placeholder */ }
-}
-
-// ══════════════════════════════════════════════════
-// CONFIGURACIÓN: Bot WhatsApp
-// ══════════════════════════════════════════════════
-
-const BOT_CONFIG_KEYS = [
-  'horario_semana_inicio','horario_semana_fin','horario_sabado_inicio','horario_sabado_fin',
-  'reset_timeout_ms','max_auto_mensajes','silenciar_lead_minutos','silenciar_pitch_dias',
-  'auto_respuesta_activa','derivar_sin_respuesta','consulta_ot_activa',
-  'mensaje_presentacion','mensaje_bienvenida','mensaje_fuera_horario','mensaje_derivar','mensaje_despedida',
-  'crm_api_url'
-];
-
-const BOT_TOGGLE_KEYS = ['auto_respuesta_activa','derivar_sin_respuesta','consulta_ot_activa'];
-
-async function loadBotConfig() {
-  document.getElementById('botCfgLoading').style.display = 'block';
-  document.getElementById('botCfgForm').style.display = 'none';
-  try {
-    const config = await fetchJSON('/api/bot/config?verbose=1');
-    // Fill form fields
-    for (const key of BOT_CONFIG_KEYS) {
-      const val = config[key];
-      if (!val) continue;
-      const el = document.getElementById('cfg_' + key);
-      if (!el) continue;
-      if (BOT_TOGGLE_KEYS.includes(key)) {
-        el.checked = val.value === 'true';
-      } else {
-        el.value = val.value;
-      }
-    }
-    // Initialize message previews
-    document.querySelectorAll('.cfg-msg').forEach(ta => updateMsgPreview(ta));
-    // Check bot status
-    checkBotStatus();
-    document.getElementById('botCfgLoading').style.display = 'none';
-    document.getElementById('botCfgForm').style.display = 'block';
-  } catch (e) {
-    document.getElementById('botCfgLoading').innerHTML =
-      '<div class="alert alert-warning">⚠️ No se pudo cargar la configuración: ' + e.message + '</div>';
-  }
-}
-
-function updateMsgPreview(el) {
-  const previewId = el.id.replace('cfg_mensaje_', 'preview_');
-  const preview = document.getElementById(previewId);
-  if (preview) {
-    preview.textContent = el.value.substring(0, 300) || '(vacío)';
-  }
-  updateWaPreview();
-}
-
-function updateWaPreview() {
-  const wa = document.getElementById('waPreview');
-  if (!wa) return;
-  const msgs = document.querySelectorAll('.cfg-msg');
-  let html = '';
-  msgs.forEach(ta => {
-    if (!ta.value.trim()) return;
-    const label = ta.closest('.col-md-6')?.querySelector('.form-label')?.textContent || '';
-    html += `<div style="margin-bottom:8px;"><small style="color:rgba(255,255,255,0.3);">${label}</small><div style="background:rgba(0,212,170,0.12);padding:8px 12px;border-radius:0 10px 10px 10px;white-space:pre-wrap;word-break:break-word;">${escapeHtml(ta.value.substring(0,200))}</div></div>`;
-  });
-  wa.innerHTML = html || '<small class="text-muted">Escribe en los mensajes para ver el preview aquí...</small>';
-}
-
-function escapeHtml(text) {
-  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-}
-
-async function guardarConfigBot() {
-  const payload = {};
-  let hasChanges = false;
-  for (const key of BOT_CONFIG_KEYS) {
-    const el = document.getElementById('cfg_' + key);
-    if (!el) continue;
-    let val;
-    if (BOT_TOGGLE_KEYS.includes(key)) {
-      val = el.checked ? 'true' : 'false';
-    } else {
-      val = el.value;
-    }
-    payload[key] = val;
-    hasChanges = true;
-  }
-  if (!hasChanges) {
-    showToast('No hay cambios para guardar', 'warning');
-    return;
-  }
-  try {
-    const resp = await fetch('/api/bot/config', {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload)
-    });
-    const result = await resp.json();
-    if (result.ok) {
-      document.getElementById('cfgSaveResult').innerHTML =
-        '<div class="alert alert-success py-2">✅ Configuración guardada (' + result.updated + ' claves)</div>';
-      showToast('Configuración guardada ✅', 'success');
-      // Auto-recargar en el bot
-      setTimeout(() => recargarConfigBot(), 500);
-    } else {
-      document.getElementById('cfgSaveResult').innerHTML =
-        '<div class="alert alert-danger py-2">❌ ' + (result.error || 'Error desconocido') + '</div>';
-    }
-  } catch (e) {
-    showToast('Error guardando: ' + e.message, 'danger');
-  }
-}
-
-async function recargarConfigBot() {
-  const resultDiv = document.getElementById('cfgSaveResult');
-  resultDiv.innerHTML = '<div class="alert alert-info py-2">🔄 Recargando configuración en el bot...</div>';
-  try {
-    const resp = await fetch('/api/bot/config/reload', {method: 'POST'});
-    const result = await resp.json();
-    if (result.ok) {
-      resultDiv.innerHTML = '<div class="alert alert-success py-2">✅ ' + result.message + '</div>';
-      showToast(result.message, 'success');
-    } else {
-      resultDiv.innerHTML = '<div class="alert alert-warning py-2">⚠️ ' + (result.error || result.message || 'Error') + '</div>';
-      showToast('Recarga falló: ' + (result.error || result.message), 'warning');
-    }
-  } catch (e) {
-    resultDiv.innerHTML = '<div class="alert alert-danger py-2">❌ No se pudo contactar al bot: ' + e.message + '</div>';
-    showToast('Bot no disponible', 'danger');
-  }
-}
-
-async function checkBotStatus() {
-  // Update config tab badge
-  const badge = document.getElementById('cfgBotStatus');
-  // Update header indicator
-  const headerBadge = document.getElementById('botStatusIndicator');
-  try {
-    const resp = await fetch('/api/bot/status');
-    const data = await resp.json();
-    if (data.ok && data.status === 'on') {
-      if (badge) { badge.className = 'badge bg-success'; badge.textContent = '🟢 Conectado'; }
-      if (headerBadge) { headerBadge.className = 'badge bg-success'; headerBadge.innerHTML = '🟢 Bot conectado'; }
-    } else if (data.status === 'off') {
-      if (badge) { badge.className = 'badge bg-warning text-dark'; badge.textContent = '🟡 Apagado'; }
-      if (headerBadge) { headerBadge.className = 'badge bg-warning text-dark'; headerBadge.innerHTML = '🟡 Bot apagado'; }
-    } else {
-      if (badge) { badge.className = 'badge bg-danger'; badge.textContent = '🔴 Sin conexión'; }
-      if (headerBadge) { headerBadge.className = 'badge bg-danger'; headerBadge.innerHTML = '🔴 Bot offline'; }
-    }
-  } catch (e) {
-    if (badge) { badge.className = 'badge bg-danger'; badge.textContent = '🔴 Sin conexión'; }
-    if (headerBadge) { headerBadge.className = 'badge bg-danger'; headerBadge.innerHTML = '🔴 Bot offline'; }
-  }
-}
-
-async function loadTemplates() {
-  try {
-    const tipo = document.getElementById('templateFilterType').value;
-    const url = tipo ? `/api/wo-templates?tipo_ot=${tipo}` : '/api/wo-templates';
-    woTemplates = await fetchJSON(url);
-    renderTemplatesTable();
-  } catch (e) {
-    showToast('Error cargando plantillas: ' + e.message, 'danger');
-  }
-}
-
-function renderTemplatesTable() {
-  const tbody = document.getElementById('templatesTableBody');
-  if (!woTemplates.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No hay plantillas. ¡Crea la primera!</td></tr>';
-    return;
-  }
-  const tipoIcons = {reparacion:'🔧', fabricacion:'🏭', instalacion:'🚗', '*':'🌐'};
-  tbody.innerHTML = woTemplates.map(t => {
-    const preview = (t.mensaje || '').replace(/\n/g, ' ').substring(0, 80) + ((t.mensaje||'').length > 80 ? '...' : '');
-    return `
-    <tr>
-      <td><span class="badge bg-secondary">${tipoIcons[t.tipo_ot]||'🌐'} ${t.tipo_ot==='*'?'Todos':t.tipo_ot}</span></td>
-      <td><span class="badge ${ESTADOS_WO[t.estado_origen]?.class||'bg-secondary'}">${ESTADOS_WO[t.estado_origen]?.label||t.estado_origen}</span></td>
-      <td>${escHtml(t.nombre||'')}</td>
-      <td><small style="color:rgba(255,255,255,0.6);">${escHtml(preview)}</small></td>
-      <td>
-        <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" ${t.activo?'checked':''} onchange="toggleTemplate(${t.id}, this.checked)">
-        </div>
-      </td>
-      <td>
-        <button class="action-btn primary" onclick="editTemplate(${t.id})" title="Editar"><i class="bi bi-pencil"></i></button>
-        <button class="action-btn danger" onclick="deleteTemplate(${t.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-async function toggleTemplate(id, active) {
-  try {
-    await fetch(`/api/wo-templates/${id}`, {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({activo: active})
-    });
-    showToast(active ? 'Plantilla activada' : 'Plantilla desactivada');
-  } catch (e) {
-    showToast('Error: ' + e.message, 'danger');
-    loadTemplates();
-  }
-}
-
-async function deleteTemplate(id) {
-  if (!confirm('¿Eliminar esta plantilla?')) return;
-  try {
-    await fetch(`/api/wo-templates/${id}`, {method: 'DELETE'});
-    showToast('Plantilla eliminada');
-    loadTemplates();
-  } catch (e) {
-    showToast('Error: ' + e.message, 'danger');
-  }
-}
-
-function showTemplateEditor(tmplData) {
-  const isEdit = !!tmplData;
-  document.getElementById('templateEditorTitle').textContent = isEdit ? 'Editar Plantilla' : 'Nueva Plantilla';
-  document.getElementById('tmplEditId').value = isEdit ? tmplData.id : '';
-  document.getElementById('tmplEditName').value = isEdit ? (tmplData.nombre||'') : '';
-  document.getElementById('tmplEditTipo').value = isEdit ? (tmplData.tipo_ot||'*') : '*';
-  document.getElementById('tmplEditAsunto').value = isEdit ? (tmplData.asunto||'') : '';
-  document.getElementById('tmplEditMensaje').value = isEdit ? (tmplData.mensaje||'') : '';
-  document.getElementById('tmplEditCanal').value = isEdit ? (tmplData.canal||'whatsapp') : 'whatsapp';
-  document.getElementById('tmplEditActivo').checked = isEdit ? !!tmplData.activo : true;
-  
-  onTmplTipoChange();
-  if (isEdit) {
-    // Set estado after populating dropdown
-    setTimeout(() => {
-      document.getElementById('tmplEditEstado').value = tmplData.estado_origen || '';
-    }, 50);
-  }
-  updateTemplatePreview();
-  updatePlaceholderChips();
-  templateEditorModal.show();
-}
-
-function onTmplTipoChange() {
-  const tipo = document.getElementById('tmplEditTipo').value;
-  const estados = getWOStatusOrder(tipo === '*' ? 'reparacion' : tipo);
-  const sel = document.getElementById('tmplEditEstado');
-  sel.innerHTML = estados.map(s => `<option value="${s}">${ESTADOS_WO[s]?.label||s}</option>`).join('');
-  updatePlaceholderChips();
-}
-
-function updatePlaceholderChips() {
-  const tipo = document.getElementById('tmplEditTipo').value;
-  let chips = [...PLACEHOLDERS.comun];
-  if (tipo !== '*' && PLACEHOLDERS[tipo]) {
-    chips = chips.concat(PLACEHOLDERS[tipo]);
-  } else if (tipo === '*') {
-    // Include all type-specific placeholders for wildcard
-    ['reparacion','fabricacion','instalacion'].forEach(t => {
-      chips = chips.concat(PLACEHOLDERS[t] || []);
-    });
-  }
-  
-  document.getElementById('tmplPlaceholderChips').innerHTML = chips.map(p =>
-    `<span class="badge" style="background:rgba(0,212,170,0.15);color:var(--htk-primary);cursor:pointer;font-size:0.8em;padding:4px 8px;border-radius:12px;" onclick="insertPlaceholder('${p.key}')" title="${p.label}">${p.key}</span>`
-  ).join('');
-}
-
-function insertPlaceholder(key) {
-  const textarea = document.getElementById('tmplEditMensaje');
-  const start = textarea.selectionStart;
-  const end = textarea.selectionEnd;
-  const text = textarea.value;
-  textarea.value = text.substring(0, start) + key + text.substring(end);
-  textarea.focus();
-  textarea.setSelectionRange(start + key.length, start + key.length);
-  updateTemplatePreview();
-}
-
-function updateTemplatePreview() {
-  const mensaje = document.getElementById('tmplEditMensaje').value;
-  const preview = document.getElementById('tmplPreviewContent');
-  
-  // Replace placeholders with sample data for preview
-  const samples = {
-    '{id}': 'HTK-042',
-    '{cliente}': 'Juan Pérez',
-    '{equipo}': 'Elevador 5kVA Siemens',
-    '{estado}': 'bobinado',
-    '{presupuesto}': '450.000',
-    '{fecha}': new Date().toLocaleDateString('es-CO'),
-    '{diagnostico}': 'Falla en bobinado primario',
-    '{tipo_producto}': 'Elevador',
-    '{capacidad}': '5kVA',
-    '{fecha_estimada}': '20/05/2026',
-    '{tipo_cargador}': 'Nivel 2',
-    '{potencia}': '7.4kW',
-    '{fecha_agendada}': '20/05/2026',
-    '{tecnico_asignado}': 'Pedro'
-  };
-  
-  let previewText = mensaje || 'Escribe un mensaje para ver la vista previa...';
-  Object.entries(samples).forEach(([k, v]) => {
-    previewText = previewText.replace(new RegExp(k.replace(/[{}]/g, '\\$&'), 'g'), v);
-  });
-  preview.textContent = previewText;
-}
-
-function editTemplate(id) {
-  const tmpl = woTemplates.find(t => t.id === id);
-  if (tmpl) showTemplateEditor(tmpl);
-}
-
-async function saveTemplate() {
-  const id = document.getElementById('tmplEditId').value;
-  const data = {
-    nombre: document.getElementById('tmplEditName').value,
-    tipo_ot: document.getElementById('tmplEditTipo').value,
-    estado_origen: document.getElementById('tmplEditEstado').value,
-    asunto: document.getElementById('tmplEditAsunto').value,
-    mensaje: document.getElementById('tmplEditMensaje').value,
-    canal: document.getElementById('tmplEditCanal').value,
-    activo: document.getElementById('tmplEditActivo').checked
-  };
-  
-  if (!data.nombre || !data.mensaje) {
-    showToast('Nombre y mensaje son requeridos', 'danger');
-    return;
-  }
-  
-  try {
-    const method = id ? 'PUT' : 'POST';
-    const url = id ? `/api/wo-templates/${id}` : '/api/wo-templates';
-    await fetch(url, {
-      method,
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data)
-    });
-    showToast(id ? 'Plantilla actualizada' : 'Plantilla creada');
-    templateEditorModal.hide();
-    loadTemplates();
-  } catch (e) {
-    showToast('Error: ' + e.message, 'danger');
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// NOTIFICAR CLIENTE
-// ═══════════════════════════════════════════════════════════════
-
-function showNotifyModal(woId) {
-  const o = workOrders.find(x => x.id === woId);
-  if (!o) return showToast('Orden no encontrada', 'danger');
-  
-  const phone = o.cliente?.telefono || '(sin teléfono)';
-  let detailHTML = `
-    <p><strong>Orden:</strong> ${o.id} — ${escHtml(o.cliente?.nombre||'Sin nombre')}</p>
-    <p><strong>Teléfono:</strong> ${escHtml(phone)}</p>
-    <p><strong>Estado actual:</strong> <span class="badge ${ESTADOS_WO[o.estado]?.class||'bg-secondary'}">${ESTADOS_WO[o.estado]?.label||o.estado}</span></p>
-    <hr>
-    <p class="text-muted">Se usará la plantilla configurada para <strong>${o.tipo} / ${o.estado}</strong>.</p>
-    <p class="text-muted small">El mensaje se enviará vía WhatsApp al número del cliente.</p>
-  `;
-  
-  setModal('📨 Notificar Cliente — ' + o.id, detailHTML,
-    `<button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-     <button class="btn btn-htk" onclick="sendNotification('${woId}')"><i class="bi bi-send"></i> Enviar notificación</button>`
-  );
-  modalInstance.show();
-}
-
-async function sendNotification(woId) {
-  try {
-    const btn = modalInstance._element.querySelector('.btn-htk');
-    if (btn) btn.disabled = true;
-    
-    const resp = await fetch(`/api/work_orders/${woId}/notify`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({})
-    });
-    const result = await resp.json();
-    
-    if (result.ok) {
-      showToast(`✅ Notificación enviada — ${result.plantilla || 'OK'}`, 'success');
-      modalInstance.hide();
-      // Refresh WO detail
-      const updated = await fetchJSON(`/api/work_orders/${woId}`);
-      const idx = workOrders.findIndex(o => o.id === woId);
-      if (idx >= 0) workOrders[idx] = updated;
-    } else {
-      showToast(`❌ ${result.error || 'Error al enviar'}`, 'danger');
-    }
-  } catch (e) {
-    showToast('Error: ' + e.message, 'danger');
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// PRICES TAB (placeholder)
-// ═══════════════════════════════════════════════════════════════
-
-async function loadSegmentsTab() {
-  const container = document.getElementById('config-tab-segments');
-  if (!container) return;
-  container.innerHTML = '<div class="text-center py-5"><span class="spinner-border spinner-border-sm"></span> Cargando segmentos...</div>';
-  try {
-    const segs = await loadSegments();
-    if (!segs.length) {
-      container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-diagram-3" style="font-size:3em;"></i><p class="mt-3">No hay segmentos configurados.</p><button class="btn btn-htk btn-sm" onclick="showModal(\'lead\',null)"><i class="bi bi-plus-lg"></i> Crear un lead con segmento</button></div>';
-      return;
-    }
-    let html = '<div class="table-container mt-3"><table class="table table-hover mb-0"><thead><tr><th>Key</th><th>Label</th><th>Prioridad</th><th>Color</th><th>Leads</th></tr></thead><tbody>';
-    segs.forEach(s => {
-      html += `<tr><td><code>${escHtml(s.key||'')}</code></td><td><strong>${escHtml(s.label||'')}</strong></td><td><span class="badge bg-${s.prioridad==='alta'?'danger':s.prioridad==='media'?'warning text-dark':'secondary'}">${s.prioridad||'-'}</span></td><td><span class="badge" style="background:${s.color||'#888'};color:#fff;">${escHtml(s.color||'')}</span></td><td>${s.leads_count||0}</td></tr>`;
-    });
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
-  } catch(e) {
-    container.innerHTML = '<div class="alert alert-warning">Error al cargar segmentos: ' + e.message + '</div>';
-  }
-}
-
-async function loadGeneralConfig() {
-  // Load system stats
-  try {
-    const stats = await fetchJSON('/api/stats');
-    const statsEl = document.getElementById('cfgSystemStats');
-    if (statsEl) {
-      statsEl.innerHTML = `
-        <tr><td class="text-muted">Total Leads</td><td><strong>${stats.total_leads||0}</strong></td></tr>
-        <tr><td class="text-muted">Clientes</td><td><strong>${stats.total_clients||0}</strong></td></tr>
-        <tr><td class="text-muted">Órdenes activas</td><td><strong>${stats.active_work_orders||0}</strong></td></tr>
-        <tr><td class="text-muted">Órdenes completadas</td><td><strong>${stats.completed_work_orders||0}</strong></td></tr>`;
-    }
-    // Update db info
-    const dbEl = document.getElementById('dbInfoPath');
-    if (dbEl && stats.db_size) {
-      dbEl.textContent = stats.db_path + ' (' + stats.db_size + ')';
-    }
-  } catch(e) {
-    console.warn('Could not load stats for general config:', e);
-  }
-  
-  // Load last backup info
-  try {
-    const resp = await fetch('/api/auto/backup', {method:'POST'});
-    const data = await resp.json();
-    const el = document.getElementById('cfgLastBackup');
-    if (el && data.output) {
-      // Extract date from backup list if possible
-      const lines = data.output.split('\n').filter(l => l.trim());
-      if (lines.length > 0) {
-        el.textContent = lines[lines.length-1].substring(0, 60);
-      } else {
-        el.textContent = 'No disponible';
-      }
-    } else if (el) {
-      el.textContent = 'No disponible';
-    }
-  } catch(e) {
-    const el = document.getElementById('cfgLastBackup');
-    if (el) el.textContent = 'Error al cargar';
-  }
-  // Check bot status for the General tab too
-  checkBotStatus();
-}
-
-async function loadPricesTab() {
-  try {
-    const prices = await fetchJSON('/api/prices');
-    const container = document.getElementById('pricesTabContent');
-    if (!prices.length) {
-      container.innerHTML = '<div class="text-center text-muted py-4">No hay precios registrados.</div>';
-      return;
-    }
-    container.innerHTML = `
-      <div class="table-container mt-3">
-        <table class="table table-hover mb-0">
-          <thead><tr><th>Categoría</th><th>Producto</th><th>Capacidad</th><th>Base</th><th>Venta</th></tr></thead>
-          <tbody>
-            ${prices.map(p => `
-              <tr>
-                <td>${escHtml(p.categoria||'')}</td>
-                <td>${escHtml(p.producto||'')}</td>
-                <td>${escHtml(p.capacidad||'')}</td>
-                <td>${formatCurrency(p.precio_base)}</td>
-                <td>${formatCurrency(p.precio_venta)}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>`;
-  } catch(e) {
-    console.error('Error loading prices:', e);
-  }
-}
-
 // INIT 
 document.addEventListener('DOMContentLoaded', async function() {
  applyTheme();
@@ -5370,17 +4429,11 @@ document.addEventListener('DOMContentLoaded', async function() {
  else if (tabParam === 'workorders') loadWorkOrders();
  else if (tabParam === 'kanban') loadKanban();
  else if (tabParam === 'interactions') loadInteractions();
- else if (tabParam === 'config') { loadGeneralConfig(); }
  // Limpiar URL para evitar que el tab quede "linkeado" al recargar
  window.history.replaceState({}, '', '/');
  }
  }
  loadInteractions();
-  // Iniciar verificación periódica del bot
-  checkBotStatus();
-  setInterval(checkBotStatus, 60000);
-  // Iniciar actualización periódica de notificaciones
-  setInterval(loadOTNotifBadges, 60000);
 });
 
 // Mobile Menu Toggle 
@@ -5440,250 +4493,8 @@ function updateThemeButton(theme) {
 function handleLogout() {
  window.location.href = '/logout';
 }
-
-// ── INVENTARIO ──────────────────────────────────────────────────────
-let inventarioData = [];
-
-async function loadInventario() {
-  const cat = document.getElementById('invCategoriaFilter')?.value || '';
-  const search = document.getElementById('invSearch')?.value || '';
-  const params = new URLSearchParams();
-  if (cat) params.set('categoria', cat);
-  if (search) params.set('search', search);
-  
-  try {
-    const resp = await fetch('/api/inventario?' + params.toString());
-    inventarioData = await resp.json();
-    
-    // Cargar categorias para el filtro
-    const catResp = await fetch('/api/inventario/categorias');
-    const categorias = await catResp.json();
-    const catSelect = document.getElementById('invCategoriaFilter');
-    const currentVal = catSelect.value;
-    catSelect.innerHTML = '<option value="">Todas categorias</option>' + 
-      categorias.map(c => `<option value="${c}" ${c === currentVal ? 'selected' : ''}>${c}</option>`).join('');
-    
-    // Badge bajo stock
-    const bajoStock = inventarioData.filter(i => i.cantidad < i.stock_minimo);
-    const badge = document.getElementById('invBajoStockBadge');
-    if (bajoStock.length > 0) {
-      badge.style.display = 'inline-block';
-      badge.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${bajoStock.length} item(s) bajo stock minimo`;
-    } else {
-      badge.style.display = 'none';
-    }
-    
-    // Renderizar tabla
-    const tbody = document.getElementById('invTableBody');
-    if (inventarioData.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4" style="color:rgba(255,255,255,0.3);"><i class="bi bi-inbox"></i><p class="mt-1">No hay items en inventario</p></td></tr>';
-      return;
-    }
-    
-    tbody.innerHTML = inventarioData.map(item => {
-      const stockClass = item.cantidad < item.stock_minimo ? 'text-danger fw-bold' : 
-                        (item.cantidad > item.stock_minimo * 2 ? 'text-success' : '');
-      const stockIcon = item.cantidad < item.stock_minimo ? ' \u{1f534}' : 
-                       (item.cantidad > item.stock_minimo * 2 ? ' \u{1f7e2}' : '');
-      return `
-      <tr>
-        <td><code>${escHtml(item.codigo)}</code></td>
-        <td>${escHtml(item.nombre)}</td>
-        <td><span class="badge bg-secondary">${escHtml(item.categoria || '-')}</span></td>
-        <td class="${stockClass}">${item.cantidad} ${escHtml(item.unidad)}${stockIcon}</td>
-        <td>${item.stock_minimo} ${escHtml(item.unidad)}</td>
-        <td>${escHtml(item.proveedor || '-')}</td>
-        <td>${formatCurrency(item.costo_unitario)}</td>
-        <td>${escHtml(item.ubicacion || '-')}</td>
-        <td>
-          <button class="action-btn primary" title="Entrada stock" onclick="showAjusteStockModal(${item.id}, 'entrada')"><i class="bi bi-plus-circle"></i></button>
-          <button class="action-btn danger" title="Salida stock" onclick="showAjusteStockModal(${item.id}, 'salida')"><i class="bi bi-dash-circle"></i></button>
-          <button class="action-btn primary" title="Editar" onclick="showInventarioModal(${item.id})"><i class="bi bi-pencil"></i></button>
-          <button class="action-btn danger" title="Eliminar" onclick="deleteInventarioItem(${item.id})"><i class="bi bi-trash"></i></button>
-        </td>
-      </tr>`;
-    }).join('');
-  } catch (e) {
-    console.error('loadInventario:', e);
-    document.getElementById('invTableBody').innerHTML = '<tr><td colspan="9" class="text-center text-danger py-3">Error al cargar inventario</td></tr>';
-  }
-}
-
-function showInventarioModal(itemId) {
-  const item = itemId ? inventarioData.find(i => i.id === itemId) : null;
-  const isEdit = !!item;
-  
-  document.getElementById('modalTitle').innerHTML = `<i class="bi bi-box-seam"></i> ${isEdit ? 'Editar' : 'Nuevo'} Item`;
-  
-  document.getElementById('modalBody').innerHTML = `
-    <form id="invItemForm" onsubmit="saveInventarioItem(event, ${itemId || 0})">
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label">Codigo *</label>
-          <input type="text" class="form-control" id="invCodigo" value="${escHtml(item?.codigo || '')}" required>
-        </div>
-        <div class="col-md-8">
-          <label class="form-label">Nombre *</label>
-          <input type="text" class="form-control" id="invNombre" value="${escHtml(item?.nombre || '')}" required>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Categoria</label>
-          <input type="text" class="form-control" id="invCategoria" value="${escHtml(item?.categoria || '')}" list="invCatList">
-          <datalist id="invCatList">
-            ${[...new Set(inventarioData.map(i => i.categoria).filter(Boolean))].map(c => `<option value="${c}">`).join('')}
-          </datalist>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Unidad</label>
-          <input type="text" class="form-control" id="invUnidad" value="${escHtml(item?.unidad || 'unidad')}">
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">Stock inicial</label>
-          <input type="number" class="form-control" id="invCantidad" value="${item?.cantidad || 0}" step="0.01">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Stock minimo</label>
-          <input type="number" class="form-control" id="invStockMin" value="${item?.stock_minimo || 0}" step="0.01">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Proveedor</label>
-          <input type="text" class="form-control" id="invProveedor" value="${escHtml(item?.proveedor || '')}">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Costo unitario</label>
-          <input type="number" class="form-control" id="invCosto" value="${item?.costo_unitario || 0}" step="0.01">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Ubicacion</label>
-          <input type="text" class="form-control" id="invUbicacion" value="${escHtml(item?.ubicacion || '')}">
-        </div>
-      </div>
-    </form>
-  `;
-  
-  document.getElementById('modalFooter').innerHTML = `
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-    <button type="button" class="btn btn-htk" onclick="document.getElementById('invItemForm').requestSubmit()">${isEdit ? 'Guardar cambios' : 'Crear item'}</button>
-  `;
-  
-  new bootstrap.Modal(document.getElementById('genericModal')).show();
-}
-
-async function saveInventarioItem(event, itemId) {
-  event.preventDefault();
-  const data = {
-    codigo: document.getElementById('invCodigo').value.trim(),
-    nombre: document.getElementById('invNombre').value.trim(),
-    categoria: document.getElementById('invCategoria').value.trim(),
-    unidad: document.getElementById('invUnidad').value.trim(),
-    cantidad: parseFloat(document.getElementById('invCantidad').value) || 0,
-    stock_minimo: parseFloat(document.getElementById('invStockMin').value) || 0,
-    proveedor: document.getElementById('invProveedor').value.trim(),
-    costo_unitario: parseFloat(document.getElementById('invCosto').value) || 0,
-    ubicacion: document.getElementById('invUbicacion').value.trim()
-  };
-  
-  try {
-    const url = itemId ? `/api/inventario/${itemId}` : '/api/inventario';
-    const method = itemId ? 'PUT' : 'POST';
-    const resp = await fetch(url, {
-      method,
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data)
-    });
-    if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.error || 'Error al guardar');
-    }
-    bootstrap.Modal.getInstance(document.getElementById('genericModal')).hide();
-    loadInventario();
-  } catch (e) {
-    alert('Error: ' + e.message);
-  }
-}
-
-async function deleteInventarioItem(itemId) {
-  const item = inventarioData.find(i => i.id === itemId);
-  if (!confirm(`Eliminar "${item?.codigo} - ${item?.nombre}"?\nEsta accion no se puede deshacer.`)) return;
-  try {
-    const resp = await fetch(`/api/inventario/${itemId}`, { method: 'DELETE' });
-    if (!resp.ok) throw new Error('Error al eliminar');
-    loadInventario();
-  } catch (e) {
-    alert('Error: ' + e.message);
-  }
-}
-
-function showAjusteStockModal(itemId, tipoPre) {
-  const item = inventarioData.find(i => i.id === itemId);
-  if (!item) return;
-  
-  document.getElementById('modalTitle').innerHTML = `<i class="bi bi-arrow-left-right"></i> Ajustar Stock: ${escHtml(item.codigo)}`;
-  
-  document.getElementById('modalBody').innerHTML = `
-    <div class="alert alert-secondary">
-      <strong>${escHtml(item.nombre)}</strong><br>
-      Stock actual: <strong>${item.cantidad} ${escHtml(item.unidad)}</strong> | Stock minimo: ${item.stock_minimo} ${escHtml(item.unidad)}
-    </div>
-    <form id="invAjusteForm" onsubmit="ajustarStock(event, ${itemId})">
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label">Tipo *</label>
-          <select class="form-select" id="ajusteTipo" required>
-            <option value="entrada" ${tipoPre === 'entrada' ? 'selected' : ''}>&#x1f4e5; Entrada (+)</option>
-            <option value="salida" ${tipoPre === 'salida' ? 'selected' : ''}>&#x1f4e4; Salida (-)</option>
-            <option value="ajuste">&#x1f504; Ajuste</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Cantidad *</label>
-          <input type="number" class="form-control" id="ajusteCantidad" required step="0.01" min="0.01" value="1">
-          <small class="text-muted">${escHtml(item.unidad)}</small>
-        </div>
-        <div class="col-md-5">
-          <label class="form-label">Motivo</label>
-          <input type="text" class="form-control" id="ajusteMotivo" placeholder="Ej: Compra proveedor / OT HTK-042">
-        </div>
-      </div>
-    </form>
-  `;
-  
-  document.getElementById('modalFooter').innerHTML = `
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-    <button type="button" class="btn btn-htk" onclick="document.getElementById('invAjusteForm').requestSubmit()">Ajustar stock</button>
-  `;
-  
-  new bootstrap.Modal(document.getElementById('genericModal')).show();
-}
-
-async function ajustarStock(event, itemId) {
-  event.preventDefault();
-  const data = {
-    tipo: document.getElementById('ajusteTipo').value,
-    cantidad: parseFloat(document.getElementById('ajusteCantidad').value),
-    motivo: document.getElementById('ajusteMotivo').value.trim()
-  };
-  
-  try {
-    const resp = await fetch(`/api/inventario/${itemId}/ajustar`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data)
-    });
-    if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.error || 'Error al ajustar stock');
-    }
-    bootstrap.Modal.getInstance(document.getElementById('genericModal')).hide();
-    loadInventario();
-  } catch (e) {
-    alert('Error: ' + e.message);
-  }
-}
-
 </script>
 
-    
+<script>
 
-</body>
-</html>
+    
