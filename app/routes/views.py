@@ -41,7 +41,8 @@ def logout():
 def index():
     if 'user' not in session:
         is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1')
-        if not is_local:
+        via_cf = request.headers.get('CF-Connecting-IP') is not None
+        if not is_local or via_cf:
             return redirect(url_for('views.login_page', next=request.path))
     return render_template('base.html')
 
@@ -50,7 +51,8 @@ def index():
 def page_lead(lid):
     if 'user' not in session:
         is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1')
-        if not is_local:
+        via_cf = request.headers.get('CF-Connecting-IP') is not None
+        if not is_local or via_cf:
             return redirect(url_for('views.login_page', next=request.path))
     db = get_db()
     row = db.execute("SELECT * FROM leads WHERE id = ?", (lid,)).fetchone()
@@ -71,7 +73,8 @@ def page_lead(lid):
 def page_wo(wid):
     if 'user' not in session:
         is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1')
-        if not is_local:
+        via_cf = request.headers.get('CF-Connecting-IP') is not None
+        if not is_local or via_cf:
             return redirect(url_for('views.login_page', next=request.path))
     conn = get_db()
     wo = wo_to_dict(conn, wid)
@@ -84,6 +87,7 @@ def page_wo(wid):
 @views_bp.route('/bot-whatsapp')
 def page_bot_whatsapp():
     is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1')
-    if not is_local and 'user' not in session:
+    via_cf = request.headers.get('CF-Connecting-IP') is not None
+    if (not is_local or via_cf) and 'user' not in session:
         return redirect(url_for('views.login_page', next=request.path))
     return render_template('bot_whatsapp.html')
