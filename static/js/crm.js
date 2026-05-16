@@ -589,7 +589,10 @@ function formatDateTime(iso) {
 // CLIENTES 
 async function loadClients() {
  showLoading('clientsLoading','clientsContent');
- clients = await fetchJSON('/api/clients');
+ try {
+ const data = await fetchJSON('/api/clients');
+ if (Array.isArray(data)) clients = data;
+ } catch(e) {}
  renderClients();
  updateNotifications();
 }
@@ -831,7 +834,10 @@ async function saveClientField(clientId, field, value) {
 // ÓRDENES DE TRABAJO 
 async function loadWorkOrders() {
  showLoading('woLoading','woContent');
- workOrders = await fetchJSON('/api/work_orders');
+ try {
+ const data = await fetchJSON('/api/work_orders');
+ if (Array.isArray(data)) workOrders = data;
+ } catch(e) {}
  renderWorkOrders();
  updateNotifications();
 }
@@ -1172,7 +1178,10 @@ async function savePayment(woId) {
 // LEADS 
 async function loadLeads() {
  showLoading('leadsLoading','leadsContent');
- leads = await fetchJSON('/api/leads');
+ try {
+ const data = await fetchJSON('/api/leads');
+ if (Array.isArray(data)) leads = data;
+ } catch(e) {}
  renderLeads();
  updateNotifications();
 }
@@ -1835,9 +1844,9 @@ async function saveModal(type, id) {
  modalInstance.hide();
  flashSave();
  showToast(isEdit ? 'Orden actualizada' : 'Orden creada');
- await loadWorkOrders();
- await loadClients();
- await loadDashboard();
+ try { await loadWorkOrders(); } catch(e) {}
+ try { await loadClients(); } catch(e) {}
+ try { await loadDashboard(); } catch(e) {}
  } catch(e) { showToast(e.message || 'Error al guardar orden', 'danger'); }
   setTimeout(loadPipeline, 1000);
 
