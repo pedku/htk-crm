@@ -1020,6 +1020,7 @@ async function showWODetail(id) {
   <button class="btn btn-sm btn-outline-light" onclick="copyToClipboard('${o.id}','copyWO_${o.id}')"><i class="bi bi-clipboard"></i> Copiar ID</button>
   <button class="btn btn-sm btn-outline-success" onclick="notifyClient('${o.id}')"><i class="bi bi-whatsapp"></i> Notificar</button>
   <button class="btn btn-sm btn-outline-htk" onclick="showStatusModal('${o.id}')"><i class="bi bi-arrow-right-circle"></i> Cambiar Estado</button>
+  <a href="/ordenes/${o.id}" class="btn btn-sm btn-htk"><i class="bi bi-box-arrow-up-right"></i> Ver perfil</a>
  </div>`
  );
  modalInstance.show();
@@ -1821,10 +1822,15 @@ async function saveModal(type, id) {
  };
 
  try {
+ let resp;
  if (isEdit) {
- await fetch(`/api/work_orders/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+ resp = await fetch(`/api/work_orders/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
  } else {
- await fetch('/api/work_orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+ resp = await fetch('/api/work_orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+ }
+ if (!resp.ok) {
+ const err = await resp.json().catch(()=>({}));
+ throw new Error(err.error || err.message || `Error del servidor (${resp.status})`);
  }
  modalInstance.hide();
  flashSave();
@@ -1832,7 +1838,7 @@ async function saveModal(type, id) {
  await loadWorkOrders();
  await loadClients();
  await loadDashboard();
- } catch(e) { showToast('Error al guardar orden', 'danger'); }
+ } catch(e) { showToast(e.message || 'Error al guardar orden', 'danger'); }
   setTimeout(loadPipeline, 1000);
 
  } else if (type === 'lead') {
