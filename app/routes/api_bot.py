@@ -154,10 +154,39 @@ def api_bot_global_on():
 # ── BOT STATUS ────────────────────────────────────────────────────────
 
 @api_bot_bp.route('/api/bot/status')
-@login_required
 def api_bot_status():
+    """Bot status with auth handling for localhost."""
+    is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1')
+    is_auth = 'user' in session
+    if not is_local and not is_auth:
+        return jsonify({'ok': False, 'error': 'No autenticado', 'status': 'auth_required'}), 401
     result = bot_action('status')
+    if result.get('ok'):
+        result['connected'] = result.get('connected', False)
     return jsonify(result)
+
+
+# ── BOT RESTART ──────────────────────────────────────────────────────
+
+@api_bot_bp.route('/api/bot/restart', methods=['POST'])
+@login_required
+def api_bot_restart():
+    """Restart WhatsApp bot via systemd user service."""
+    import subprocess, time
+    try:
+        subprocess.run(['systemctl', '--user', 'stop', 'htk-whatsapp-bot'],
+                      capture_output=True, timeout=5)
+        subprocess.run(['pkill', '-f', 'node.*bot\\.js'], capture_output=True, timeout=5)
+        time.sleep(2)
+        r = subprocess.run(['systemctl', '--user', 'restart', 'htk-whatsapp-bot'],
+                          capture_output=True, text=True, timeout=15)
+        if r.returncode == 0:
+            return jsonify({'ok': True, 'message': 'Bot reiniciado correctamente'})
+        return jsonify({'ok': True, 'message': 'Bot reiniciado (fallback)', 'stderr': r.stderr[:200]})
+    except subprocess.TimeoutExpired:
+        return jsonify({'ok': False, 'error': 'Timeout al reiniciar'}), 500
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 
 # ── BOT LOG ───────────────────────────────────────────────────────────

@@ -1,0 +1,126 @@
+<div id="tab-dashboard" class="tab-content active">
+ <h3 class="page-title"><i class="bi bi-speedometer2"></i> Dashboard</h3>
+ <div id="dashboardLoading" class="loading-overlay">
+ <span class="spinner-border spinner-border-sm"></span> Cargando métricas...
+ </div>
+ <div id="dashboardContent" style="display:none;">
+ <div class="row g-3" id="statsRow">
+ <div class="col-md-3">
+ <div class="stat-card">
+ <div class="d-flex justify-content-between align-items-center">
+ <div><span class="number" id="statTotalLeads">0</span><span class="label"> leads</span></div>
+ <i class="bi bi-graph-up-arrow icon"></i>
+ </div>
+ <div class="label mt-1">Total prospectos</div>
+ </div>
+ </div>
+ <div class="col-md-3">
+ <div class="stat-card">
+ <div class="d-flex justify-content-between align-items-center">
+ <div><span class="number" id="statClients">0</span><span class="label"> clientes</span></div>
+ <i class="bi bi-people icon"></i>
+ </div>
+ <div class="label mt-1">Registrados</div>
+ </div>
+ </div>
+ <div class="col-md-3">
+ <div class="stat-card">
+ <div class="d-flex justify-content-between align-items-center">
+ <div><span class="number" id="statActiveWO">0</span><span class="label"> activas</span></div>
+ <i class="bi bi-tools icon"></i>
+ </div>
+ <div class="label mt-1">Órdenes en taller</div>
+ </div>
+ </div>
+ <div class="col-md-3">
+ <div class="stat-card">
+ <div class="d-flex justify-content-between align-items-center">
+ <div><span class="number" id="statCompletedWO">0</span><span class="label"> completadas</span></div>
+ <i class="bi bi-check-circle icon"></i>
+ </div>
+ <div class="label mt-1">Entregadas</div>
+ </div>
+ </div>
+ </div>
+ <!-- OT Financial Stats -->
+ <div class="row g-3 mt-3">
+  <div class="col-md-3">
+   <div class="stat-card">
+    <div class="d-flex justify-content-between align-items-center">
+     <div><span class="number" id="statsOtActivas">—</span></div>
+     <i class="bi bi-tools icon"></i>
+    </div>
+    <div class="label mt-1">Órdenes Activas</div>
+   </div>
+  </div>
+  <div class="col-md-3">
+   <div class="stat-card">
+    <div class="d-flex justify-content-between align-items-center">
+     <div><span class="number" id="statsPresupuestado">$0</span></div>
+     <i class="bi bi-calculator icon"></i>
+    </div>
+    <div class="label mt-1">Total Presupuestado</div>
+   </div>
+  </div>
+  <div class="col-md-3">
+   <div class="stat-card">
+    <div class="d-flex justify-content-between align-items-center">
+     <div><span class="number" id="statsAbonado">$0</span></div>
+     <i class="bi bi-cash-coin icon"></i>
+    </div>
+    <div class="label mt-1">Total Abonado</div>
+   </div>
+  </div>
+  <div class="col-md-3">
+   <div class="stat-card">
+    <div class="d-flex justify-content-between align-items-center">
+     <div><span class="number" id="statsPendiente">$0</span></div>
+     <i class="bi bi-hourglass-split icon"></i>
+    </div>
+    <div class="label mt-1">Saldo Pendiente</div>
+   </div>
+  </div>
+ </div>
+ <div class="row g-3 mt-2">
+ <div class="col-md-6">
+ <div class="table-container">
+ <div class="section-title"><i class="bi bi-pie-chart"></i> Órdenes por Estado</div>
+ <div id="woByStatusChart"></div>
+ </div>
+ </div>
+ <div class="col-md-6">
+ <div class="table-container">
+ <div class="section-title"><i class="bi bi-bar-chart"></i> Líneas de Interés</div>
+ <div id="leadsByLineaChart"></div>
+ </div>
+ </div>
+ </div>
+ <div class="row g-3 mt-2">
+ <div class="col-md-12">
+ <div class="table-container">
+ <div class="d-flex justify-content-between align-items-center mb-3">
+ <div class="section-title mb-0"><i class="bi bi-calendar-check"></i> Próximos Seguimientos</div>
+ </div>
+ <div id="upcomingFollowups">
+ <div class="text-center py-3"><span class="spinner-border spinner-border-sm"></span> Cargando...</div>
+ </div>
+ </div>
+ </div>
+ </div>
+ <div class="row g-3 mt-2">
+ <div class="col-md-12">
+ <div class="table-container">
+ <div class="d-flex justify-content-between align-items-center mb-3">
+ <div class="section-title mb-0"><i class="bi bi-clock-history"></i> Últimas Órdenes</div>
+ </div>
+ <table class="table table-hover" id="recentWOTable">
+ <thead><tr><th>ID</th><th>Cliente</th><th>Equipo</th><th>Estado</th><th>Recibido</th></tr></thead>
+ <tbody id="recentWOBody"></tbody>
+ </table>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- ===================== KANBAN ===================== -->

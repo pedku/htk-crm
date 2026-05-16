@@ -1,0 +1,112 @@
+<div id="tab-kanban" class="tab-content">
+ <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+ <h3 class="page-title mb-0"><i class="bi bi-kanban"></i> Kanban Board</h3>
+ <div class="view-toggle kanban-toggle-btn" id="kanbanViewToggle">
+ <button class="btn active" data-kanban-view="kanban" title="Vista Kanban"><i class="bi bi-columns-gap"></i> Kanban</button>
+ <button class="btn" data-kanban-view="table" title="Vista Tabla"><i class="bi bi-table"></i> Tabla</button>
+ </div>
+ </div>
+
+ <!-- Kanban Sub-tabs -->
+ <ul class="nav nav-tabs mb-3" id="kanbanSubTabs">
+ <li class="nav-item">
+ <a class="nav-link active" href="#" data-kanban-sub="wo"><i class="bi bi-tools"></i> Órdenes de Trabajo</a>
+ </li>
+ <li class="nav-item">
+ <a class="nav-link" href="#" data-kanban-sub="leads"><i class="bi bi-graph-up-arrow"></i> Prospectos</a>
+ </li>
+ </ul>
+
+ <!-- Kanban: Work Orders -->
+ <div id="kanban-wo-view" class="kanban-sub-view active">
+ <!-- Tipo Selector -->
+ <div id="kanbanWOTipoSelector" class="d-flex gap-2 mb-3 flex-wrap" style="display:none;">
+ <button class="btn btn-sm kanban-tipo-btn active" data-tipo="" onclick="switchKanbanWOTipo('')">
+ 📋 Todos
+ </button>
+ </div>
+ <div id="kanbanWOLoading" class="loading-overlay">
+ <span class="spinner-border spinner-border-sm"></span> Cargando tablero...
+ </div>
+ <div id="kanbanWOBoard" class="kanban-board" style="display:none;"></div>
+ <div id="kanbanWOEmpty" class="empty-state" style="display:none;">
+ <i class="bi bi-inbox"></i>
+ <p>No hay órdenes de trabajo aún</p>
+ <button class="btn btn-htk" onclick="showModal('workorder',null)"><i class="bi bi-plus-lg"></i> Crear primera orden</button>
+ </div>
+ <!-- Kanban: Work Orders Table View -->
+ <div id="kanbanWOTable" style="display:none;">
+ <div class="table-container">
+ <div class="d-flex justify-content-between mb-3">
+ <input class="search-box" id="kanbanWOSearch" placeholder="Buscar orden..." onkeyup="renderKanbanWOTable()" style="width:300px;">
+ <select class="form-select" id="kanbanWOStatusFilter" onchange="renderKanbanWOTable()" style="width:200px;">
+ <option value="">Todos los estados</option>
+ <option value="recibido">Recibido</option>
+ <option value="diagnosticando">Diagnosticando</option>
+ <option value="presupuestado">Presupuestado</option>
+ <option value="aprobado">Aprobado</option>
+ <option value="reparando">Reparando</option>
+ <option value="esperando_repuestos">Esperando Repuestos</option>
+ <option value="completado">Completado</option>
+ <option value="entregado">Entregado</option>
+ <option value="cancelado">Cancelado</option>
+ </select>
+ </div>
+ <div style="overflow-x:auto;">
+ <table class="table table-hover">
+ <thead><tr><th>ID</th><th>Cliente</th><th>Teléfono</th><th>Equipo</th><th>Falla</th><th>Presupuesto</th><th>Estado</th><th>Recibido</th><th>Acciones</th></tr></thead>
+ <tbody id="kanbanWOTableBody"></tbody>
+ </table>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Kanban: Leads -->
+ <div id="kanban-leads-view" class="kanban-sub-view" style="display:none;">
+ <div id="kanbanLeadsLoading" class="loading-overlay">
+ <span class="spinner-border spinner-border-sm"></span> Cargando tablero...
+ </div>
+ <div style="display:none;" id="kanbanLeadsFilters">
+ <div class="d-flex justify-content-between mb-2">
+ <input class="search-box" id="kanbanBoardSearch" placeholder="Buscar en board..." onkeyup="renderKanbanLeads()" style="width:250px;">
+ <div class="d-flex gap-2">
+ <select class="form-select" id="kanbanBoardSegmentFilter" onchange="renderKanbanLeads()" style="width:170px;font-size:0.82em;" data-segments="true" data-placeholder="Todos los segmentos"></select>
+ <span class="text-muted small align-self-center" id="kanbanBoardCount"></span>
+ </div>
+ </div>
+ </div>
+ <div id="kanbanLeadsBoard" class="kanban-board" style="display:none;"></div>
+ <div id="kanbanLeadsEmpty" class="empty-state" style="display:none;">
+ <i class="bi bi-inbox"></i>
+ <p>No hay prospectos aún</p>
+ <button class="btn btn-htk" onclick="showModal('lead',null)"><i class="bi bi-plus-lg"></i> Crear primer prospecto</button>
+ </div>
+ <!-- Kanban: Leads Table View -->
+ <div id="kanbanLeadsTable" style="display:none;">
+ <div class="table-container">
+ <div class="d-flex justify-content-between mb-3">
+ <input class="search-box" id="kanbanLeadSearch" placeholder="Buscar prospecto..." onkeyup="renderKanbanLeadsTable()" style="width:300px;">
+ <select class="form-select" id="kanbanLeadStatusFilter" onchange="renderKanbanLeadsTable()" style="width:200px;">
+ <option value="">Todos</option>
+ <option value="nuevo">Nuevo</option>
+ <option value="contactado">Contactado</option>
+ <option value="cotizado">Cotizado</option>
+ <option value="negociacion">Negociación</option>
+ <option value="ganado">Ganado</option>
+ <option value="perdido">Perdido</option>
+ <option value="cliente">Cliente</option>
+ </select>
+ </div>
+ <div style="overflow-x:auto;">
+ <table class="table table-hover">
+ <thead><tr><th>ID</th><th>Nombre</th><th>Contacto</th><th>Segmento</th><th>Línea</th><th>Estado</th><th>Valor Est.</th><th>Creado</th><th>Acciones</th></tr></thead>
+ <tbody id="kanbanLeadsTableBody"></tbody>
+ </table>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- ===================== CLIENTES ===================== -->

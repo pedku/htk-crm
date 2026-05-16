@@ -1,0 +1,39 @@
+<div id="tab-workorders" class="tab-content">
+ <div class="d-flex justify-content-between align-items-center mb-3">
+ <h3 class="page-title mb-0"><i class="bi bi-tools"></i> Órdenes de Trabajo</h3>
+ <button class="btn btn-htk" onclick="showModal('workorder', null)"><i class="bi bi-plus-lg"></i> Nueva Orden</button>
+ </div>
+ <div id="woLoading" class="loading-overlay">
+ <span class="spinner-border spinner-border-sm"></span> Cargando órdenes...
+ </div>
+ <div id="woContent" style="display:none;" class="table-container">
+ <div class="d-flex justify-content-between mb-3">
+ <input class="search-box" id="woSearch" placeholder="Buscar orden..." onkeyup="renderWorkOrders()" style="width:300px;">
+ <select class="form-select" id="woStatusFilter" onchange="renderWorkOrders()" style="width:200px;">
+ <option value="">Todos los estados</option>
+ <option value="recibido">Recibido</option>
+ <option value="diagnosticando">Diagnosticando</option>
+ <option value="presupuestado">Presupuestado</option>
+ <option value="aprobado">Aprobado</option>
+ <option value="reparando">Reparando</option>
+ <option value="esperando_repuestos">Esperando Repuestos</option>
+ <option value="completado">Completado</option>
+ <option value="entregado">Entregado</option>
+ <option value="cancelado">Cancelado</option>
+ </select>
+ </div>
+ <div style="overflow-x:auto;">
+ <table class="table table-hover">
+ <thead><tr><th>ID</th><th>Tipo</th><th>Cliente</th><th>Teléfono</th><th>Equipo</th><th>Falla</th><th>Presupuesto</th><th>Estado</th><th>Recibido</th><th>Acciones</th></tr></thead>
+ <tbody id="woBody"></tbody>
+ </table>
+ </div>
+ <div id="woEmpty" class="empty-state" style="display:none;">
+ <i class="bi bi-tools"></i>
+ <p>No hay órdenes de trabajo aún</p>
+ <button class="btn btn-htk" onclick="showModal('workorder',null)"><i class="bi bi-plus-lg"></i> Crear primera orden</button>
+ </div>
+ </div>
+ </div>
+
+ <!-- ===================== LEADS ===================== -->

@@ -43,7 +43,7 @@ def index():
         is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1')
         if not is_local:
             return redirect(url_for('views.login_page', next=request.path))
-    return render_template('index.html')
+    return render_template('base.html')
 
 
 @views_bp.route('/leads/<path:lid>')
