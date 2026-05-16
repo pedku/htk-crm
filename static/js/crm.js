@@ -850,9 +850,9 @@ function renderWorkOrders() {
  const es = ESTADOS_WO[o.estado] || {label:o.estado, class:'bg-secondary'};
  const tipoInfo = TIPOS_OT[o.tipo] || {};
  return `<tr>
- <td><strong>${o.id}</strong></td>
+ <td><strong><a href="/ordenes/${o.id}" style="color:var(--htk-primary);text-decoration:none;">${o.id}</a></strong></td>
  <td><span class="badge" style="background:${tipoInfo.color||'#f97316'};color:#fff;font-size:0.75em;">${tipoInfo.icono||'🔧'} ${tipoInfo.label||'Reparación'}</span></td>
- <td><span title="${tipoInfo.label||o.tipo||'Reparación'}">${tipoInfo.icono||'🔧'}</span> ${escHtml(o.cliente?.nombre || '-')}</td>
+ <td><a href="/ordenes/${o.id}" style="color:#fff;text-decoration:none;"><span title="${tipoInfo.label||o.tipo||'Reparación'}">${tipoInfo.icono||'🔧'}</span> ${escHtml(o.cliente?.nombre || '-')}</a></td>
  <td>${escHtml(o.cliente?.telefono || '-')}</td>
  <td>${escHtml(o.equipo?.marca || '')} ${escHtml(o.equipo?.modelo || '')} <small class="text-secondary">(${escHtml(o.equipo?.tipo||'')})</small></td>
  <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(o.falla_reportada||'')}">${escHtml(o.falla_reportada||'-')}</td>
