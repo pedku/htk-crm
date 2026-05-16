@@ -337,8 +337,13 @@ async function loadOTNotifBadges() {
 
 // Data Loading 
 async function fetchJSON(url, options) { 
- if (options) { const r = await fetch(url, options); return r.json(); }
- const r = await fetch(url); return r.json(); 
+ try {
+  if (options) { const r = await fetch(url, options); return r.json(); }
+  const r = await fetch(url); return r.json();
+ } catch(e) {
+  console.error('fetchJSON failed:', url, e.message);
+  return {error: 'Error de conexión'};
+ }
 }
 function getVal(id) { return document.getElementById(id).value; }
 
