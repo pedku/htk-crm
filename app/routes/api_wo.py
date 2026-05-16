@@ -135,6 +135,10 @@ def api_work_order(wo_id):
                 return jsonify({'error': f'Tipo de OT inválido: {data["tipo"]}'}), 400
             updates.append("tipo = ?")
             params.append(data['tipo'])
+            # Reset estado to initial estado of new tipo
+            nuevo_estado = get_estado_inicial(data['tipo'])
+            updates.append("estado = ?")
+            params.append(nuevo_estado)
 
         if 'client_id' in data:
             updates.append("client_id = ?")
