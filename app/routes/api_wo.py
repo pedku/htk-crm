@@ -336,15 +336,32 @@ def api_wo_status(wo_id):
         old_status = row['estado']
         wo_tipo = row['tipo'] or 'reparacion'
 
-        success, error = update_wo_status(conn, wo_id, new_status, old_status, wo_tipo, {
-            'descripcion': data.get('descripcion',
-                                    f'Estado cambiado de {old_status} a {new_status}'),
-            'presupuesto': data.get('presupuesto'),
-            'diagnostico': data.get('diagnostico'),
-            'notificado': data.get('notificado'),
-        })
-        if not success:
-            return jsonify({'error': error}), 400
+        force = data.get('force', False)
+        if force:
+            # Salta validación de transición — cambio directo desde el modal
+            from app.core.wo_types import get_estado_inicial
+            conn.execute("UPDATE work_orders SET estado = ? WHERE id = ?", (new_status, wo_id))
+            if 'presupuesto' in data and data['presupuesto'] is not None:
+                conn.execute("UPDATE work_orders SET presupuesto = ? WHERE id = ?",
+                             (data['presupuesto'], wo_id))
+            if 'diagnostico' in data and data['diagnostico']:
+                conn.execute("UPDATE work_orders SET diagnostico = ? WHERE id = ?",
+                             (data['diagnostico'], wo_id))
+            conn.execute("""
+                INSERT INTO work_order_history (wo_id, fecha, estado, descripcion, notificado)
+                VALUES (?, ?, ?, ?, ?)
+            """, (wo_id, now_iso(), new_status, data.get('descripcion',
+                    f'Estado cambiado de {old_status} a {new_status} (manual)'), 0))
+        else:
+            success, error = update_wo_status(conn, wo_id, new_status, old_status, wo_tipo, {
+                'descripcion': data.get('descripcion',
+                                        f'Estado cambiado de {old_status} a {new_status}'),
+                'presupuesto': data.get('presupuesto'),
+                'diagnostico': data.get('diagnostico'),
+                'notificado': data.get('notificado'),
+            })
+            if not success:
+                return jsonify({'error': error}), 400
 
         conn.commit()
         return jsonify(wo_to_dict(conn, wo_id))

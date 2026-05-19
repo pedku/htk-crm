@@ -15,6 +15,8 @@ from app.services.bot_service import (
 api_bot_bp = Blueprint('api_bot', __name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BOT_LOG_PATH = '/home/peku/htk-whatsapp-bot/bot.log'
+BOT_DIR = '/home/peku/htk-whatsapp-bot'
 
 
 def actividad_crear(lead_id, tipo, resumen, detalle=''):
@@ -194,16 +196,98 @@ def api_bot_restart():
 @api_bot_bp.route('/api/bot/log')
 @login_required
 def api_bot_log():
-    log_path = os.path.join(BASE_DIR, 'bot', 'bot.log')
+    log_path = BOT_LOG_PATH
     try:
         if os.path.exists(log_path):
-            with open(log_path) as f:
-                lines = f.readlines()
-                last = lines[-200:]
-            return jsonify({'log': ''.join(last), 'ok': True})
+            with open(log_path, 'rb') as f:
+                # Read last 200 lines (log can be huge — 50MB+)
+                f.seek(0, 2)
+                size = f.tell()
+                if size > 100000:
+                    f.seek(size - 100000)
+                    chunk = f.read(100000).decode('utf-8', errors='replace')
+                    lines = chunk.split('\n')
+                    last = lines[-200:]
+                else:
+                    f.seek(0)
+                    last = f.read().decode('utf-8', errors='replace').split('\n')[-200:]
+            return jsonify({'log': '\n'.join(last), 'ok': True})
         return jsonify({'log': '', 'ok': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# ── BOT START / STOP ─────────────────────────────────────────────────
+
+@api_bot_bp.route('/api/bot/start', methods=['POST'])
+@login_required
+def api_bot_start():
+    """Start WhatsApp bot via systemd user service."""
+    import subprocess
+    try:
+        r = subprocess.run(['systemctl', '--user', 'start', 'htk-whatsapp-bot'],
+                          capture_output=True, text=True, timeout=10)
+        if r.returncode == 0:
+            return jsonify({'ok': True, 'message': 'Bot iniciado correctamente'})
+        return jsonify({'ok': False, 'error': r.stderr[:300]}), 500
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@api_bot_bp.route('/api/bot/stop', methods=['POST'])
+@login_required
+def api_bot_stop():
+    """Stop WhatsApp bot via systemd user service."""
+    import subprocess
+    try:
+        r = subprocess.run(['systemctl', '--user', 'stop', 'htk-whatsapp-bot'],
+                          capture_output=True, text=True, timeout=10)
+        subprocess.run(['pkill', '-f', 'node.*bot\\.js'], capture_output=True, timeout=5)
+        return jsonify({'ok': True, 'message': 'Bot detenido'})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+# ── BOT QR ────────────────────────────────────────────────────────────
+import subprocess, time as _time_module
+NODE_BIN = '/home/peku/.config/nvm/versions/node/v24.15.0/bin/node'
+
+@api_bot_bp.route('/api/bot/qr')
+def api_bot_qr():
+    """Return QR code image for WhatsApp login."""
+    qr_path = os.path.join(BOT_DIR, 'qr-code.png')
+    try:
+        # If QR file is fresh (< 2 min), serve it directly
+        if os.path.exists(qr_path):
+            age = _time_module.time() - os.path.getmtime(qr_path)
+            if age < 120:
+                from flask import send_file
+                return send_file(qr_path, mimetype='image/png')
+        
+        # Generate fresh QR using the existing script
+        proc = subprocess.run(
+            [NODE_BIN, 'generate-qr.js'],
+            cwd=BOT_DIR,
+            capture_output=True, text=True,
+            timeout=30
+        )
+        # Wait a moment for the file to be written
+        _time_module.sleep(2)
+        
+        if os.path.exists(qr_path):
+            from flask import send_file
+            return send_file(qr_path, mimetype='image/png')
+        
+        # If no image, extract QR link from stdout
+        for line in proc.stdout.split('\n'):
+            if 'chart.googleapis.com' in line:
+                return jsonify({'ok': True, 'qr_url': line.strip()})
+        
+        return jsonify({'ok': False, 'error': 'No se pudo generar QR', 'stdout': proc.stdout[-500:]}), 500
+    except subprocess.TimeoutExpired:
+        return jsonify({'ok': False, 'error': 'Timeout generando QR'}), 500
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 
 # ── LID STATS ─────────────────────────────────────────────────────────

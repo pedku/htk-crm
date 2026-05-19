@@ -1093,6 +1093,7 @@ async function updateStatus(id) {
  if (presupuesto !== undefined) body.presupuesto = presupuesto;
  if (diagnostico) body.diagnostico = diagnostico;
 
+ body.force = true;
  await fetch(`/api/work_orders/${id}/status`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
  modalInstance.hide();
  flashSave();
@@ -3131,15 +3132,7 @@ function switchConfigTab(tab) {
 window.switchConfigTab = switchConfigTab;
 
 function initConfigSubtabs() {
-  const container = document.getElementById('configSubtabs');
-  if (!container) return;
-  container.addEventListener('click', function(event) {
-    const button = event.target.closest('.client-profile-tab');
-    if (!button || !container.contains(button)) return;
-    event.preventDefault();
-    const tab = button.dataset.configTab;
-    if (tab) switchConfigTab(tab);
-  });
+  // Config subtabs use inline onclick — no extra handler needed
 }
 
 // ══════════════════════════════════════════════════
@@ -3157,12 +3150,15 @@ const BOT_CONFIG_KEYS = [
 const BOT_TOGGLE_KEYS = ['auto_respuesta_activa','derivar_sin_respuesta','consulta_ot_activa'];
 
 async function loadBotConfig() {
-  document.getElementById('botCfgLoading').style.display = 'block';
-  document.getElementById('botCfgForm').style.display = 'none';
+  const loadingEl = document.getElementById('botCfgLoading');
+  const formEl = document.getElementById('botCfgForm');
+  if (!loadingEl || !formEl) return;
+  loadingEl.style.display = 'block';
+  formEl.style.display = 'none';
   try {
     const config = await fetchJSON('/api/bot/config?verbose=1');
     if (config.error) {
-      document.getElementById('botCfgLoading').innerHTML = '<div class="alert alert-warning">⚠️ ' + config.error + '. Por favor, inicia sesión.</div>';
+      loadingEl.innerHTML = '<div class="alert alert-warning">⚠️ ' + config.error + '. Por favor, inicia sesión.</div>';
       return;
     }
     // Fill form fields
@@ -3181,10 +3177,11 @@ async function loadBotConfig() {
     document.querySelectorAll('.cfg-msg').forEach(ta => updateMsgPreview(ta));
     // Check bot status
     checkBotStatus();
-    document.getElementById('botCfgLoading').style.display = 'none';
-    document.getElementById('botCfgForm').style.display = 'block';
+    loadBotLog();
+    loadingEl.style.display = 'none';
+    formEl.style.display = 'block';
   } catch (e) {
-    document.getElementById('botCfgLoading').innerHTML =
+    loadingEl.innerHTML =
       '<div class="alert alert-warning">⚠️ No se pudo cargar la configuración: ' + e.message + '</div>';
   }
 }
@@ -3279,65 +3276,158 @@ async function checkBotStatus() {
   const badge = document.getElementById('cfgBotStatus');
   const headerBadge = document.getElementById('botStatusIndicator');
   const restartBtn = document.getElementById('cfgRestartBotBtn');
+  const startBtn = document.getElementById('cfgStartBotBtn');
+  const stopBtn = document.getElementById('cfgStopBotBtn');
+  const qrBtn = document.getElementById('cfgQrBtn');
+  const numberSpan = document.getElementById('cfgBotNumber');
   try {
     const resp = await fetch('/api/bot/status');
     const data = await resp.json();
     if (data.error || resp.status === 401) {
-      if (badge) { badge.className = 'badge bg-secondary'; badge.textContent = '🔒 Inicia sesión'; }
-      if (headerBadge) { headerBadge.className = 'badge bg-secondary'; headerBadge.innerHTML = '🔒 Inicia sesión'; }
+      setBotStatus('secondary', '🔒 Inicia sesión', '🔒 Inicia sesión');
+      hideAll(restartBtn, startBtn, stopBtn, qrBtn);
       return;
     }
+    
+    // Show/hide buttons based on state
     if (data.ok && data.connected) {
-      if (badge) { badge.className = 'badge bg-success'; badge.textContent = '🟢 Conectado'; }
-      if (headerBadge) { headerBadge.className = 'badge bg-success'; headerBadge.innerHTML = '🟢 Bot conectado'; }
-      if (restartBtn) restartBtn.style.display = 'none';
+      setBotStatus('success', '🟢 Conectado', '🟢 Bot conectado');
+      hideAll(startBtn, qrBtn);
+      showAll(restartBtn, stopBtn);
+      if (numberSpan) numberSpan.textContent = data.botNumber || '—';
     } else if (data.ok && data.status === 'on') {
-      if (badge) { badge.className = 'badge bg-warning text-dark'; badge.textContent = '🟡 Sin WhatsApp'; }
-      if (headerBadge) { headerBadge.className = 'badge bg-warning text-dark'; headerBadge.innerHTML = '🟡 Bot sin WhatsApp'; }
-      if (restartBtn) restartBtn.style.display = 'inline-block';
+      setBotStatus('warning', '🟡 Sin WhatsApp', '🟡 Bot sin WhatsApp');
+      hideAll(startBtn);
+      showAll(restartBtn, stopBtn, qrBtn);
+      if (numberSpan) numberSpan.textContent = '—';
     } else if (data.status === 'off') {
-      if (badge) { badge.className = 'badge bg-warning text-dark'; badge.textContent = '🟡 Apagado'; }
-      if (headerBadge) { headerBadge.className = 'badge bg-warning text-dark'; headerBadge.innerHTML = '🟡 Bot apagado'; }
-      if (restartBtn) restartBtn.style.display = 'inline-block';
+      setBotStatus('warning', '🟡 Apagado', '🟡 Bot apagado');
+      hideAll(restartBtn, stopBtn, qrBtn);
+      showAll(startBtn);
+      if (numberSpan) numberSpan.textContent = '—';
     } else {
-      if (badge) { badge.className = 'badge bg-danger'; badge.textContent = '🔴 Offline'; }
-      if (headerBadge) { headerBadge.className = 'badge bg-danger'; headerBadge.innerHTML = '🔴 Bot offline'; }
-      if (restartBtn) restartBtn.style.display = 'inline-block';
+      setBotStatus('danger', '🔴 Offline', '🔴 Bot offline');
+      hideAll(restartBtn, stopBtn, qrBtn);
+      showAll(startBtn);
+      if (numberSpan) numberSpan.textContent = '—';
     }
   } catch (e) {
-    if (badge) { badge.className = 'badge bg-danger'; badge.textContent = '🔴 Error'; }
-    if (headerBadge) { headerBadge.className = 'badge bg-danger'; headerBadge.innerHTML = '🔴 Error'; }
-    if (restartBtn) restartBtn.style.display = 'inline-block';
+    setBotStatus('danger', '🔴 Error', '🔴 Error');
+    hideAll(restartBtn, stopBtn, qrBtn);
+    showAll(startBtn);
+    if (numberSpan) numberSpan.textContent = '—';
   }
 }
+
+function setBotStatus(cls, text, headerText) {
+  const badge = document.getElementById('cfgBotStatus');
+  const headerBadge = document.getElementById('botStatusIndicator');
+  if (badge) { badge.className = 'badge bg-' + cls; badge.textContent = text; }
+  if (headerBadge) { headerBadge.className = 'badge bg-' + cls; headerBadge.innerHTML = headerText; }
+}
+
+function hideAll(...els) { els.forEach(el => { if(el) el.style.display = 'none'; }); }
+function showAll(...els) { els.forEach(el => { if(el) el.style.display = 'inline-block'; }); }
 
 async function restartBot() {
   const btn = document.getElementById('cfgRestartBotBtn');
   const resultDiv = document.getElementById('cfgSaveResult');
+  return _botAction(btn, resultDiv, '/api/bot/restart', 'Reiniciar Bot', 'Bot reiniciado ✅');
+}
+
+async function startBot() {
+  const btn = document.getElementById('cfgStartBotBtn');
+  const resultDiv = document.getElementById('cfgSaveResult');
+  return _botAction(btn, resultDiv, '/api/bot/start', 'Iniciar Bot', 'Bot iniciado ✅');
+}
+
+async function stopBot() {
+  const btn = document.getElementById('cfgStopBotBtn');
+  const resultDiv = document.getElementById('cfgSaveResult');
+  return _botAction(btn, resultDiv, '/api/bot/stop', 'Detener Bot', 'Bot detenido');
+}
+
+async function _botAction(btn, resultDiv, url, btnLabel, successMsg) {
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Reiniciando...';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
   }
   try {
-    const resp = await fetch('/api/bot/restart', { method: 'POST' });
+    const resp = await fetch(url, { method: 'POST' });
     const data = await resp.json();
     if (data.ok) {
       if (resultDiv) resultDiv.innerHTML = '<div class="alert alert-success py-2">✅ ' + data.message + '</div>';
-      showToast('Bot reiniciado ✅', 'success');
+      showToast(successMsg, 'success');
       setTimeout(checkBotStatus, 3000);
       setTimeout(checkBotStatus, 8000);
     } else {
       if (resultDiv) resultDiv.innerHTML = '<div class="alert alert-danger py-2">❌ ' + (data.error||'Error') + '</div>';
-      showToast('Error al reiniciar', 'danger');
+      showToast('Error: ' + (data.error||'Error'), 'danger');
     }
   } catch (e) {
     showToast('Error: ' + e.message, 'danger');
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Reiniciar Bot';
+      btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> ' + btnLabel;
     }
   }
+}
+
+async function showBotQR() {
+  const display = document.getElementById('cfgQrDisplay');
+  const img = document.getElementById('cfgQrImage');
+  const link = document.getElementById('cfgQrLink');
+  const qrBtn = document.getElementById('cfgQrBtn');
+  
+  if (qrBtn) { qrBtn.disabled = true; qrBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generando QR...'; }
+  
+  try {
+    const resp = await fetch('/api/bot/qr');
+    if (resp.headers.get('content-type')?.includes('image/png')) {
+      // It's an image — display it
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      if (img) img.src = url;
+      if (link) link.style.display = 'none';
+      if (display) display.style.display = 'block';
+    } else {
+      // JSON response with QR URL
+      const data = await resp.json();
+      if (data.ok && data.qr_url) {
+        if (img) img.src = data.qr_url;
+        if (link) { link.href = data.qr_url; link.style.display = 'inline'; }
+        if (display) display.style.display = 'block';
+      } else {
+        showToast(data.error || 'Error generando QR', 'danger');
+      }
+    }
+  } catch (e) {
+    showToast('Error: ' + e.message, 'danger');
+  } finally {
+    if (qrBtn) { qrBtn.disabled = false; qrBtn.innerHTML = '<i class="bi bi-qr-code"></i> Escanear QR'; }
+  }
+}
+
+async function loadBotLog() {
+  const pre = document.getElementById('cfgBotLog');
+  if (!pre) return;
+  pre.textContent = '⏳ Cargando logs...';
+  try {
+    const resp = await fetch('/api/bot/log');
+    const data = await resp.json();
+    if (data.ok) {
+      const lines = data.log.split('\n');
+      // Keep last 100 lines for UI
+      const last = lines.slice(-100).join('\n');
+      pre.textContent = last || '(sin logs)';
+    } else {
+      pre.textContent = 'Error: ' + (data.error || 'No se pudo cargar');
+    }
+  } catch (e) {
+    pre.textContent = 'Error: ' + e.message;
+  }
+  pre.scrollTop = pre.scrollHeight;
 }
 
 async function loadTemplates() {
