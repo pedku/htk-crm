@@ -1,0 +1,28 @@
+<div id="tab-clients" class="tab-content">
+ <div class="d-flex justify-content-between align-items-center mb-3">
+ <h3 class="page-title mb-0"><i class="bi bi-people"></i> Clientes</h3>
+ <button class="btn btn-htk" onclick="showModal('client', null)"><i class="bi bi-plus-lg"></i> Nuevo Cliente</button>
+ </div>
+ <div id="clientsLoading" class="loading-overlay">
+ <span class="spinner-border spinner-border-sm"></span> Cargando clientes...
+ </div>
+ <div id="clientsContent" style="display:none;" class="table-container">
+ <div class="d-flex justify-content-between mb-3">
+ <input class="search-box" id="clientSearch" placeholder="Buscar cliente..." onkeyup="renderClients()" style="width:300px;">
+ </div>
+ <div style="overflow-x:auto;">
+ <table class="table table-hover">
+ <thead><tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Estado</th><th>Segmento</th><th>Línea</th><th>Órdenes</th><th>Último contacto</th><th>Acciones</th></tr></thead>
+ <tbody id="clientsBody"></tbody>
+ </table>
+ </div>
+ <div id="clientsEmpty" class="empty-state" style="display:none;">
+ <i class="bi bi-people"></i>
+ <p>No hay clientes registrados</p>
+ <button class="btn btn-htk" onclick="showModal('client',null)"><i class="bi bi-plus-lg"></i> Nuevo Cliente</button>
+ <button class="btn btn-htk btn-sm" onclick="showModal('client')"><i class="bi bi-plus-lg"></i> Crear primer cliente</button>
+</div>
+ </div>
+ </div>
+
+ <!-- ===================== ÓRDENES DE TRABAJO ===================== -->
