@@ -27,6 +27,33 @@ def client_to_dict(row, conn=None):
     return d
 
 
+@api_clients_bp.route('/api/clients/by-phone/<phone>', methods=['GET'])
+@login_required
+def api_clients_by_phone(phone):
+    """Buscar cliente por número de teléfono."""
+    conn = get_db()
+    try:
+        # Buscar en tabla clients
+        row = conn.execute(
+            "SELECT id, nombre, telefono, estado FROM clients WHERE telefono LIKE ? LIMIT 1",
+            (f'%{phone}%',)
+        ).fetchone()
+        
+        if not row:
+            # Buscar en tabla leads
+            row = conn.execute(
+                "SELECT id, nombre, telefono, estado FROM leads WHERE telefono LIKE ? LIMIT 1",
+                (f'%{phone}%',)
+            ).fetchone()
+        
+        if not row:
+            return jsonify({'error': 'No encontrado'}), 404
+        
+        return jsonify(dict(row))
+    finally:
+        conn.close()
+
+
 @api_clients_bp.route('/api/clients', methods=['GET', 'POST'])
 @login_required
 def api_clients():
