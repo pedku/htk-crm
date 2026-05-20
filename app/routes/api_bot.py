@@ -254,40 +254,64 @@ NODE_BIN = '/home/peku/.config/nvm/versions/node/v24.15.0/bin/node'
 
 @api_bot_bp.route('/api/bot/qr')
 def api_bot_qr():
-    """Return QR code image for WhatsApp login."""
+    """QR login flow: stop bot, start auth waiter, return QR image."""
     qr_path = os.path.join(BOT_DIR, 'qr-code.png')
+    status_path = os.path.join(BOT_DIR, 'qr-status.json')
+    
     try:
-        # If QR file is fresh (< 2 min), serve it directly
-        if os.path.exists(qr_path):
-            age = _time_module.time() - os.path.getmtime(qr_path)
-            if age < 120:
-                from flask import send_file
-                return send_file(qr_path, mimetype='image/png')
-        
-        # Generate fresh QR using the existing script
-        proc = subprocess.run(
-            [NODE_BIN, 'generate-qr.js'],
-            cwd=BOT_DIR,
-            capture_output=True, text=True,
-            timeout=30
-        )
-        # Wait a moment for the file to be written
+        # 1. Stop any running bot (force kill if systemctl hangs)
+        try:
+            subprocess.run(['systemctl', '--user', 'stop', 'htk-whatsapp-bot'],
+                          capture_output=True, timeout=10)
+        except:
+            pass
+        subprocess.run(['pkill', '-9', '-f', 'bot\\.js'], capture_output=True, timeout=5)
+        subprocess.run(['pkill', '-9', '-f', 'qr-auth\\.js'], capture_output=True, timeout=5)
         _time_module.sleep(2)
         
-        if os.path.exists(qr_path):
+        # 2. Start qr-auth.js in background
+        subprocess.Popen(
+            [NODE_BIN, 'qr-auth.js'],
+            cwd=BOT_DIR,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+        
+        # 3. Wait for QR to be generated
+        for _ in range(20):
+            _time_module.sleep(1)
+            if os.path.exists(status_path):
+                with open(status_path) as f:
+                    status = json.load(f)
+                if status.get('status') in ('ready', 'authenticated', 'failed'):
+                    break
+        
+        # 4. Return QR image if available
+        if os.path.exists(qr_path) and os.path.getsize(qr_path) > 100:
             from flask import send_file
             return send_file(qr_path, mimetype='image/png')
         
-        # If no image, extract QR link from stdout
-        for line in proc.stdout.split('\n'):
-            if 'chart.googleapis.com' in line:
-                return jsonify({'ok': True, 'qr_url': line.strip()})
+        # Check if status file exists with QR URL
+        if os.path.exists(status_path):
+            with open(status_path) as f:
+                status = json.load(f)
+            if status.get('qr_url'):
+                return jsonify({'ok': True, 'qr_url': status['qr_url'], 'status': status.get('status')})
         
-        return jsonify({'ok': False, 'error': 'No se pudo generar QR', 'stdout': proc.stdout[-500:]}), 500
-    except subprocess.TimeoutExpired:
-        return jsonify({'ok': False, 'error': 'Timeout generando QR'}), 500
+        return jsonify({'ok': False, 'status': 'generating', 'error': 'QR todavía generándose, intenta de nuevo'}), 202
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@api_bot_bp.route('/api/bot/qr-status')
+def api_bot_qr_status():
+    """Check QR auth status."""
+    status_path = os.path.join(BOT_DIR, 'qr-status.json')
+    if os.path.exists(status_path):
+        with open(status_path) as f:
+            return jsonify(json.load(f))
+    return jsonify({'status': 'unknown'})
 
 
 # ── LID STATS ─────────────────────────────────────────────────────────

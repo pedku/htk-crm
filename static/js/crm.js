@@ -3379,34 +3379,94 @@ async function showBotQR() {
   const img = document.getElementById('cfgQrImage');
   const link = document.getElementById('cfgQrLink');
   const qrBtn = document.getElementById('cfgQrBtn');
+  const resultDiv = document.getElementById('cfgSaveResult');
   
-  if (qrBtn) { qrBtn.disabled = true; qrBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generando QR...'; }
+  if (qrBtn) { qrBtn.disabled = true; qrBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Iniciando...'; }
+  if (display) { display.style.display = 'block'; display.innerHTML = '<div class="text-center py-4"><span class="spinner-border"></span><p class="mt-2">Preparando QR...</p></div>'; }
   
-  try {
-    const resp = await fetch('/api/bot/qr');
-    if (resp.headers.get('content-type')?.includes('image/png')) {
-      // It's an image — display it
-      const blob = await resp.blob();
-      const url = URL.createObjectURL(blob);
-      if (img) img.src = url;
-      if (link) link.style.display = 'none';
-      if (display) display.style.display = 'block';
-    } else {
-      // JSON response with QR URL
-      const data = await resp.json();
-      if (data.ok && data.qr_url) {
-        if (img) img.src = data.qr_url;
-        if (link) { link.href = data.qr_url; link.style.display = 'inline'; }
-        if (display) display.style.display = 'block';
-      } else {
-        showToast(data.error || 'Error generando QR', 'danger');
+  // Helper to load QR image
+  async function loadQR() {
+    try {
+      const resp = await fetch('/api/bot/qr');
+      if (resp.status === 202) {
+        // Still generating, retry in 2s
+        setTimeout(loadQR, 2000);
+        return;
       }
+      if (resp.headers.get('content-type')?.includes('image/png')) {
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        if (display) {
+          display.innerHTML = `
+            <div class="card d-inline-block p-3" style="background:white;">
+              <img id="cfgQrImage" src="${url}" alt="QR Code" style="width:280px;height:280px;">
+            </div>
+            <div class="mt-2">
+              <small class="text-muted">Escanea con WhatsApp → Dispositivos vinculados</small>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary mt-2" onclick="document.getElementById('cfgQrDisplay').style.display='none'; stopQRPoll()">
+              <i class="bi bi-x"></i> Cerrar QR
+            </button>
+            <div id="qrStatusMsg" class="mt-2 small text-muted">⏳ Esperando escaneo...</div>
+          `;
+        }
+        // Start polling for auth status
+        if (resultDiv) resultDiv.innerHTML = '';
+        startQRPoll();
+      } else {
+        const data = await resp.json();
+        if (data.qr_url) {
+          if (display) {
+            display.innerHTML = `
+              <img src="${data.qr_url}" alt="QR" style="width:280px;height:280px;">
+              <div class="mt-2"><small class="text-muted">Escanea con WhatsApp</small></div>
+            `;
+          }
+          startQRPoll();
+        } else {
+          if (display) display.innerHTML = '<div class="alert alert-warning">⚠️ No se pudo generar QR: ' + (data.error||'error') + '</div>';
+        }
+      }
+    } catch(e) {
+      if (display) display.innerHTML = '<div class="alert alert-danger">Error: ' + e.message + '</div>';
+    } finally {
+      if (qrBtn) { qrBtn.disabled = false; qrBtn.innerHTML = '<i class="bi bi-qr-code"></i> Escanear QR'; }
     }
-  } catch (e) {
-    showToast('Error: ' + e.message, 'danger');
-  } finally {
-    if (qrBtn) { qrBtn.disabled = false; qrBtn.innerHTML = '<i class="bi bi-qr-code"></i> Escanear QR'; }
   }
+  
+  // Auth polling
+  let _qrPollInterval = null;
+  window._stopQRPoll = function() {
+    if (_qrPollInterval) { clearInterval(_qrPollInterval); _qrPollInterval = null; }
+  };
+  
+  function startQRPoll() {
+    _qrPollInterval = setInterval(async () => {
+      try {
+        const resp = await fetch('/api/bot/qr-status');
+        const data = await resp.json();
+        const msgEl = document.getElementById('qrStatusMsg');
+        
+        if (data.status === 'authenticated') {
+          if (msgEl) msgEl.innerHTML = '✅ ¡WhatsApp vinculado! Iniciando bot...';
+          clearInterval(_qrPollInterval);
+          // Start the bot
+          const startResp = await fetch('/api/bot/start', {method:'POST'});
+          const startData = await startResp.json();
+          if (resultDiv) resultDiv.innerHTML = '<div class="alert alert-success py-2">✅ Bot conectado y funcionando</div>';
+          if (display) setTimeout(() => { display.style.display = 'none'; }, 2000);
+          setTimeout(checkBotStatus, 3000);
+        } else if (data.status === 'failed' || data.status === 'timeout') {
+          if (msgEl) msgEl.innerHTML = '⚠️ ' + (data.error||'QR expirado. Genera uno nuevo.') + ' <a href="#" onclick="showBotQR()">Reintentar</a>';
+          clearInterval(_qrPollInterval);
+        } else if (data.status === 'ready') {
+          if (msgEl) msgEl.innerHTML = '⏳ QR activo. Escanea con tu celular...';
+        }
+      } catch(e) { /* ignore poll errors */ }
+    }, 3000);
+  }
+  
+  await loadQR();
 }
 
 async function loadBotLog() {
