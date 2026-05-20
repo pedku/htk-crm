@@ -24,16 +24,75 @@ def actividad_crear(lead_id, tipo, resumen, detalle=''):
         conn.close()
 
 
-# ── GET /api/segments ────────────────────────────────────────────────
+# ── SEGMENTS CRUD ─────────────────────────────────────────────────
 
-@api_leads_bp.route('/api/segments')
-def api_segments():
+@api_leads_bp.route('/api/segments', methods=['GET'])
+@login_required
+def api_segments_get():
     conn = get_db()
     try:
         rows = conn.execute(
-            "SELECT key, label, color, orden FROM segmentos WHERE activo=1 ORDER BY orden"
+            "SELECT key, label, color, orden, activo FROM segmentos ORDER BY orden"
         ).fetchall()
         return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
+
+@api_leads_bp.route('/api/segments', methods=['POST'])
+@login_required
+def api_segments_create():
+    data = request.get_json()
+    key = data.get('key', '').strip().lower().replace(' ', '_')
+    if not key:
+        return jsonify({'error': 'Se requiere una clave para el segmento'}), 400
+    conn = get_db()
+    try:
+        existing = conn.execute("SELECT key FROM segmentos WHERE key=?", (key,)).fetchone()
+        if existing:
+            return jsonify({'error': f'El segmento "{key}" ya existe'}), 409
+        max_orden = conn.execute("SELECT MAX(orden) FROM segmentos").fetchone()[0] or 0
+        conn.execute(
+            "INSERT INTO segmentos (key, label, color, orden, activo) VALUES (?, ?, ?, ?, 1)",
+            (key, data.get('label', key), data.get('color', '#6f42c1'), max_orden + 1)
+        )
+        conn.commit()
+        row = conn.execute("SELECT * FROM segmentos WHERE key=?", (key,)).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@api_leads_bp.route('/api/segments/<key>', methods=['PUT', 'DELETE'])
+@login_required
+def api_segments_item(key):
+    conn = get_db()
+    try:
+        if request.method == 'DELETE':
+            conn.execute("DELETE FROM segmentos WHERE key=?", (key,))
+            conn.commit()
+            return jsonify({'success': True})
+        
+        # PUT
+        data = request.get_json()
+        updates = []
+        params = []
+        for col in ['label', 'color', 'orden', 'activo']:
+            if col in data:
+                updates.append(f"{col} = ?")
+                params.append(data[col])
+        if updates:
+            params.append(key)
+            conn.execute(f"UPDATE segmentos SET {', '.join(updates)} WHERE key = ?", params)
+            conn.commit()
+        row = conn.execute("SELECT * FROM segmentos WHERE key=?", (key,)).fetchone()
+        return jsonify(dict(row) if row else {})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
 

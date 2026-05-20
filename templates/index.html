@@ -4934,6 +4934,7 @@ function switchConfigTab(tab) {
 
   if (tab === 'general') loadGeneralConfig();
   else if (tab === 'bot') loadBotConfig();
+  else if (tab === 'segments') loadSegmentsTab();
   else if (tab === 'templates') loadTemplates();
   else if (tab === 'prices') loadPricesTab();
   else if (tab === 'segments') loadSegmentsTab();
@@ -4952,6 +4953,210 @@ function initConfigSubtabs() {
     const tab = button.dataset.configTab;
     if (tab) switchConfigTab(tab);
   });
+}
+
+// ══════════════════════════════════════════════════
+// CONFIGURACIÓN: Segmentos y Pitches
+// ══════════════════════════════════════════════════
+
+let segmentList = [];
+let pitchList = [];
+
+async function loadSegmentsTab() {
+  await Promise.all([loadSegmentsList(), loadPitchesList()]);
+}
+
+async function loadSegmentsList() {
+  try {
+    const data = await fetchJSON('/api/segments');
+    segmentList = data || [];
+    renderSegmentsTable();
+  } catch(e) {
+    document.getElementById('segmentTableBody').innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function renderSegmentsTable() {
+  const tbody = document.getElementById('segmentTableBody');
+  if (!tbody) return;
+  if (!segmentList.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox"></i> No hay segmentos creados</td></tr>';
+    return;
+  }
+  tbody.innerHTML = segmentList.map(s => `
+    <tr>
+      <td><span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:${s.color||'#6f42c1'};border:2px solid rgba(255,255,255,0.2)"></span></td>
+      <td>${escHtml(s.label||s.key)}</td>
+      <td><code>${escHtml(s.key)}</code></td>
+      <td>${s.orden||'-'}</td>
+      <td>${s.activo ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-htk me-1" onclick="showSegmentModal('${s.key}')" title="Editar"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteSegment('${s.key}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function showSegmentModal(key) {
+  const modal = new bootstrap.Modal(document.getElementById('segmentModal'));
+  if (key) {
+    const seg = segmentList.find(s => s.key === key);
+    if (!seg) return;
+    document.getElementById('segmentModalTitle').textContent = 'Editar Segmento';
+    document.getElementById('seg_key').value = seg.key;
+    document.getElementById('seg_key').disabled = true;
+    document.getElementById('seg_label').value = seg.label || '';
+    document.getElementById('seg_color').value = seg.color || '#6f42c1';
+  } else {
+    document.getElementById('segmentModalTitle').textContent = 'Nuevo Segmento';
+    document.getElementById('seg_key').value = '';
+    document.getElementById('seg_key').disabled = false;
+    document.getElementById('seg_label').value = '';
+    document.getElementById('seg_color').value = '#6f42c1';
+  }
+  modal.show();
+}
+
+async function saveSegment() {
+  const key = document.getElementById('seg_key').value.trim().toLowerCase().replace(/\s+/g, '_');
+  const label = document.getElementById('seg_label').value.trim();
+  const color = document.getElementById('seg_color').value;
+  if (!key) { showToast('La clave es requerida', 'danger'); return; }
+  
+  const existing = segmentList.find(s => s.key === key);
+  try {
+    if (existing) {
+      await fetch('/api/segments/' + key, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({label, color}) });
+    } else {
+      await fetch('/api/segments', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({key, label, color}) });
+    }
+    bootstrap.Modal.getInstance(document.getElementById('segmentModal')).hide();
+    showToast(existing ? 'Segmento actualizado' : 'Segmento creado');
+    await loadSegmentsList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+async function deleteSegment(key) {
+  if (!confirm('¿Eliminar segmento "' + key + '"?')) return;
+  try {
+    await fetch('/api/segments/' + key, { method:'DELETE' });
+    showToast('Segmento eliminado');
+    await loadSegmentsList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+// ── PITCHES ────────────────────────────────────────
+
+async function loadPitchesList() {
+  try {
+    const data = await fetchJSON('/api/pitches');
+    pitchList = (data && data.plantillas_cuerpo) ? data.plantillas_cuerpo : [];
+    renderPitchesTable();
+  } catch(e) {
+    document.getElementById('pitchTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function renderPitchesTable() {
+  const tbody = document.getElementById('pitchTableBody');
+  if (!tbody) return;
+  if (!pitchList.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox"></i> No hay plantillas. Crea la primera.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = pitchList.map(p => `
+    <tr>
+      <td><strong>${escHtml(p.titulo||'Sin título')}</strong></td>
+      <td>${(p.segmentos||[]).map(s => `<span class="badge bg-secondary me-1">${escHtml(s)}</span>`).join('') || '<span class="text-muted">—</span>'}</td>
+      <td>${p.whatsapp ? '<span class="text-success"><i class="bi bi-check-lg"></i> Sí</span>' : '<span class="text-muted">—</span>'}</td>
+      <td>${p.email ? '<span class="text-success"><i class="bi bi-check-lg"></i> Sí</span>' : '<span class="text-muted">—</span>'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-htk" onclick="showPitchModal('${escHtml(p.id)}')" title="Editar"><i class="bi bi-pencil"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function showPitchModal(id) {
+  const modal = new bootstrap.Modal(document.getElementById('pitchModal'));
+  const container = document.getElementById('pitch_segmentos_container');
+  
+  // Cargar segmentos disponibles
+  let segs = segmentList;
+  if (!segs.length) {
+    try { segs = await fetchJSON('/api/segments'); segmentList = segs; } catch(e) {}
+  }
+  
+  let pitch = null;
+  if (id) {
+    pitch = pitchList.find(p => p.id === id);
+    document.getElementById('pitchModalTitle').textContent = 'Editar Plantilla';
+    document.getElementById('pitchDeleteBtn').style.display = 'block';
+  } else {
+    document.getElementById('pitchModalTitle').textContent = 'Nueva Plantilla';
+    document.getElementById('pitchDeleteBtn').style.display = 'none';
+  }
+  
+  const selectedSegs = (pitch && pitch.segmentos) || [];
+  container.innerHTML = (segs||[]).map(s => {
+    const checked = selectedSegs.includes(s.key) ? 'checked' : '';
+    return `<label class="btn btn-sm ${checked?'btn-htk':'btn-outline-secondary'}" style="cursor:pointer" onclick="this.classList.toggle('btn-htk');this.classList.toggle('btn-outline-secondary');">
+      <input type="checkbox" value="${escHtml(s.key)}" ${checked} style="display:none"> ${escHtml(s.label||s.key)}
+    </label>`;
+  }).join('') || '<p class="text-muted">Crea segmentos primero</p>';
+  
+  document.getElementById('pitch_titulo').value = (pitch && pitch.titulo) || '';
+  document.getElementById('pitch_whatsapp').value = (pitch && pitch.whatsapp) || '';
+  document.getElementById('pitch_email').value = (pitch && pitch.email) || '';
+  document.getElementById('pitch_asunto_email').value = (pitch && pitch.asunto_email) || '';
+  
+  // Guardar id para edición
+  container.dataset.pitchId = id || '';
+  
+  modal.show();
+}
+
+async function savePitch() {
+  const container = document.getElementById('pitch_segmentos_container');
+  const checkboxes = container.querySelectorAll('input[type=checkbox]:checked');
+  const segmentos = Array.from(checkboxes).map(cb => cb.value);
+  
+  const data = {
+    titulo: document.getElementById('pitch_titulo').value.trim(),
+    segmentos,
+    whatsapp: document.getElementById('pitch_whatsapp').value,
+    email: document.getElementById('pitch_email').value,
+    asunto_email: document.getElementById('pitch_asunto_email').value
+  };
+  
+  const existingId = container.dataset.pitchId;
+  
+  try {
+    if (existingId) {
+      data.id = existingId;
+      await fetch('/api/pitches', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      showToast('Plantilla actualizada');
+    } else {
+      data.id = 'pitch_' + Date.now();
+      await fetch('/api/pitches', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      showToast('Plantilla creada');
+    }
+    bootstrap.Modal.getInstance(document.getElementById('pitchModal')).hide();
+    await loadPitchesList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+async function deletePitch() {
+  const container = document.getElementById('pitch_segmentos_container');
+  const id = container.dataset.pitchId;
+  if (!id || !confirm('¿Eliminar esta plantilla?')) return;
+  try {
+    await fetch('/api/pitches', { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) });
+    bootstrap.Modal.getInstance(document.getElementById('pitchModal')).hide();
+    showToast('Plantilla eliminada');
+    await loadPitchesList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
 }
 
 // ══════════════════════════════════════════════════

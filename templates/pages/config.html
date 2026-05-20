@@ -339,8 +339,128 @@
 
  <!-- Segments Sub-tab -->
  <div id="config-tab-segments" class="config-subtab" style="display:none;">
-  <div class="text-center py-5">
-   <span class="spinner-border spinner-border-sm"></span> Cargando segmentos...
+  <div class="d-flex justify-content-between align-items-center mb-3">
+   <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Segmentos</h5>
+   <button class="btn btn-htk btn-sm" onclick="showSegmentModal(null)"><i class="bi bi-plus-lg"></i> Nuevo segmento</button>
+  </div>
+  
+  <!-- Tabla de segmentos -->
+  <div class="table-responsive">
+   <table class="table table-dark table-hover">
+    <thead>
+     <tr>
+      <th style="width:40px">Color</th>
+      <th>Segmento</th>
+      <th>Clave</th>
+      <th style="width:80px">Orden</th>
+      <th style="width:60px">Activo</th>
+      <th style="width:120px">Acciones</th>
+     </tr>
+    </thead>
+    <tbody id="segmentTableBody">
+     <tr><td colspan="6" class="text-center text-muted py-3"><span class="spinner-border spinner-border-sm"></span> Cargando...</td></tr>
+    </tbody>
+   </table>
+  </div>
+
+  <hr class="my-4">
+  
+  <!-- Sección de Plantillas (Pitches) -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+   <h5 class="mb-0"><i class="bi bi-chat-square-text"></i> Plantillas de mensajes (Pitches)</h5>
+   <button class="btn btn-htk btn-sm" onclick="showPitchModal(null)"><i class="bi bi-plus-lg"></i> Nueva plantilla</button>
+  </div>
+  <p class="text-muted small mb-3">Cada plantilla se asigna a uno o más segmentos y puede tener contenido para WhatsApp y Email.</p>
+  
+  <div class="table-responsive">
+   <table class="table table-dark table-hover">
+    <thead>
+     <tr>
+      <th>Título</th>
+      <th>Segmentos</th>
+      <th>WhatsApp</th>
+      <th>Email</th>
+      <th style="width:80px">Acción</th>
+     </tr>
+    </thead>
+    <tbody id="pitchTableBody">
+     <tr><td colspan="5" class="text-center text-muted py-3"><span class="spinner-border spinner-border-sm"></span> Cargando...</td></tr>
+    </tbody>
+   </table>
+  </div>
+ </div>
+
+ <!-- Modal Segmento -->
+ <div class="modal fade" id="segmentModal" tabindex="-1">
+  <div class="modal-dialog">
+   <div class="modal-content bg-dark text-light">
+    <div class="modal-header">
+     <h5 class="modal-title" id="segmentModalTitle">Nuevo Segmento</h5>
+     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+     <div class="mb-3">
+      <label class="form-label">Clave única</label>
+      <input class="form-control" id="seg_key" placeholder="ej: hoteles, B2B taller">
+      <small class="text-muted">Se usa como identificador interno. Sin espacios, ej: "B2B_taller"</small>
+     </div>
+     <div class="mb-3">
+      <label class="form-label">Nombre visible</label>
+      <input class="form-control" id="seg_label" placeholder="Ej: Hoteles">
+     </div>
+     <div class="mb-3">
+      <label class="form-label">Color</label>
+      <input class="form-control" id="seg_color" type="color" value="#6f42c1">
+     </div>
+    </div>
+    <div class="modal-footer">
+     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+     <button type="button" class="btn btn-htk" onclick="saveSegment()">Guardar</button>
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <!-- Modal Pitch -->
+ <div class="modal fade" id="pitchModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+   <div class="modal-content bg-dark text-light">
+    <div class="modal-header">
+     <h5 class="modal-title" id="pitchModalTitle">Nueva Plantilla</h5>
+     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+     <div class="mb-3">
+      <label class="form-label">Título</label>
+      <input class="form-control" id="pitch_titulo" placeholder="Ej: Hoteles — Mantenimiento integral">
+     </div>
+     <div class="mb-3">
+      <label class="form-label">Segmentos asignados</label>
+      <div id="pitch_segmentos_container" class="d-flex flex-wrap gap-2"></div>
+      <small class="text-muted">Selecciona los segmentos donde se usará esta plantilla</small>
+     </div>
+     <div class="mb-3">
+      <label class="form-label">Mensaje WhatsApp</label>
+      <textarea class="form-control font-monospace small" id="pitch_whatsapp" rows="6" style="font-size:0.85em;"></textarea>
+      <small class="text-muted">Usa {nombre} para personalizar</small>
+     </div>
+     <div class="row">
+      <div class="col-md-4 mb-3">
+       <label class="form-label">Asunto Email</label>
+       <input class="form-control" id="pitch_asunto_email" placeholder="Asunto del correo">
+      </div>
+      <div class="col-md-8 mb-3">
+       <label class="form-label">Cuerpo Email</label>
+       <textarea class="form-control font-monospace small" id="pitch_email" rows="4" style="font-size:0.85em;"></textarea>
+      </div>
+     </div>
+    </div>
+    <div class="modal-footer">
+     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+     <button type="button" class="btn btn-danger me-auto" id="pitchDeleteBtn" onclick="deletePitch()" style="display:none">Eliminar</button>
+     <button type="button" class="btn btn-htk" onclick="savePitch()">Guardar</button>
+    </div>
+   </div>
   </div>
  </div>
 
