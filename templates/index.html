@@ -4937,7 +4937,6 @@ function switchConfigTab(tab) {
   else if (tab === 'segments') loadSegmentsTab();
   else if (tab === 'templates') loadTemplates();
   else if (tab === 'prices') loadPricesTab();
-  else if (tab === 'segments') loadSegmentsTab();
   else if (tab === 'usuarios') { /* placeholder */ }
 }
 
@@ -5569,26 +5568,6 @@ async function sendNotification(woId) {
 // PRICES TAB (placeholder)
 // ═══════════════════════════════════════════════════════════════
 
-async function loadSegmentsTab() {
-  const container = document.getElementById('config-tab-segments');
-  if (!container) return;
-  container.innerHTML = '<div class="text-center py-5"><span class="spinner-border spinner-border-sm"></span> Cargando segmentos...</div>';
-  try {
-    const segs = await loadSegments();
-    if (!segs.length) {
-      container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-diagram-3" style="font-size:3em;"></i><p class="mt-3">No hay segmentos configurados.</p><button class="btn btn-htk btn-sm" onclick="showModal(\'lead\',null)"><i class="bi bi-plus-lg"></i> Crear un lead con segmento</button></div>';
-      return;
-    }
-    let html = '<div class="table-container mt-3"><table class="table table-hover mb-0"><thead><tr><th>Key</th><th>Label</th><th>Prioridad</th><th>Color</th><th>Leads</th></tr></thead><tbody>';
-    segs.forEach(s => {
-      html += `<tr><td><code>${escHtml(s.key||'')}</code></td><td><strong>${escHtml(s.label||'')}</strong></td><td><span class="badge bg-${s.prioridad==='alta'?'danger':s.prioridad==='media'?'warning text-dark':'secondary'}">${s.prioridad||'-'}</span></td><td><span class="badge" style="background:${s.color||'#888'};color:#fff;">${escHtml(s.color||'')}</span></td><td>${s.leads_count||0}</td></tr>`;
-    });
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
-  } catch(e) {
-    container.innerHTML = '<div class="alert alert-warning">Error al cargar segmentos: ' + e.message + '</div>';
-  }
-}
 
 async function loadGeneralConfig() {
   // Load system stats
