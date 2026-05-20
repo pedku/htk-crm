@@ -176,6 +176,24 @@ def api_leads_from_bot():
     conn = get_db()
     try:
         new_id = next_id('PRO', 'leads')
+        
+        # No guardar @lid como número de teléfono
+        numero_raw = data.get('numero', '')
+        telefono_val = ''
+        contacto_val = ''
+        if numero_raw and '@lid' not in numero_raw and '@c.us' in numero_raw:
+            telefono_val = numero_raw.split('@')[0]
+            contacto_val = telefono_val
+        elif numero_raw and '@lid' not in numero_raw:
+            telefono_val = numero_raw
+            contacto_val = numero_raw
+        # Si viene telefono explicito, usarlo
+        if data.get('telefono'):
+            tel_clean = data['telefono'].split('@')[0]
+            if '@lid' not in tel_clean:
+                telefono_val = tel_clean
+                contacto_val = tel_clean
+        
         conn.execute("""
             INSERT INTO leads (id, nombre, contacto, segmento, linea_interes, estado, fuente,
                 valor_estimado, fecha_creacion, proximo_seguimiento, notas,
@@ -184,7 +202,7 @@ def api_leads_from_bot():
         """, (
             new_id,
             data.get('nombre', ''),
-            data.get('contacto', data.get('numero', '')),
+            contacto_val,
             data.get('segmento', 'consumidor'),
             data.get('linea_interes', 'varios'),
             data.get('estado', 'nuevo'),
@@ -193,7 +211,7 @@ def api_leads_from_bot():
             data.get('fecha_creacion', now_iso()),
             data.get('proximo_seguimiento'),
             data.get('notas', data.get('detalle', '')),
-            data.get('telefono', data.get('numero', '')),
+            telefono_val,
             data.get('email', ''),
             data.get('url', ''),
             data.get('contacto_nombre', data.get('nombre', '')),
