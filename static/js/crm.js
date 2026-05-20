@@ -3728,24 +3728,190 @@ async function sendNotification(woId) {
 // ═══════════════════════════════════════════════════════════════
 
 async function loadSegmentsTab() {
-  const container = document.getElementById('config-tab-segments');
-  if (!container) return;
-  container.innerHTML = '<div class="text-center py-5"><span class="spinner-border spinner-border-sm"></span> Cargando segmentos...</div>';
+  // Esta función es reemplazada por loadSegmentsList + loadPitchesList
+  // que se renderizan dentro del HTML ya definido en config.html
+  await Promise.all([loadSegmentsList(), loadPitchesList()]);
+}
+
+async function loadSegmentsList() {
   try {
-    const segs = await loadSegments();
-    if (!segs.length) {
-      container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-diagram-3" style="font-size:3em;"></i><p class="mt-3">No hay segmentos configurados.</p><button class="btn btn-htk btn-sm" onclick="showModal(\'lead\',null)"><i class="bi bi-plus-lg"></i> Crear un lead con segmento</button></div>';
-      return;
-    }
-    let html = '<div class="table-container mt-3"><table class="table table-hover mb-0"><thead><tr><th>Key</th><th>Label</th><th>Prioridad</th><th>Color</th><th>Leads</th></tr></thead><tbody>';
-    segs.forEach(s => {
-      html += `<tr><td><code>${escHtml(s.key||'')}</code></td><td><strong>${escHtml(s.label||'')}</strong></td><td><span class="badge bg-${s.prioridad==='alta'?'danger':s.prioridad==='media'?'warning text-dark':'secondary'}">${s.prioridad||'-'}</span></td><td><span class="badge" style="background:${s.color||'#888'};color:#fff;">${escHtml(s.color||'')}</span></td><td>${s.leads_count||0}</td></tr>`;
-    });
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
+    const data = await fetchJSON('/api/segments');
+    window._segmentList = data || [];
+    renderSegmentsTable();
   } catch(e) {
-    container.innerHTML = '<div class="alert alert-warning">Error al cargar segmentos: ' + e.message + '</div>';
+    const tb = document.getElementById('segmentTableBody');
+    if (tb) tb.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error: ${e.message}</td></tr>`;
   }
+}
+
+function renderSegmentsTable() {
+  const tbody = document.getElementById('segmentTableBody');
+  if (!tbody) return;
+  const segs = window._segmentList || [];
+  if (!segs.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox"></i> No hay segmentos creados</td></tr>';
+    return;
+  }
+  tbody.innerHTML = segs.map(s => `
+    <tr>
+      <td><span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:${s.color||'#6f42c1'};border:2px solid rgba(255,255,255,0.2)"></span></td>
+      <td>${escHtml(s.label||s.key)}</td>
+      <td><code>${escHtml(s.key)}</code></td>
+      <td>${s.orden||'-'}</td>
+      <td>${s.activo ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-htk me-1" onclick="showSegmentModal('${s.key}')" title="Editar"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteSegment('${s.key}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function loadPitchesList() {
+  try {
+    const data = await fetchJSON('/api/pitches');
+    window._pitchList = (data && data.plantillas_cuerpo) ? data.plantillas_cuerpo : [];
+    renderPitchesTable();
+  } catch(e) {
+    const tb = document.getElementById('pitchTableBody');
+    if (tb) tb.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function renderPitchesTable() {
+  const tbody = document.getElementById('pitchTableBody');
+  if (!tbody) return;
+  const pitchList = window._pitchList || [];
+  if (!pitchList.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox"></i> No hay plantillas. Crea la primera.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = pitchList.map(p => `
+    <tr>
+      <td><strong>${escHtml(p.titulo||'Sin título')}</strong></td>
+      <td>${(p.segmentos||[]).map(s => `<span class="badge bg-secondary me-1">${escHtml(s)}</span>`).join('') || '<span class="text-muted">—</span>'}</td>
+      <td>${p.whatsapp ? '<span class="text-success"><i class="bi bi-check-lg"></i> Sí</span>' : '<span class="text-muted">—</span>'}</td>
+      <td>${p.email ? '<span class="text-success"><i class="bi bi-check-lg"></i> Sí</span>' : '<span class="text-muted">—</span>'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-htk" onclick="showPitchModal('${escHtml(p.id)}')" title="Editar"><i class="bi bi-pencil"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function showSegmentModal(key) {
+  const segs = window._segmentList || [];
+  const modal = new bootstrap.Modal(document.getElementById('segmentModal'));
+  if (key) {
+    const seg = segs.find(s => s.key === key);
+    if (!seg) return;
+    document.getElementById('segmentModalTitle').textContent = 'Editar Segmento';
+    document.getElementById('seg_key').value = seg.key;
+    document.getElementById('seg_key').disabled = true;
+    document.getElementById('seg_label').value = seg.label || '';
+    document.getElementById('seg_color').value = seg.color || '#6f42c1';
+  } else {
+    document.getElementById('segmentModalTitle').textContent = 'Nuevo Segmento';
+    document.getElementById('seg_key').value = '';
+    document.getElementById('seg_key').disabled = false;
+    document.getElementById('seg_label').value = '';
+    document.getElementById('seg_color').value = '#6f42c1';
+  }
+  modal.show();
+}
+
+async function saveSegment() {
+  const key = document.getElementById('seg_key').value.trim().toLowerCase().replace(/\s+/g, '_');
+  const label = document.getElementById('seg_label').value.trim();
+  const color = document.getElementById('seg_color').value;
+  if (!key) { showToast('La clave es requerida', 'danger'); return; }
+  const segs = window._segmentList || [];
+  const existing = segs.find(s => s.key === key);
+  try {
+    if (existing) {
+      await fetch('/api/segments/' + key, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({label, color}) });
+    } else {
+      await fetch('/api/segments', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({key, label, color}) });
+    }
+    bootstrap.Modal.getInstance(document.getElementById('segmentModal')).hide();
+    showToast(existing ? 'Segmento actualizado' : 'Segmento creado');
+    await loadSegmentsList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+async function deleteSegment(key) {
+  if (!confirm('¿Eliminar segmento "' + key + '"?')) return;
+  try {
+    await fetch('/api/segments/' + key, { method:'DELETE' });
+    showToast('Segmento eliminado');
+    await loadSegmentsList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+async function showPitchModal(id) {
+  const container = document.getElementById('pitch_segmentos_container');
+  if (!container) return;
+  const segs = window._segmentList || [];
+  const pitchList = window._pitchList || [];
+  const pitch = id ? pitchList.find(p => p.id === id) : null;
+  
+  document.getElementById('pitchModalTitle').textContent = id ? 'Editar Plantilla' : 'Nueva Plantilla';
+  document.getElementById('pitchDeleteBtn').style.display = id ? 'block' : 'none';
+  
+  const selectedSegs = (pitch && pitch.segmentos) || [];
+  container.innerHTML = (segs||[]).map(s => {
+    const checked = selectedSegs.includes(s.key) ? 'checked' : '';
+    return `<label class="btn btn-sm ${checked?'btn-htk':'btn-outline-secondary'}" style="cursor:pointer" onclick="this.classList.toggle('btn-htk');this.classList.toggle('btn-outline-secondary');">
+      <input type="checkbox" value="${escHtml(s.key)}" ${checked} style="display:none"> ${escHtml(s.label||s.key)}
+    </label>`;
+  }).join('') || '<p class="text-muted">Crea segmentos primero</p>';
+  
+  document.getElementById('pitch_titulo').value = (pitch && pitch.titulo) || '';
+  document.getElementById('pitch_whatsapp').value = (pitch && pitch.whatsapp) || '';
+  document.getElementById('pitch_email').value = (pitch && pitch.email) || '';
+  document.getElementById('pitch_asunto_email').value = (pitch && pitch.asunto_email) || '';
+  container.dataset.pitchId = id || '';
+  
+  new bootstrap.Modal(document.getElementById('pitchModal')).show();
+}
+
+async function savePitch() {
+  const container = document.getElementById('pitch_segmentos_container');
+  const checkboxes = container.querySelectorAll('input[type=checkbox]:checked');
+  const segmentos = Array.from(checkboxes).map(cb => cb.value);
+  const data = {
+    titulo: document.getElementById('pitch_titulo').value.trim(),
+    segmentos,
+    whatsapp: document.getElementById('pitch_whatsapp').value,
+    email: document.getElementById('pitch_email').value,
+    asunto_email: document.getElementById('pitch_asunto_email').value
+  };
+  const existingId = container.dataset.pitchId;
+  try {
+    if (existingId) {
+      data.id = existingId;
+      await fetch('/api/pitches', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      showToast('Plantilla actualizada');
+    } else {
+      data.id = 'pitch_' + Date.now();
+      await fetch('/api/pitches', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      showToast('Plantilla creada');
+    }
+    bootstrap.Modal.getInstance(document.getElementById('pitchModal')).hide();
+    await loadPitchesList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+async function deletePitch() {
+  const container = document.getElementById('pitch_segmentos_container');
+  const id = container.dataset.pitchId;
+  if (!id || !confirm('¿Eliminar esta plantilla?')) return;
+  try {
+    await fetch('/api/pitches', { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) });
+    bootstrap.Modal.getInstance(document.getElementById('pitchModal')).hide();
+    showToast('Plantilla eliminada');
+    await loadPitchesList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
 }
 
 async function loadGeneralConfig() {
