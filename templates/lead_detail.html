@@ -941,7 +941,7 @@
       html += '<select class="template-select flex-grow-1" onchange="switchPitchTemplate(this.value)">';
       templates.forEach(function(t) {
         const sel = t.id === currentPitchTemplateId ? ' selected' : '';
-        html += '<option value="' + t.id + '"' + sel + '>' + escHtml(t.nombre) + '</option>';
+        html += '<option value="' + t.id + '"' + sel + '>' + escHtml(t.titulo || t.nombre || 'Sin título') + '</option>';
       });
       html += '</select>';
       html += '</div>';
