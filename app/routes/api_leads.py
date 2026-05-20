@@ -160,6 +160,102 @@ def api_leads():
         conn.close()
 
 
+@api_leads_bp.route('/api/leads/from-bot', methods=['POST'])
+def api_leads_from_bot():
+    """Endpoint sin auth para que el bot cree leads (solo localhost)."""
+    # Verificar que la petición viene de localhost
+    remote = request.remote_addr
+    if remote not in ('127.0.0.1', 'localhost', '::1'):
+        if request.headers.get('CF-Connecting-IP'):
+            return jsonify({'error': 'Forbidden'}), 403
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data'}), 400
+
+    conn = get_db()
+    try:
+        new_id = next_id('PRO', 'leads')
+        conn.execute("""
+            INSERT INTO leads (id, nombre, contacto, segmento, linea_interes, estado, fuente,
+                valor_estimado, fecha_creacion, proximo_seguimiento, notas,
+                telefono, email, url, contacto_nombre, lid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            new_id,
+            data.get('nombre', ''),
+            data.get('contacto', data.get('numero', '')),
+            data.get('segmento', 'consumidor'),
+            data.get('linea_interes', 'varios'),
+            data.get('estado', 'nuevo'),
+            data.get('fuente', 'WhatsApp'),
+            data.get('valor_estimado'),
+            data.get('fecha_creacion', now_iso()),
+            data.get('proximo_seguimiento'),
+            data.get('notas', data.get('detalle', '')),
+            data.get('telefono', data.get('numero', '')),
+            data.get('email', ''),
+            data.get('url', ''),
+            data.get('contacto_nombre', data.get('nombre', '')),
+            data.get('lid', '')
+        ))
+        conn.commit()
+        row = conn.execute("SELECT * FROM leads WHERE id = ?", (new_id,)).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+# ── (duplicado eliminado — el POST original ahora está arriba) ──
+    if request.method == 'GET':
+        conn = get_db()
+        try:
+            rows = conn.execute("SELECT * FROM leads ORDER BY id").fetchall()
+            return jsonify([dict(r) for r in rows])
+        finally:
+            conn.close()
+
+    # POST
+    data = request.get_json()
+    conn = get_db()
+    try:
+        new_id = next_id('PRO', 'leads')
+        conn.execute("""
+            INSERT INTO leads (id, nombre, contacto, segmento, linea_interes, estado, fuente,
+                valor_estimado, fecha_creacion, proximo_seguimiento, notas,
+                telefono, email, url, contacto_nombre, lid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            new_id,
+            data.get('nombre', ''),
+            data.get('contacto', ''),
+            data.get('segmento', 'consumidor'),
+            data.get('linea_interes', 'varios'),
+            data.get('estado', 'nuevo'),
+            data.get('fuente', ''),
+            data.get('valor_estimado'),
+            data.get('fecha_creacion', now_iso()),
+            data.get('proximo_seguimiento'),
+            data.get('notas', ''),
+            data.get('telefono', ''),
+            data.get('email', ''),
+            data.get('url', ''),
+            data.get('contacto_nombre', ''),
+            data.get('lid', '')
+        ))
+        conn.commit()
+        row = conn.execute("SELECT * FROM leads WHERE id = ?", (new_id,)).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
 @api_leads_bp.route('/api/leads/<lead_id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
 def api_lead(lead_id):
