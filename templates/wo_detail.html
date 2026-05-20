@@ -210,7 +210,8 @@
 
   // ── Editar ──
   function editWO() {
-    window.location.href = '/ordenes/' + WO_ID + '?edit=1';
+    // Redirigir a la página principal con el modal de edición abierto
+    window.location.href = '/?editWO=' + WO_ID;
   }
 
   // ── Avanzar estado ──

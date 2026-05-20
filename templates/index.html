@@ -5502,6 +5502,17 @@ document.addEventListener('DOMContentLoaded', async function() {
  // Limpiar URL para evitar que el tab quede "linkeado" al recargar
  window.history.replaceState({}, '', '/');
  }
+ 
+ // Parámetro editWO: abrir modal de edición de OT directamente
+ const editWOParam = params.get('editWO');
+ if (editWOParam) {
+ // Asegurar que estamos en el tab de órdenes
+ const woLink = document.querySelector('.sidebar .nav-link[data-tab="workorders"]');
+ if (woLink) woLink.click();
+ // Esperar a que carguen las órdenes y abrir el modal
+ setTimeout(() => {
+ showModal('workorder', editWOParam);
+ }, 800);
  }
  loadInteractions();
   // Iniciar verificación periódica del bot

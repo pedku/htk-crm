@@ -378,4 +378,13 @@ def create_app():
     app.register_blueprint(api_inventory_bp)
     app.register_blueprint(api_misc_bp)
 
+    # Cache-busting: evitar que el navegador cachee HTML
+    @app.after_request
+    def add_no_cache_header(response):
+        if response.content_type and 'text/html' in response.content_type:
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+        return response
+
     return app
