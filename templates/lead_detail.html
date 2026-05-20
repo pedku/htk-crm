@@ -863,6 +863,7 @@
       const telefono = (LEAD_CONTACTO || '').replace(/[^\d+]/g, '');
       return texto
         .replace(/\[Nombre\]/g, nombre)
+        .replace(/\{nombre\}/g, nombre)
         .replace(/\[Empresa\]/g, empresa)
         .replace(/\[Contacto\]/g, nombre || 'senor/a')
         .replace(/\[Telefono\]/g, telefono || '315 603 2940');
