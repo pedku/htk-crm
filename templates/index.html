@@ -3413,7 +3413,7 @@ async function showModal(type, id) {
  const tipoFieldsCommon = [
  {label:'Nombre del Cliente', key:'cliente_nombre', type:'text', required:true},
  {label:'Teléfono del Cliente', key:'cliente_telefono', type:'text', placeholder:'+573001234567'},
- {label:'Tipo de Equipo', key:'equipo_tipo', type:'select', options:['aire_acondicionado','lavadora','refrigerador','plc','variador','fuente','electrodomestico','cargador','otro']},
+ {label:'Tipo de Equipo', key:'equipo_tipo', type:'select', options:['aire_acondicionado','lavadora','refrigerador','elevador','estabilizador','plc','variador','fuente','electrodomestico','cargador','otro'], otherText:true},
  {label:'Marca', key:'equipo_marca', type:'text'},
  {label:'Modelo', key:'equipo_modelo', type:'text'}
  ];
@@ -3539,7 +3539,23 @@ function formField(f, val) {
  </div>`;
  }
  if (f.type === 'select') {
- const opts = f.options.map(o => `<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('');
+ const opts = f.options.map(o => `<option value="${o}" ${val===o?'selected':''}>${o.replace(/_/g,' ')}</option>`).join('');
+ // Si tiene otherText, agregar input text inline para 'otro'
+ if (f.otherText) {
+ const isOther = val && !f.options.includes(val);
+ const selectedOther = val === 'otro' || isOther ? 'selected' : '';
+ const optsWithOther = f.options.filter(o => o !== 'otro').map(o => 
+ `<option value="${o}" ${val===o?'selected':''}>${o.replace(/_/g,' ')}</option>`
+ ).join('') + 
+ `<option value="otro" ${selectedOther}>Otro (especificar)</option>`;
+ return `<div class="mb-3">
+ <label class="form-label">${f.label}</label>
+ <div style="display:flex;gap:8px;align-items:start">
+ <select class="form-select" id="f_${f.key}" style="flex:1" onchange="document.getElementById('f_${f.key}_other').style.display=this.value==='otro'?'block':'none'">${optsWithOther}</select>
+ <input class="form-control" id="f_${f.key}_other" type="text" placeholder="Especificar..." style="flex:1;display:${selectedOther?'block':'none'}" value="${escHtml(isOther?val:'')}">
+ </div>
+ </div>`;
+ }
  return `<div class="mb-3">
  <label class="form-label">${f.label}</label>
  <select class="form-select" id="f_${f.key}">${opts}</select>
@@ -3622,7 +3638,7 @@ async function saveModal(type, id) {
  telefono: document.getElementById('f_cliente_telefono')?.value || ''
  },
  equipo: {
- tipo: document.getElementById('f_equipo_tipo')?.value || 'otro',
+ tipo: (document.getElementById('f_equipo_tipo')?.value === 'otro' && document.getElementById('f_equipo_tipo_other')?.value) ? document.getElementById('f_equipo_tipo_other').value.trim() : (document.getElementById('f_equipo_tipo')?.value || 'otro'),
  marca: document.getElementById('f_equipo_marca')?.value || '',
  modelo: document.getElementById('f_equipo_modelo')?.value || ''
  },
