@@ -71,8 +71,8 @@ def api_leads():
         conn.execute("""
             INSERT INTO leads (id, nombre, contacto, segmento, linea_interes, estado, fuente,
                 valor_estimado, fecha_creacion, proximo_seguimiento, notas,
-                telefono, email, url, contacto_nombre)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                telefono, email, url, contacto_nombre, lid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             new_id,
             data.get('nombre', ''),
@@ -88,7 +88,8 @@ def api_leads():
             data.get('telefono', ''),
             data.get('email', ''),
             data.get('url', ''),
-            data.get('contacto_nombre', '')
+            data.get('contacto_nombre', ''),
+            data.get('lid', '')
         ))
         conn.commit()
         row = conn.execute("SELECT * FROM leads WHERE id = ?", (new_id,)).fetchone()
@@ -144,7 +145,7 @@ def api_lead(lead_id):
         params = []
         for key in ['nombre', 'contacto', 'contacto_nombre', 'segmento', 'linea_interes',
                      'estado', 'fuente', 'notas', 'valor_estimado', 'proximo_seguimiento',
-                     'telefono', 'email', 'url']:
+                     'telefono', 'email', 'url', 'lid']:
             if key in data:
                 updates.append(f"{key} = ?")
                 params.append(data[key])

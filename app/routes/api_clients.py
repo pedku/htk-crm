@@ -54,6 +54,26 @@ def api_clients_by_phone(phone):
         conn.close()
 
 
+@api_clients_bp.route('/api/clients/by-lid/<lid>', methods=['GET'])
+@login_required
+def api_clients_by_lid(lid):
+    """Buscar cliente/lead por @lid de WhatsApp."""
+    conn = get_db()
+    try:
+        # Buscar en tabla leads primero (más probable para WhatsApp)
+        row = conn.execute(
+            "SELECT id, nombre, telefono, estado, lid FROM leads WHERE lid = ? LIMIT 1",
+            (lid,)
+        ).fetchone()
+        
+        if not row:
+            return jsonify({'error': 'No encontrado'}), 404
+        
+        return jsonify(dict(row))
+    finally:
+        conn.close()
+
+
 @api_clients_bp.route('/api/clients', methods=['GET', 'POST'])
 @login_required
 def api_clients():
