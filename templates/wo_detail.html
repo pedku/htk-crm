@@ -50,6 +50,7 @@
     </div>
     <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;">
       <button class="btn btn-sm btn-outline-success" onclick="notifyWAClient()"><i class="bi bi-whatsapp"></i> WhatsApp</button>
+      <button class="btn btn-sm btn-outline-info" onclick="notifyWATemplate()" id="woNotifyBtn"><i class="bi bi-megaphone"></i> Notificar</button>
       <button class="btn btn-sm btn-outline-htk" onclick="editWO()"><i class="bi bi-pencil"></i> Editar</button>
       <button class="btn btn-sm btn-outline-light" onclick="showStatusOptions()" id="woStatusBtn"><i class="bi bi-arrow-right-circle"></i> Avanzar</button>
     </div>
@@ -208,6 +209,17 @@
     } catch(e) { alert('Error: ' + e.message); }
   }
 
+  // ── Notificar por WhatsApp (plantilla automática) ──
+  async function notifyWATemplate() {
+    if (!confirm('¿Enviar notificación de estado a ' + (woData?.cliente?.nombre || 'cliente') + ' por WhatsApp?')) return;
+    try {
+      const r = await fetch('/api/work_orders/' + WO_ID + '/notify', { method:'POST' });
+      const data = await r.json();
+      if (data.ok) { alert('✅ Notificación enviada por WhatsApp Bot'); }
+      else { alert('❌ ' + (data.error || 'Error al notificar')); }
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+
   // ── Editar ──
   function editWO() {
     // Redirigir a la página principal con el modal de edición abierto
@@ -241,6 +253,10 @@
         body: JSON.stringify({estado: nuevoEstado})
       });
       if (r.ok) {
+        // Auto-notificar al cliente
+        try {
+          await fetch('/api/work_orders/' + WO_ID + '/notify', { method:'POST' });
+        } catch(notifErr) { /* silencioso */ }
         location.reload();
       } else {
         const e = await r.json();
