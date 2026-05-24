@@ -272,8 +272,8 @@ def init_db():
                 ('crm_api_url', 'http://localhost:18800', 'str', 'URL del CRM', 'conexion'),
                 ('bot_global_off', '0', 'bool', 'Bot apagado globalmente', 'conexion'),
                 # ── Control de chat activo (Pedro atiende desde la bandeja) ──
-                ('active_chat_cooldown_ms', '600000', 'int', 'Cooldown chat activo (ms). Default: 10min', 'comportamiento'),
-                ('active_chat_ttl_ms', '3600000', 'int', 'TTL total chat activo (ms). Default: 60min', 'comportamiento'),
+                ('active_chat_cooldown_min', '10', 'int', 'Cooldown chat activo (min). Default: 10min', 'comportamiento'),
+                ('active_chat_ttl_min', '60', 'int', 'TTL total chat activo (min). Default: 60min', 'comportamiento'),
                 ('inactividad_aviso_min', '5', 'int', 'Min sin respuesta antes de avisar inactividad', 'comportamiento'),
                 ('inactividad_cierre_min', '10', 'int', 'Min sin respuesta antes de cerrar por inactividad', 'comportamiento'),
                 # ── Mensajes de inactividad y cierre ──
