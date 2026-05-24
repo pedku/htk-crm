@@ -271,6 +271,15 @@ def init_db():
                 ('mensaje_despedida', '¡Gracias por contactar a HTK INGENIERIA! ⚡\n\nSi necesitas algo más, aquí estoy. ¡Que tengas un excelente día!', 'str', 'Mensaje despedida', 'mensajes'),
                 ('crm_api_url', 'http://localhost:18800', 'str', 'URL del CRM', 'conexion'),
                 ('bot_global_off', '0', 'bool', 'Bot apagado globalmente', 'conexion'),
+                # ── Control de chat activo (Pedro atiende desde la bandeja) ──
+                ('active_chat_cooldown_ms', '600000', 'int', 'Cooldown chat activo (ms). Default: 10min', 'comportamiento'),
+                ('active_chat_ttl_ms', '3600000', 'int', 'TTL total chat activo (ms). Default: 60min', 'comportamiento'),
+                ('inactividad_aviso_min', '5', 'int', 'Min sin respuesta antes de avisar inactividad', 'comportamiento'),
+                ('inactividad_cierre_min', '10', 'int', 'Min sin respuesta antes de cerrar por inactividad', 'comportamiento'),
+                # ── Mensajes de inactividad y cierre ──
+                ('msg_aviso_inactividad', '¿Sigues ahí? Te recordamos que estamos pendientes de tu mensaje. En 5 minutos cerraremos esta conversación si no hay respuesta.', 'str', 'Aviso de inactividad (chat activo)', 'mensajes'),
+                ('msg_cierre_inactividad', 'Conversación cerrada por inactividad. Si necesitas algo más, escribe *HOLA* para continuar.', 'str', 'Cierre por inactividad', 'mensajes'),
+                ('msg_reapertura', 'La conversación anterior ha finalizado. ¿En qué puedo ayudarte?\n\n— *MENU* para ver servicios\n— O cuéntame directamente', 'str', 'Reapertura tras chat activo', 'mensajes'),
             ]
             conn2.executemany(
                 "INSERT INTO bot_config (key, value, tipo, descripcion, categoria) VALUES (?, ?, ?, ?, ?)",
