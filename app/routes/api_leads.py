@@ -403,10 +403,21 @@ def api_interactions():
     if request.method == 'GET':
         conn = get_db()
         try:
-            rows = conn.execute(
-                "SELECT * FROM interactions ORDER BY fecha DESC"
-            ).fetchall()
-            return jsonify([dict(r) for r in rows])
+            rows = conn.execute("""
+                SELECT i.*, l.telefono AS lead_telefono, l.nombre AS lead_nombre_2,
+                       l.segmento AS lead_segmento, l.contacto AS lead_contacto,
+                       l.contacto_nombre AS lead_contacto_nombre
+                FROM interactions i
+                LEFT JOIN leads l ON i.lead_id = l.id
+                ORDER BY i.fecha DESC
+            """).fetchall()
+            result = []
+            for r in rows:
+                d = dict(r)
+                if not d.get('lead_nombre'):
+                    d['lead_nombre'] = d.get('lead_nombre_2', '')
+                result.append(d)
+            return jsonify(result)
         finally:
             conn.close()
 

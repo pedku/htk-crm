@@ -95,6 +95,67 @@ def api_work_orders():
 
         conn.commit()
         link_wo_to_client(new_id, cliente.get('nombre', ''), cliente.get('telefono', ''))
+        
+        # ── Auto-notificar al cliente por WhatsApp ──
+        try:
+            telefono = cliente.get('telefono', '') or ''
+            cliente_nombre = cliente.get('nombre', '') or ''
+            if telefono:
+                # Buscar plantilla para este tipo/estado
+                tmpl = conn.execute(
+                    "SELECT * FROM wo_templates WHERE tipo_ot = ? AND estado_origen = ? AND activo = 1",
+                    (tipo, estado_inicial)
+                ).fetchone()
+                if not tmpl:
+                    tmpl = conn.execute(
+                        "SELECT * FROM wo_templates WHERE tipo_ot = '*' AND estado_origen = ? AND activo = 1",
+                        (estado_inicial,)
+                    ).fetchone()
+                
+                if tmpl:
+                    try:
+                        campos_extra_dict = json.loads(campos_extra_str) if isinstance(campos_extra_str, str) else {}
+                    except:
+                        campos_extra_dict = {}
+                    
+                    equipo_str = ' '.join(filter(None, [
+                        equipo.get('tipo', ''),
+                        equipo.get('marca', ''),
+                        equipo.get('modelo', '')
+                    ])).strip()
+                    
+                    tmpl_text = tmpl['mensaje']
+                    presupuesto_val = data.get('presupuesto')
+                    presupuesto_str = f"{presupuesto_val:,.0f}".replace(',', '.') if presupuesto_val else '0'
+                    
+                    replacements = {
+                        '{id}': new_id,
+                        '{cliente}': cliente_nombre,
+                        '{equipo}': equipo_str,
+                        '{estado}': estado_inicial,
+                        '{presupuesto}': presupuesto_str,
+                        '{fecha}': now.split('T')[0],
+                        '{diagnostico}': '',
+                        '{tipo_producto}': campos_extra_dict.get('tipo_producto', ''),
+                        '{capacidad}': campos_extra_dict.get('capacidad', ''),
+                        '{fecha_estimada}': campos_extra_dict.get('fecha_estimada', ''),
+                        '{tipo_cargador}': campos_extra_dict.get('tipo_cargador', ''),
+                        '{potencia}': campos_extra_dict.get('potencia', ''),
+                        '{fecha_agendada}': campos_extra_dict.get('fecha_agendada', ''),
+                        '{tecnico_asignado}': campos_extra_dict.get('tecnico_asignado', ''),
+                    }
+                    for placeholder, value in replacements.items():
+                        tmpl_text = tmpl_text.replace(placeholder, str(value))
+                    
+                    from app.services.bot_service import send_whatsapp
+                    result = send_whatsapp(telefono, tmpl_text)
+                    if result.get('ok'):
+                        print(f"  📨 Notificación auto-enviada a {telefono} para OT {new_id}")
+                    else:
+                        print(f"  ⚠️ No se pudo notificar OT {new_id} a {telefono}: {result.get('error')}")
+        except Exception as notify_err:
+            print(f"  ⚠️ Error en auto-notificación OT {new_id}: {notify_err}")
+        
         return jsonify(wo_to_dict(conn, new_id)), 201
     except Exception as e:
         conn.rollback()

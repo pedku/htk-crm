@@ -2397,6 +2397,56 @@ function formatDateTime(iso) {
  catch(e) { return iso; }
 }
 
+// ── WHATSAPP SEND ─────────────────────────────────────────────────
+
+async function sendPending(interactionId) {
+ if (!confirm('¿Enviar este mensaje por WhatsApp ahora?')) return;
+ try {
+ const r = await fetchJSON('/api/send-pending', {
+ method: 'POST',
+ body: { interaction_id: interactionId }
+ });
+ if (r.ok) {
+ showToast('✅ Mensaje enviado a ' + (r.lead || r.to || ''), 'success');
+ loadInteractions();
+ } else {
+ showToast('❌ Error: ' + (r.error || 'desconocido'), 'danger');
+ }
+ } catch(e) {
+ showToast('❌ Error de conexión: ' + e.message, 'danger');
+ }
+}
+
+async function sendCampaign() {
+ if (!confirm('¿Enviar TODAS las interacciones WhatsApp pendientes ahora?\n\nEsto enviará mensajes a todos los leads con teléfono y mensaje pendiente.')) return;
+ const btn = document.querySelector('[onclick="sendCampaign()"]');
+ if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...'; }
+ try {
+ const r = await fetchJSON('/api/send-campaign', {
+ method: 'POST',
+ body: {}
+ });
+ if (r.ok) {
+ let msg = `✅ Campaña completada\nEnviados: ${r.sent}\nSaltados: ${r.skipped}\nTotal: ${r.total}`;
+ if (r.results) {
+ const errors = r.results.filter(x => !x.ok);
+ if (errors.length) {
+ msg += `\n\n⚠️ Fallos (${errors.length}):`;
+ errors.slice(0,5).forEach(e => { msg += `\n- ${e.lead}: ${e.error || 'error'}`; });
+ }
+ }
+ showToast(msg, r.sent > 0 ? 'success' : 'warning');
+ loadInteractions();
+ } else {
+ showToast('❌ ' + (r.error || 'Error al enviar campaña'), 'danger');
+ }
+ } catch(e) {
+ showToast('❌ Error de conexión: ' + e.message, 'danger');
+ } finally {
+ if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-send"></i> Enviar todos pendientes'; }
+ }
+}
+
 // CLIENTES 
 async function loadClients() {
  showLoading('clientsLoading','clientsContent');
@@ -3339,8 +3389,10 @@ function renderInteractions() {
  <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(int.resumen||'')}">${escHtml(int.resumen||'-')}</td>
  <td><span class="badge bg-secondary">${escHtml(int.estado||'-')}</span></td>
  <td><small>${formatDateTime(int.fecha)}</small></td>
- <td>
+ <td class="text-nowrap">
  <button class="action-btn primary" onclick='showInteractionDetail(${JSON.stringify(int).replace(/'/g,"&#39;")})' title="Ver"><i class="bi bi-eye"></i></button>
+ ${(int.estado==='pendiente'||!int.estado||int.estado==='') && (int.lead_telefono||int.tipo?.toLowerCase()==='whatsapp') ?
+   `<button class="action-btn success ms-1" onclick="sendPending('${int.id}')" title="Enviar WhatsApp"><i class="bi bi-whatsapp"></i></button>` : ''}
  </td>
  </tr>
  `).join('');
@@ -3359,6 +3411,9 @@ function showInteractionDetail(int) {
  <p class="mt-2"><strong>Estado:</strong> <span class="badge bg-secondary">${escHtml(int.estado||'-')}</span></p>
  <p><strong>Próximo Paso:</strong> ${escHtml(int.proximo_paso || '-')}</p>
  <p><strong>Fecha:</strong> ${formatDateTime(int.fecha)}</p>
+ ${(int.estado==='pendiente'||!int.estado||int.estado==='') && (int.lead_telefono||int.lead_id) ?
+   `<hr><div class="text-center"><button class="btn btn-success" onclick="sendPending('${int.id}');modalInstance.hide()">
+   <i class="bi bi-whatsapp"></i> Enviar por WhatsApp Ahora</button></div>` : ''}
  `;
  setModal('Interacción: ' + int.id, html, '');
  modalInstance.show();
