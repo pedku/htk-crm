@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>{{ empresa.comercial }} — Factura {{ invoice.numero }}</title>
+<style>
+  @page { size: A4; margin: 12mm 15mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11pt;
+    color: #000;
+    line-height: 1.35;
+  }
+  
+  /* ─── HEADER ─── */
+  table.header { width: 100%; margin-bottom: 8mm; }
+  table.header td { vertical-align: top; padding: 0; }
+  table.header .logo-cell { width: 140px; }
+  table.header .logo-cell img { width: 110px; height: auto; }
+  table.header .info-cell { text-align: right; }
+  table.header .factura-num { font-size: 20pt; font-weight: 800; color: #059BDA; }
+  table.header .factura-label { font-size: 8pt; color: #888; text-transform: uppercase; letter-spacing: 1pt; }
+  
+  /* ─── EMPRESA ─── */
+  .empresa { margin-bottom: 5mm; font-size: 9pt; color: #444; }
+  .empresa strong { color: #000; font-size: 11pt; }
+  .empresa-line { margin-bottom: 1pt; }
+  
+  hr.divider { border: none; height: 2pt; background: #059BDA; margin: 4mm 0 5mm; }
+  
+  /* ─── META ─── */
+  table.meta { width: 100%; margin-bottom: 5mm; }
+  table.meta td { vertical-align: top; width: 50%; padding: 0; }
+  table.meta .label { font-size: 7pt; color: #888; text-transform: uppercase; letter-spacing: 0.8pt; margin-bottom: 2mm; }
+  table.meta .value { font-size: 10pt; margin-bottom: 1mm; }
+  table.meta .value.name { font-size: 12pt; font-weight: 700; }
+  table.meta .row { margin-bottom: 0.5mm; }
+  table.meta .row span.label { font-size: 8pt; color: #666; display: inline-block; width: 70px; letter-spacing: 0; }
+  table.meta .row span.val { font-size: 9pt; }
+  
+  /* Badge */
+  .badge {
+    display: inline-block;
+    padding: 1pt 8pt;
+    border-radius: 10pt;
+    font-size: 8pt;
+    font-weight: 600;
+    margin-top: 1mm;
+  }
+  .badge.pagada { color: #059669; border: 1pt solid #059669; }
+  .badge.emitida { color: #059BDA; border: 1pt solid #059BDA; }
+  .badge.borrador { color: #888; border: 1pt solid #888; }
+  .badge.vencida { color: #dc2626; border: 1pt solid #dc2626; }
+  .badge.anulada { color: #888; border: 1pt solid #888; text-decoration: line-through; }
+  
+  /* ─── ITEMS TABLE ─── */
+  table.items { width: 100%; border-collapse: collapse; margin-bottom: 5mm; }
+  table.items thead th {
+    background: #f5f5f5;
+    border-bottom: 1.5pt solid #ddd;
+    padding: 5pt 6pt;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+    color: #666;
+    text-align: right;
+  }
+  table.items thead th.left { text-align: left; }
+  table.items thead th.center { text-align: center; }
+  table.items tbody td {
+    padding: 5pt 6pt;
+    border-bottom: 0.5pt solid #eee;
+    font-size: 9pt;
+    text-align: right;
+  }
+  table.items tbody td.left { text-align: left; }
+  table.items tbody td.center { text-align: center; color: #999; }
+  
+  /* ─── TOTALS ─── */
+  table.totals { width: 100%; margin-bottom: 5mm; }
+  table.totals td { vertical-align: top; padding: 0; }
+  table.totals td.notes { width: 55%; padding-right: 10mm; }
+  table.totals td.notes .nl { font-size: 7pt; color: #888; text-transform: uppercase; letter-spacing: 0.8pt; margin-bottom: 2mm; }
+  table.totals td.notes .nt { font-size: 8pt; color: #555; line-height: 1.5; white-space: pre-line; }
+  table.totals td.summary { width: 45%; }
+  
+  table.summary-table { width: 100%; }
+  table.summary-table td { padding: 2pt 0; font-size: 9pt; }
+  table.summary-table td.label { color: #666; }
+  table.summary-table td.value { text-align: right; font-weight: 600; }
+  table.summary-table tr.total td { font-size: 14pt; font-weight: 800; color: #059BDA; padding-top: 3mm; }
+  table.summary-table tr.total-line td { border-top: 1pt solid #ddd; }
+  
+  /* ─── PAYMENT ─── */
+  .pago { margin-bottom: 5mm; padding: 3mm 0; border-top: 0.5pt solid #ddd; border-bottom: 0.5pt solid #ddd; }
+  .pago .pl { font-size: 7pt; color: #888; text-transform: uppercase; letter-spacing: 0.8pt; margin-bottom: 1mm; }
+  .pago .pi { font-size: 9pt; color: #444; }
+  
+  /* ─── FOOTER ─── */
+  .footer { text-align: center; margin-top: 6mm; }
+  .footer .brand { font-size: 10pt; font-weight: 700; color: #059BDA; }
+  .footer .tagline { font-size: 8pt; color: #aaa; margin: 1mm 0; }
+  .footer .legal { font-size: 7pt; color: #bbb; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<table class="header">
+  <tr>
+    <td class="logo-cell">
+      {% if empresa.logo_url %}
+      <img src="{{ empresa.logo_url }}" alt="{{ empresa.comercial }}">
+      {% endif %}
+    </td>
+    <td class="info-cell">
+      <div class="factura-label">Factura N°</div>
+      <div class="factura-num">{{ invoice.numero }}</div>
+    </td>
+  </tr>
+</table>
+
+<!-- EMPRESA -->
+<div class="empresa">
+  <div class="empresa-line"><strong>{{ empresa.nombre }}</strong></div>
+  <div class="empresa-line">NIT: {{ empresa.nit }}</div>
+  <div class="empresa-line">{{ empresa.direccion }}</div>
+  <div class="empresa-line">{{ empresa.email }} · {{ empresa.telefono }}</div>
+</div>
+
+<hr class="divider">
+
+<!-- META -->
+<table class="meta">
+  <tr>
+    <td>
+      <div class="label">Facturar a</div>
+      <div class="value name">{{ client.nombre if client else '—' }}</div>
+      {% if client and client.documento %}<div class="value">{{ client.tipo_documento or 'NIT/CC' }}: {{ client.documento }}</div>{% endif %}
+      {% if client and client.direccion %}<div class="value">{{ client.direccion }}{% if client.ciudad %}, {{ client.ciudad }}{% endif %}</div>{% endif %}
+      {% if client and client.telefono %}<div class="value">{{ client.telefono }}</div>{% endif %}
+    </td>
+    <td>
+      <div class="label">Datos de la Factura</div>
+      <div class="row"><span class="label">Emisión</span> <span class="val">{{ invoice.fecha_emision[:10] }}</span></div>
+      <div class="row"><span class="label">Vence</span> <span class="val">{{ invoice.fecha_vencimiento[:10] }}</span></div>
+      {% if invoice.wo_id %}<div class="row"><span class="label">O.T.</span> <span class="val">{{ invoice.wo_id }}</span></div>{% endif %}
+      <div class="badge {{ invoice.estado }}">{{ invoice.estado.upper() }}</div>
+    </td>
+  </tr>
+</table>
+
+<!-- ITEMS -->
+<table class="items">
+  <thead>
+    <tr>
+      <th class="center" style="width:30px;">#</th>
+      <th class="left">Descripción</th>
+      <th style="width:50px;">Cant</th>
+      <th style="width:90px;">Vr. Unitario</th>
+      <th style="width:70px;">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td class="center">{{ '%02d' % item.item_num }}</td>
+      <td class="left">{{ item.descripcion }}</td>
+      <td>{{ item.cantidad }}</td>
+      <td>${{ '{:,.0f}'.format(item.precio_unitario) }}</td>
+      <td>${{ '{:,.0f}'.format(item.total_linea) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- TOTALS -->
+<table class="totals">
+  <tr>
+    <td class="notes">
+      <div class="nl">Notas</div>
+      <div class="nt">{{ invoice.notas or 'Sin notas adicionales.' }}</div>
+    </td>
+    <td class="summary">
+      <table class="summary-table">
+        <tr><td class="label">Subtotal</td><td class="value">${{ '{:,.0f}'.format(invoice.sub_total) }}</td></tr>
+        {% if invoice.descuento and invoice.descuento > 0 %}
+        <tr><td class="label">Descuento</td><td class="value">−${{ '{:,.0f}'.format(invoice.descuento) }}</td></tr>
+        {% endif %}
+        <tr><td class="label">IVA 19%</td><td class="value">${{ '{:,.0f}'.format(invoice.iva_total) }}</td></tr>
+        <tr class="total-line"><td class="label">TOTAL</td><td class="value" style="font-size:14pt;font-weight:800;color:#059BDA;">${{ '{:,.0f}'.format(invoice.total_general) }}</td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- PAGO -->
+<div class="pago">
+  <div class="pl">💳 Forma de Pago</div>
+  <div class="pi">{{ invoice.metodo_pago or 'Transferencia Bancaria · Efectivo · Datafono' }}</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="brand">⚡ {{ empresa.comercial }}</div>
+  <div class="tagline">Gracias por confiar en nosotros</div>
+  <div class="legal">{{ empresa.nombre }} · {{ empresa.direccion }}</div>
+</div>
+
+</body>
+</html>

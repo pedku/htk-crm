@@ -355,7 +355,7 @@ def invoice_pdf(inv_id):
         client = conn.execute("SELECT * FROM clients WHERE id = ?",
                               (inv['client_id'],)).fetchone()
 
-        return render_template('pages/factura_template.html',
+        return render_template('pages/factura_template_print.html',
             invoice=dict(inv),
             items=[dict(i) for i in items],
             client=dict(client) if client else None,
@@ -425,7 +425,7 @@ def public_factura_view(inv_id):
         client = conn.execute("SELECT * FROM clients WHERE id = ?",
                               (inv['client_id'],)).fetchone()
 
-        return render_template('pages/factura_template.html',
+        return render_template('pages/factura_template_print.html',
             invoice=dict(inv),
             items=[dict(i) for i in items],
             client=dict(client) if client else None,
