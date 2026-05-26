@@ -207,157 +207,225 @@ body {
 @media print {
   @page {
     size: A4;
-    margin: 12mm 14mm;
+    margin: 15mm;
   }
 
+  /* Reset print colors */
   *, *::before, *::after {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
 
+  /* Full reset for print — no flex, no grid, block layout only */
   body {
     padding: 0 !important;
-    font-size: 10.5px;
-    max-width: none;
-    color: #18181b !important;
+    font-size: 10pt;
+    max-width: 100% !important;
+    color: #000 !important;
+    line-height: 1.4;
   }
 
+  /* Kill all flex/grid — they don't print well */
+  .inv-header,
+  .inv-meta,
+  .inv-totals-row,
+  .d-flex,
+  [class*="d-flex"],
+  [class*="justify-content"],
+  [class*="align-items"] {
+    display: block !important;
+    width: 100% !important;
+    gap: 0 !important;
+  }
+
+  /* Header — logo left, number right using floats */
   .inv-header {
-    margin-bottom: 18px;
+    margin-bottom: 12pt;
+    overflow: hidden;
   }
-
+  .inv-header-logo {
+    float: left;
+    width: 40%;
+  }
   .inv-header-logo img {
-    width: 90px;
+    width: 100px;
     height: auto;
   }
-
+  .inv-header-num {
+    float: right;
+    width: 55%;
+    text-align: right;
+  }
+  .inv-header-num .inv-num-label {
+    font-size: 8pt;
+  }
   .inv-header-num .inv-num-value {
     animation: none;
-    font-size: 22px;
+    font-size: 18pt;
   }
 
+  /* Clear floats */
   .inv-empresa {
-    margin-bottom: 14px;
-    font-size: 11px;
-    line-height: 1.5;
+    clear: both;
+    margin-bottom: 8pt;
+    font-size: 8pt;
+    line-height: 1.4;
+  }
+  .inv-empresa .empresa-nombre {
+    font-size: 10pt;
+    font-weight: 700;
   }
 
+  /* Divider */
   .inv-divider {
-    height: 2px;
-    margin: 14px 0 20px;
+    height: 1.5pt;
+    margin: 10pt 0 14pt;
   }
 
+  /* Meta — block layout, not grid */
   .inv-meta {
-    gap: 24px;
-    margin-bottom: 18px;
+    margin-bottom: 12pt;
     page-break-inside: avoid;
   }
-
-  .inv-card {
+  .inv-meta > .inv-card {
+    display: inline-block !important;
+    vertical-align: top;
+    width: 48% !important;
     box-shadow: none;
-    padding: 14px;
+    padding: 10pt;
     page-break-inside: avoid;
   }
-
+  .inv-meta > .inv-card:first-child {
+    margin-right: 2%;
+  }
   .inv-card-label {
-    margin-bottom: 8px;
+    margin-bottom: 6pt;
+    font-size: 7pt;
   }
-
   .inv-card-body {
-    gap: 4px;
+    gap: 2pt;
+    font-size: 9pt;
+  }
+  .inv-card-body .cliente-nombre {
+    font-size: 11pt;
+  }
+  .inv-info-row {
+    padding: 1pt 0;
+    font-size: 9pt;
   }
 
+  /* Items table */
   .inv-items-section {
     page-break-inside: avoid;
   }
-
+  .inv-items-section .section-label {
+    font-size: 7pt;
+    margin-bottom: 6pt;
+  }
   .inv-table thead th {
-    padding: 8px 10px;
-    font-size: 9px;
+    padding: 5pt 6pt;
+    font-size: 7pt;
   }
-
   .inv-table tbody td {
-    padding: 8px 10px;
-    font-size: 11px;
+    padding: 5pt 6pt;
+    font-size: 9pt;
   }
-
   .inv-table tbody tr:hover {
     background: none;
   }
+  .inv-table tbody td.item-desc-detail {
+    font-size: 7pt;
+  }
 
+  /* Totals + notes — side by side using floats */
   .inv-totals-row {
-    gap: 24px;
-    margin-bottom: 16px;
+    margin-bottom: 10pt;
     page-break-inside: avoid;
+    overflow: hidden;
   }
-
   .inv-notes {
-    padding: 14px;
+    float: left;
+    width: 48%;
+    padding: 10pt;
     box-shadow: none;
+    font-size: 8pt;
   }
-
+  .inv-notes .notes-label {
+    font-size: 7pt;
+    margin-bottom: 4pt;
+  }
+  .inv-notes p {
+    font-size: 8pt;
+    line-height: 1.4;
+  }
   .inv-summary {
-    width: 220px;
+    float: right;
+    width: 48%;
   }
-
   .inv-summary-row {
-    padding: 4px 0;
-    font-size: 11px;
+    padding: 2pt 0;
+    font-size: 9pt;
   }
-
   .inv-summary-divider {
-    margin: 8px 0;
+    margin: 5pt 0;
   }
-
+  .inv-summary-total .total-label {
+    font-size: 7pt;
+  }
   .inv-summary-total .total-value {
-    font-size: 22px;
+    font-size: 16pt;
   }
-
   .inv-summary-total .total-bar {
-    height: 3px;
-    margin-top: 4px;
+    height: 2pt;
+    margin-top: 3pt;
   }
 
+  /* Footer divider */
   .inv-footer-divider {
-    margin: 18px 0 14px;
+    clear: both;
+    margin: 12pt 0 10pt;
   }
 
+  /* Pago */
   .inv-pago {
-    padding: 12px;
-    margin-bottom: 16px;
+    clear: both;
+    padding: 8pt;
+    margin-bottom: 10pt;
     box-shadow: none;
     page-break-inside: avoid;
+    font-size: 9pt;
   }
-
+  .inv-pago .pago-label {
+    font-size: 7pt;
+    margin-bottom: 4pt;
+  }
   .inv-pago .pago-info {
-    font-size: 11px;
+    font-size: 9pt;
   }
 
+  /* Footer */
+  .inv-footer {
+    clear: both;
+  }
   .inv-footer .footer-brand {
-    font-size: 12px;
+    font-size: 10pt;
   }
-
   .inv-footer .footer-tagline {
-    font-size: 10px;
+    font-size: 8pt;
   }
-
   .inv-footer .footer-legal {
-    font-size: 9px;
+    font-size: 7pt;
   }
 
+  /* Badge */
   .inv-badge .dot {
     animation: none;
   }
-
-  .inv-info-row {
-    padding: 2px 0;
-    font-size: 11px;
-  }
 }
 
-/* ─── RESPONSIVE ─── */
-@media (max-width:768px) {
+/* ─── RESPONSIVE (screen only) ─── */
+@media screen and (max-width:768px) {
   body { padding:24px; font-size:12px; }
   .inv-header { flex-direction:column; gap:20px; align-items:flex-start; }
   .inv-header-num { text-align:left; }
