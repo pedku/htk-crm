@@ -91,7 +91,5 @@ def page_bot_whatsapp():
     if (not is_local or via_cf) and 'user' not in session:
         return redirect(url_for('views.login_page', next=request.path))
     return render_template('bot_whatsapp.html')
-@views_bp.route('/test-fact')
-def test_fact():
     return render_template('test_fact.html')
 
