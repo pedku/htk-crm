@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-13T14:30:32.241Z",
+  "updatedAt": "2026-05-26T21:06:12.079Z",
   "entries": {
     "memory:memory/2026-05-04.md:1:14": {
       "key": "memory:memory/2026-05-04.md:1:14",
@@ -9,13 +9,13 @@
       "endLine": 14,
       "source": "memory",
       "snippet": "# 2026-05-04 — Configuración Inicial ## 🚀 Setup del Agente - Configurada identidad HTK-Asistente (⚡) - Creada estructura de datos en `data/` (leads, projects, transactions, inventory) - Definido esquema de datos en `data/schema.md` - MEMORY.md inicializada con estructura de empresa ## Pendientes - [ ] Cargar leads iniciales - [ ] Registrar proyectos activos - [ ] Configurar estado financiero actual - [ ] Definir recordatorios periódicos (cron jobs) si aplica",
-      "recallCount": 15,
+      "recallCount": 20,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 8.618445374310921,
+      "totalScore": 10.917963125050973,
       "maxScore": 1,
       "firstRecalledAt": "2026-05-05T03:00:36.925Z",
-      "lastRecalledAt": "2026-05-13T14:30:32.241Z",
+      "lastRecalledAt": "2026-05-25T19:28:34.692Z",
       "queryHashes": [
         "a0c515277fbd",
         "273bd8d0a7c3",
@@ -31,7 +31,12 @@
         "b2d1f9a2982c",
         "c6743fb3addc",
         "ea2517b09045",
-        "b4a813a42a8c"
+        "b4a813a42a8c",
+        "77a68a3f4e70",
+        "791b3c031ad8",
+        "fd62315c5a83",
+        "b1d795c12c1e",
+        "b33aa7787484"
       ],
       "recallDays": [
         "2026-05-04",
@@ -40,7 +45,11 @@
         "2026-05-08",
         "2026-05-11",
         "2026-05-12",
-        "2026-05-13"
+        "2026-05-13",
+        "2026-05-14",
+        "2026-05-18",
+        "2026-05-24",
+        "2026-05-25"
       ],
       "conceptTags": [
         "configuración",
@@ -60,13 +69,13 @@
       "endLine": 32,
       "source": "memory",
       "snippet": "# Memory Flush — 2026-05-09 (madrugada) ## Resumen de la sesión - Estrategia de marketing: diagnosticamos que lo más útil ahora es contactar leads existentes en horario hábil, no campañas complejas - Se creó **toolkit de automatización** (sin IA): auto_enrich.py, auto_score.py, auto_schedule.py, auto_campaign.py, backup_db.sh - **CRM integrado**: pestaña Automatización con botones para enriquecer/puntuar/programar/campaña/backup - **Scraping masivo**: 26 leads con website scrapeados → 47/48 leads con datos de contacto (98%) - Restaurantes: Los Kioscos (314 879 6240) y La Vianda (320 517 2042) encontrados por sub-agente - 42 leads programados para contacto desde Sáb 9/05 8am - 5 git commits",
-      "recallCount": 8,
+      "recallCount": 22,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 3.6554695755243305,
-      "maxScore": 0.4888399183750152,
+      "totalScore": 10.033165675401689,
+      "maxScore": 0.4900449484586715,
       "firstRecalledAt": "2026-05-11T14:00:54.593Z",
-      "lastRecalledAt": "2026-05-13T14:00:38.571Z",
+      "lastRecalledAt": "2026-05-26T21:06:12.079Z",
       "queryHashes": [
         "467bd60087ef",
         "b4aaf7796a33",
@@ -75,12 +84,36 @@
         "0b7845cf6031",
         "b2d1f9a2982c",
         "c6743fb3addc",
-        "ea2517b09045"
+        "ea2517b09045",
+        "77a68a3f4e70",
+        "791b3c031ad8",
+        "a6ad90faa8ba",
+        "f098779c3fc5",
+        "fd62315c5a83",
+        "63b02abac58a",
+        "4c5fb724ea85",
+        "d63589991ffb",
+        "efe0a3286679",
+        "152b5a40e85c",
+        "b1d795c12c1e",
+        "b33aa7787484",
+        "893bb6a56c0c"
       ],
       "recallDays": [
         "2026-05-11",
         "2026-05-12",
-        "2026-05-13"
+        "2026-05-13",
+        "2026-05-14",
+        "2026-05-15",
+        "2026-05-17",
+        "2026-05-18",
+        "2026-05-19",
+        "2026-05-20",
+        "2026-05-22",
+        "2026-05-23",
+        "2026-05-24",
+        "2026-05-25",
+        "2026-05-26"
       ],
       "conceptTags": [
         "backup",
@@ -100,22 +133,38 @@
       "endLine": 34,
       "source": "memory",
       "snippet": "## Infraestructura - htk-ingenieria.com:8080 → sitio web corporativo - crm.htk-ingenieria.com:5000 → CRM HTK - Ambos via cloudflared tunnel, con systemd services - htk-crm.service y htk-website.service - cloudflared-tunnel.service ## Ajustes pendientes - NIT pendiente de agregar al sitio - Cloudflare cache puede necesitar purga - Contactar leads cargadores mañana 8am sábado",
-      "recallCount": 4,
+      "recallCount": 13,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 1.7680417388677596,
-      "maxScore": 0.45667598545551297,
+      "totalScore": 5.781739348173141,
+      "maxScore": 0.4722399055957794,
       "firstRecalledAt": "2026-05-11T14:00:54.593Z",
-      "lastRecalledAt": "2026-05-12T14:00:32.773Z",
+      "lastRecalledAt": "2026-05-24T23:06:32.682Z",
       "queryHashes": [
         "467bd60087ef",
         "b4aaf7796a33",
         "febebb2091f0",
-        "0b7845cf6031"
+        "0b7845cf6031",
+        "791b3c031ad8",
+        "a6ad90faa8ba",
+        "fd62315c5a83",
+        "63b02abac58a",
+        "d63589991ffb",
+        "d3bc03109446",
+        "152b5a40e85c",
+        "b1d795c12c1e"
       ],
       "recallDays": [
         "2026-05-11",
-        "2026-05-12"
+        "2026-05-12",
+        "2026-05-14",
+        "2026-05-15",
+        "2026-05-18",
+        "2026-05-19",
+        "2026-05-20",
+        "2026-05-22",
+        "2026-05-23",
+        "2026-05-24"
       ],
       "conceptTags": [
         "htk-ingenieria.com",
@@ -126,6 +175,153 @@
         "infraestructura",
         "htk",
         "ingenieria.com"
+      ]
+    },
+    "memory:memory/2026-05-15.md:25:34": {
+      "key": "memory:memory/2026-05-15.md:25:34",
+      "path": "memory/2026-05-15.md",
+      "startLine": 25,
+      "endLine": 34,
+      "source": "memory",
+      "snippet": "- showToast con auto-dismiss 4s ### Entornos - Producción: `crm.htk-ingenieria.com` (main, 4b855ef) - Desarrollo: `dev.htk-ingenieria.com` (modular-frontend, 8 commits nuevos) ### Pendientes - BUG_REPORT.md documenta 11 bugs (quedan 🟡 vacíos en kanban/interacciones, 🟢 consolidate escapeHtml, 🟢 PITCHES_PATH hardcodeado, 🟢 toast configurable) - Faltan tests de perfil WO (mensajes, pagos, cambio estado desde perfil)",
+      "recallCount": 8,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 3.7296033650636673,
+      "maxScore": 0.529916876554489,
+      "firstRecalledAt": "2026-05-18T10:33:25.520Z",
+      "lastRecalledAt": "2026-05-25T20:42:34.486Z",
+      "queryHashes": [
+        "fd62315c5a83",
+        "63b02abac58a",
+        "d63589991ffb",
+        "efe0a3286679",
+        "152b5a40e85c",
+        "b1d795c12c1e",
+        "0b8d51bbb4f1"
+      ],
+      "recallDays": [
+        "2026-05-18",
+        "2026-05-19",
+        "2026-05-20",
+        "2026-05-22",
+        "2026-05-23",
+        "2026-05-24",
+        "2026-05-25"
+      ],
+      "conceptTags": [
+        "auto-dismiss",
+        "crm.htk-ingenieria.com",
+        "dev.htk-ingenieria.com",
+        "modular-frontend",
+        "bug-report.md",
+        "kanban/interacciones",
+        "pitches-path",
+        "showtoast"
+      ]
+    },
+    "memory:memory/2026-05-15.md:1:32": {
+      "key": "memory:memory/2026-05-15.md:1:32",
+      "path": "memory/2026-05-15.md",
+      "startLine": 1,
+      "endLine": 32,
+      "source": "memory",
+      "snippet": "# 2026-05-15 — Sprints nocturnos ## Logro del día CRM completamente reestructurado: de monolito a modular, con fixes profundos de auth, frontend y workflows. ## Commit final: 6598fc0 (branch modular-frontend) ### Builder — Modularización del Frontend - `index.html` (5801 líneas) → `base.html` + 9 templates en `templates/pages/` - CSS extraído a `static/css/crm.css` (31KB) - JS extraído a `static/js/crm.js` (169KB, un solo archivo) - 279/279 divs balanceados ### Bug Fixes - **Auth bypass por Cloudflare**: tunnel hacía que Flask viera 127.0.0.1, saltando login. Detectado con header `CF-Connecting-IP` - **ToastMsg faltante**: elemento `toastMsg` no existía en base.html → JS crasheaba al mos",
+      "recallCount": 2,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1.2774310851264585,
+      "maxScore": 0.8007923388648619,
+      "firstRecalledAt": "2026-05-19T21:15:38.909Z",
+      "lastRecalledAt": "2026-05-25T20:42:34.486Z",
+      "queryHashes": [
+        "63b02abac58a",
+        "0b8d51bbb4f1"
+      ],
+      "recallDays": [
+        "2026-05-19",
+        "2026-05-25"
+      ],
+      "conceptTags": [
+        "modular-frontend",
+        "index.html",
+        "base.html",
+        "templates/pages",
+        "static/css/crm.css",
+        "static/js/crm.js",
+        "279/279",
+        "127.0.0.1"
+      ]
+    },
+    "memory:memory/2026-05-20.md:23:34": {
+      "key": "memory:memory/2026-05-20.md:23:34",
+      "path": "memory/2026-05-20.md",
+      "startLine": 23,
+      "endLine": 34,
+      "source": "memory",
+      "snippet": "- Para salir: escribir \"MENU\", \"SALIR\", \"VOLVER\" ### 4. Archivos modificados - `bot.js`: +normalizarTexto, +BREAK_SILENCE_KEYWORDS, +tieneBreakSilence, detectarOpcion normalizado, detectarFAQ normalizado, CONSULTA_OT persistente, SILENT con break-silence - `config.js`: consultaOTActiva: true - `messages.js`: opción 7 en bienvenida ### Estado actual - Bot corriendo via systemd `htk-whatsapp-bot.service` - Commit: ee4e88b (htk-whatsapp-bot repo) y 40f337a (.openclaw/whatsapp-bot repo) - CRM web activo en htk-crm.service",
+      "recallCount": 5,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 2.3105609357357024,
+      "maxScore": 0.47877718806266784,
+      "firstRecalledAt": "2026-05-22T22:13:21.352Z",
+      "lastRecalledAt": "2026-05-26T21:06:12.079Z",
+      "queryHashes": [
+        "d3bc03109446",
+        "82e2557c269a",
+        "8077d4594100",
+        "0b8d51bbb4f1",
+        "893bb6a56c0c"
+      ],
+      "recallDays": [
+        "2026-05-22",
+        "2026-05-24",
+        "2026-05-25",
+        "2026-05-26"
+      ],
+      "conceptTags": [
+        "bot.js",
+        "break-silence-keywords",
+        "consulta-ot",
+        "break-silence",
+        "config.js",
+        "messages.js",
+        "htk-whatsapp-bot.service",
+        "htk-whatsapp-bot"
+      ]
+    },
+    "memory:memory/2026-05-20.md:1:29": {
+      "key": "memory:memory/2026-05-20.md:1:29",
+      "path": "memory/2026-05-20.md",
+      "startLine": 1,
+      "endLine": 29,
+      "source": "memory",
+      "snippet": "# Memory Flush — 2026-05-20 (mañana) ## Bot WhatsApp v5 — Cambios realizados ### 1. Normalización de acentos (acentos → sin acentos) - `normalizarTexto()` usa `NFD` para eliminar diacríticos - Se aplica en `detectarOpcion()`, `detectarFAQ()` y `tieneBreakSilence()` - \"menú\", \"reparación\", \"automatización\" → matchean aunque el cliente no ponga acentos ### 2. BREAK_SILENCE_KEYWORDS — keywords rompen silencio - Si el bot está silenciado (porque Pedro escribió al chat) pero el cliente escribe palabras como \"menú\", \"hola\", \"estado\", \"orden\", \"consulta\", \"mi ot\" → el bot RESPONDE igual - Tipos: 'reset' (menú/hola/ayuda), 'consulta_ot' (estado/orden/proceso), 'wake' (otras keywords) - Implementa",
+      "recallCount": 2,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 0.9314252316951751,
+      "maxScore": 0.46678438186645504,
+      "firstRecalledAt": "2026-05-24T13:27:03.977Z",
+      "lastRecalledAt": "2026-05-26T21:06:12.079Z",
+      "queryHashes": [
+        "82e2557c269a",
+        "893bb6a56c0c"
+      ],
+      "recallDays": [
+        "2026-05-24",
+        "2026-05-26"
+      ],
+      "conceptTags": [
+        "break-silence-keywords",
+        "menú/hola/ayuda",
+        "consulta-ot",
+        "estado/orden/proceso",
+        "flush",
+        "mañana",
+        "bot",
+        "whatsapp"
       ]
     }
   }

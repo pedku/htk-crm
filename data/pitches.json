@@ -25,7 +25,7 @@
         "mantenimiento"
       ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe comento por qué le escribo: usted recibe aires todo el tiempo y estoy seguro de que en más de una ocasión le ha llegado uno con la tarjeta electrónica dañada — un inversor, un mini-split, un VRF — y conseguir esa tarjeta o repararla no es fácil.\n\nJusto ahí podemos ayudarle. Nosotros nos encargamos de esas tarjetas, las revisamos sin costo y si tienen reparación, le damos respuesta en el menor tiempo posible. Tenemos experiencia trabajando con este tipo de equipos a nivel electrónico.\n\nCuente con nosotros para eso, ¿qué le parece?",
-      "email": "Asunto: Soporte técnico para reparación de tarjetas electrónicas de AA\n\nBuenos días [Contacto],\n\nSoy Pedro Castro, ingeniero de HTK INGENIERÍA (HOUSETRONIK S.A.S.), empresa barranquillera especializada en electrónica industrial y de climatización.\n\nMe presento porque sé que en [Empresa] reciben constantemente equipos de aire acondicionado y, en más de una ocasión, llegan con tarjetas electrónicas dañadas que requieren reparación especializada.\n\nOfrecemos:\nReparación Diagnóstico sin costo de tarjetas electrónicas\nRápido Reparación ágil de inversores, mini-splits, VRF y sistemas de control\nRespuesta Respuesta en el menor tiempo posible\n\nTrabajamos como su aliado técnico para que esos equipos no se queden parados por falta de soporte electrónico.\n\n¿Podemos coordinar una visita o llamada para conocer sus necesidades?\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo pedroluiscastrofranco@gmail.com\nUbicación Barranquilla, Colombia",
+      "email": "Asunto: Soporte técnico para reparación de tarjetas electrónicas de AA\n\nBuenos días [Contacto],\n\nSoy Pedro Castro, ingeniero de HTK INGENIERÍA (HOUSETRONIK S.A.S.), empresa barranquillera especializada en electrónica industrial y de climatización.\n\nMe presento porque sé que en [Empresa] reciben constantemente equipos de aire acondicionado y, en más de una ocasión, llegan con tarjetas electrónicas dañadas que requieren reparación especializada.\n\nOfrecemos:\nReparación Diagnóstico sin costo de tarjetas electrónicas\nRápido Reparación ágil de inversores, mini-splits, VRF y sistemas de control\nRespuesta Respuesta en el menor tiempo posible\n\nTrabajamos como su aliado técnico para que esos equipos no se queden parados por falta de soporte electrónico.\n\n¿Podemos coordinar una visita o llamada para conocer sus necesidades?\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo info@htk-ingenieria.com\nUbicación Barranquilla, Colombia",
       "variables": [
         "Contacto",
         "Empresa"
@@ -44,7 +44,7 @@
         "varios"
       ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque he visto su trabajo en reparación electrónica y creo que podemos ser un buen aliado para usted.\n\nLa idea es la siguiente: de vez en cuando llegan trabajos que requieren un perfil distinto — electrónica industrial, control, automatización — que no es exactamente lo mismo que la reparación de equipos de consumo. Y viceversa: a nosotros nos llegan trabajos que tal vez encajan mejor en su taller.\n\nLa propuesta es simple: tener una relación de colegas donde usted me refiere lo industrial y yo le refiero lo que sea más de su perfil. Todos ganan — usted, nosotros y, sobre todo, el cliente que queda bien atendido.\n\n¿Le interesa la idea de tener un aliado para ese tipo de trabajos?",
-      "email": "Asunto: Propuesta de alianza técnica para [Empresa]\n\nBuenos días [Contacto],\n\nSoy Pedro Castro, ingeniero de HTK INGENIERÍA (HOUSETRONIK S.A.S.) en Barranquilla.\n\nHe estado revisando el trabajo de [Empresa] en el sector de reparación y mantenimiento electrónico, y creo que podemos construir una alianza que beneficie a ambas partes y, sobre todo, a nuestros clientes.\n\nNuestra propuesta:\nAlianza Usted nos refiere trabajos de electrónica industrial, control y automatización\nRecíproco Nosotros le referimos trabajos que encajen mejor en el perfil de su taller\nConfirmado El cliente recibe atención especializada en cada caso\n\nNo buscamos competir, buscamos complementarnos como colegas. Si le interesa la idea, podemos conversar para alinear detalles.\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo pedroluiscastrofranco@gmail.com",
+      "email": "Asunto: Propuesta de alianza técnica para [Empresa]\n\nBuenos días [Contacto],\n\nSoy Pedro Castro, ingeniero de HTK INGENIERÍA (HOUSETRONIK S.A.S.) en Barranquilla.\n\nHe estado revisando el trabajo de [Empresa] en el sector de reparación y mantenimiento electrónico, y creo que podemos construir una alianza que beneficie a ambas partes y, sobre todo, a nuestros clientes.\n\nNuestra propuesta:\nAlianza Usted nos refiere trabajos de electrónica industrial, control y automatización\nRecíproco Nosotros le referimos trabajos que encajen mejor en el perfil de su taller\nConfirmado El cliente recibe atención especializada en cada caso\n\nNo buscamos competir, buscamos complementarnos como colegas. Si le interesa la idea, podemos conversar para alinear detalles.\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo info@htk-ingenieria.com",
       "variables": [
         "Contacto",
         "Empresa"
@@ -57,13 +57,14 @@
       "segmentos": [
         "B2B industria",
         "fabrica",
-        "industria"
+        "industria",
+        "B2B fábrica"
       ],
       "lineas_interes": [
         "mantenimiento"
       ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque usted tiene máquinas con control electrónico en producción — PLCs, variadores, tarjetas de control — y cuando una de esas falla, cada hora que pasa representa una pérdida en productividad.\n\nNosotros ayudamos a que eso no se extienda. Reparamos componentes electrónicos industriales con respuesta ágil, para que una tarjeta dañada no les pare la producción por días. Tenemos experiencia trabajando con este tipo de equipos.\n\nEl objetivo es simple: ayudarlos a mantener su operación y reducir el impacto de las fallas electrónicas en su negocio.\n\n¿Ha tenido alguna situación donde una tarjeta se daña y no consigue quién la repare a tiempo?",
-      "email": "Asunto: Soporte en mantenimiento electrónico industrial para [Empresa]\n\nBuenos días [Contacto],\n\nSoy Pedro Castro, gerente de HTK INGENIERÍA (HOUSETRONIK S.A.S.), empresa barranquillera especializada en automatización industrial y mantenimiento electrónico.\n\nSabemos que en plantas como [Empresa], una falla en una tarjeta de control, un PLC o un variador puede detener líneas completas de producción. Cada hora de parada tiene un costo real.\n\nPor eso ofrecemos:\nServicio Reparación de componentes electrónicos industriales con respuesta ágil\nDiagnóstico Diagnóstico técnico sin costo\nTiempo mínimo Minimización del tiempo de parada — ese es nuestro compromiso\nRespuesta Experiencia con PLCs, variadores, fuentes y sistemas de control\n\n¿Podemos coordinar una visita técnica para conocer sus equipos y presentarle una propuesta?\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo pedroluiscastrofranco@gmail.com\nUbicación Barranquilla, Colombia",
+      "email": "Asunto: Soporte en mantenimiento electrónico industrial para [Empresa]\n\nBuenos días [Contacto],\n\nSoy Pedro Castro, gerente de HTK INGENIERÍA (HOUSETRONIK S.A.S.), empresa barranquillera especializada en automatización industrial y mantenimiento electrónico.\n\nSabemos que en plantas como [Empresa], una falla en una tarjeta de control, un PLC o un variador puede detener líneas completas de producción. Cada hora de parada tiene un costo real.\n\nPor eso ofrecemos:\nServicio Reparación de componentes electrónicos industriales con respuesta ágil\nDiagnóstico Diagnóstico técnico sin costo\nTiempo mínimo Minimización del tiempo de parada — ese es nuestro compromiso\nRespuesta Experiencia con PLCs, variadores, fuentes y sistemas de control\n\n¿Podemos coordinar una visita técnica para conocer sus equipos y presentarle una propuesta?\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo info@htk-ingenieria.com\nUbicación Barranquilla, Colombia",
       "variables": [
         "Contacto",
         "Empresa"
@@ -75,13 +76,14 @@
       "nombre": "Distribuidores de Cargadores EV — Alianza",
       "segmentos": [
         "B2B comercio",
-        "distribuidor"
+        "distribuidor",
+        "distribuidor cargadores"
       ],
       "lineas_interes": [
         "cargadores"
       ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque veo que usted comercializa cargadores para vehículos eléctricos y quiero proponerle algo.\n\nUsted vende el equipo, nosotros instalamos. Trabajamos como su brazo técnico en Barranquilla y la Costa: hacemos la visita, la instalación, la puesta en marcha y le garantizamos al cliente final una experiencia completa.\n\nEl beneficio para usted es claro: puede ofrecer un servicio llave en mano sin tener que montar un equipo de instalación propio. El cliente compra el cargador con usted y nosotros nos encargamos de que quede funcionando correctamente.\n\n¿Le interesaría conversar para alinear cómo podemos trabajar juntos?",
-      "email": "Asunto: Alianza estratégica — Instalación de cargadores EV para sus clientes\n\nBuenos días [Contacto],\n\nSoy Pedro Castro, gerente de HTK INGENIERÍA (HOUSETRONIK S.A.S.) en Barranquilla.\n\nHe visto que [Empresa] comercializa cargadores para vehículos eléctricos y quiero proponerle una alianza que potencie su oferta.\n\nUsted vende el equipo — nosotros instalamos:\nCargador Visita técnica y evaluación del sitio\nRápido Instalación eléctrica completa y puesta en marcha\nConfirmado Garantía de funcionamiento y soporte post-instalación\n Cobertura en Barranquilla y la Costa Caribe\n\nEl beneficio para [Empresa]:\n Ofrecer servicio llave en mano sin invertir en equipo de instalación propio\n Diferenciarse de competidores que solo venden el equipo\n Cliente final satisfecho con una experiencia completa\n\n¿Le interesaría que coordinemos una reunión para alinear detalles?\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo pedroluiscastrofranco@gmail.com\nUbicación Barranquilla, Colombia",
+      "email": "Asunto: Alianza estratégica — Instalación de cargadores EV para sus clientes\n\nBuenos días [Contacto],\n\nSoy Pedro Castro, gerente de HTK INGENIERÍA (HOUSETRONIK S.A.S.) en Barranquilla.\n\nHe visto que [Empresa] comercializa cargadores para vehículos eléctricos y quiero proponerle una alianza que potencie su oferta.\n\nUsted vende el equipo — nosotros instalamos:\nCargador Visita técnica y evaluación del sitio\nRápido Instalación eléctrica completa y puesta en marcha\nConfirmado Garantía de funcionamiento y soporte post-instalación\n Cobertura en Barranquilla y la Costa Caribe\n\nEl beneficio para [Empresa]:\n Ofrecer servicio llave en mano sin invertir en equipo de instalación propio\n Diferenciarse de competidores que solo venden el equipo\n Cliente final satisfecho con una experiencia completa\n\n¿Le interesaría que coordinemos una reunión para alinear detalles?\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo info@htk-ingenieria.com\nUbicación Barranquilla, Colombia",
       "variables": [
         "Contacto",
         "Empresa"
@@ -100,7 +102,7 @@
         "mantenimiento"
       ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla. ¿En qué puedo ayudarle?\n\nCuénteme qué equipo tiene y qué falla presenta. Si puede compartirme una foto de la tarjeta o del equipo, con gusto le indico si tiene reparación.\n\nEl diagnóstico es sin costo y sin compromiso.",
-      "email": "Asunto: Consulta de servicio técnico — HTK INGENIERÍA\n\nBuenos días [Contacto],\n\nGracias por contactar a HTK INGENIERÍA. Somos una empresa barranquillera especializada en reparación electrónica y automatización.\n\nPara poder ayudarle mejor, necesitamos la siguiente información:\nReparación ¿Qué equipo presenta la falla? (marca y modelo si es posible)\n ¿Qué síntomas o comportamiento anormal presenta?\n Si puede enviarnos una foto de la tarjeta o del equipo, nos ayudaría mucho\n\nEl diagnóstico inicial es sin costo y sin compromiso.\n\nQuedamos atentos,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo pedroluiscastrofranco@gmail.com",
+      "email": "Asunto: Consulta de servicio técnico — HTK INGENIERÍA\n\nBuenos días [Contacto],\n\nGracias por contactar a HTK INGENIERÍA. Somos una empresa barranquillera especializada en reparación electrónica y automatización.\n\nPara poder ayudarle mejor, necesitamos la siguiente información:\nReparación ¿Qué equipo presenta la falla? (marca y modelo si es posible)\n ¿Qué síntomas o comportamiento anormal presenta?\n Si puede enviarnos una foto de la tarjeta o del equipo, nos ayudaría mucho\n\nEl diagnóstico inicial es sin costo y sin compromiso.\n\nQuedamos atentos,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo info@htk-ingenieria.com",
       "variables": [
         "Contacto"
       ],
@@ -110,50 +112,54 @@
       "id": "hoteles",
       "nombre": "Hoteles — Mantenimiento y Automatización",
       "segmentos": [
-        "hotel"
+        "hotel",
+        "hoteles"
       ],
       "lineas_interes": [
         "mantenimiento",
         "automatizacion"
       ],
-      "whatsapp": "Buenos días, ¿cómo está?\n\nSé que en hoteles como [Empresa] el control de clima, la seguridad y el consumo energético son prioridad. Ofrecemos:\n\n• Mantenimiento de aires acondicionados y sistemas eléctricos\n• Sistemas CCTV y control de acceso\n• Automatización de iluminación para ahorro energético (10-30%)\n• Cargadores para vehículos eléctricos (diferenciador para huéspedes)\n\nSin contratos largos ni burocracia. ¿Le parece si coordinamos una llamada de 10 min para conocer sus necesidades?",
-      "email": "Asunto: Automatización y mantenimiento electrónico para [Empresa]\n\nBuenos días [Contacto],\n\nMi nombre es Pedro Castro, representante de HTK INGENIERIA (HOUSETRONIK S.A.S.), empresa barranquillera especializada en automatización industrial, mantenimiento electrónico y sistemas de seguridad.\n\nEntendemos que la operación de un hotel como [Empresa] requiere mantener estándares altos de confort, seguridad y eficiencia. Por eso queremos presentarle nuestros servicios:\n\nReparación Mantenimiento Electrónico\nSoporte preventivo y correctivo para sistemas eléctricos, tableros de control, aires acondicionados y equipos electrónicos en general.\n\n Seguridad Electrónica\nDiseño e instalación de sistemas CCTV, control de acceso y alarmas. Monitoreo remoto incluido.\n\nRápido Automatización y Eficiencia\nControl inteligente de iluminación y climatización en zonas comunes. Reducción comprobable del consumo energético.\n\nCargador Cargadores para Vehículos Eléctricos\nInstalación de estaciones de carga como servicio diferenciador para huéspedes.\n\nTrabajamos con empresas locales ofreciendo agilidad en la ejecución, tarifas justas y atención personalizada — sin la burocracia de las grandes contratistas.\n\n¿Podemos agendar una visita técnica sin compromiso para conocer sus instalaciones y presentarle una propuesta a la medida?\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo pedroluiscastrofranco@gmail.com\nUbicación Barranquilla, Colombia",
+      "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque sé que en hoteles como [Empresa] mantener el confort de los huéspedes, la seguridad de las instalaciones y los costos operativos controlados es un reto diario.\n\nEn HTK ofrecemos servicios que ayudan justamente con eso:\n\n🔧 Mantenimiento de aires acondicionados y sistemas eléctricos\n— Que una habitación sin aire no sea motivo de queja\n\n📹 Sistemas CCTV y control de acceso\n— Seguridad perimetral y monitoreo de zonas comunes\n\n💡 Automatización de iluminación y climatización\n— Ahorro energético comprobado del 10 al 30%\n\n🔌 Cargadores para vehículos eléctricos\n— Un servicio diferenciador que atrae huéspedes premium\n\nTrabajamos directo con usted, sin contratos amarrados ni burocracia de grandes empresas. Somos locales, respondemos rápido y nos adaptamos a lo que su operación necesite.\n\n¿Le parece si coordinamos una visita de 10 minutos para conocer sus instalaciones y contarle más?",
+      "email": "Asunto: Mantenimiento y automatización para [Empresa] — HTK INGENIERÍA\n\nBuenos días [Contacto],\n\nSoy Pedro Castro, gerente de HTK INGENIERÍA (HOUSETRONIK S.A.S.), empresa barranquillera especializada en automatización industrial, mantenimiento electrónico y sistemas de seguridad.\n\nEntendemos que la operación de un hotel como [Empresa] exige mantener altos estándares de confort, seguridad y eficiencia sin que los costos se disparen. Por eso queremos presentarle nuestros servicios:\n\n⚡ Mantenimiento Electrónico\n— Preventivo y correctivo de sistemas eléctricos, tableros de control y aires acondicionados\n\n📹 Seguridad Electrónica\n— Diseño e instalación de sistemas CCTV, control de acceso y alarmas con monitoreo remoto\n\n💡 Automatización y Eficiencia Energética\n— Control inteligente de iluminación y climatización en zonas comunes con ahorro comprobado del 10-30%\n\n🔌 Cargadores para Vehículos Eléctricos\n— Instalación de estaciones de carga como servicio diferenciador para sus huéspedes\n\nTrabajamos con empresas locales ofreciendo agilidad en la ejecución, tarifas competitivas y atención personalizada — sin la burocracia de las grandes contratistas.\n\n¿Podemos agendar una visita técnica sin compromiso para conocer sus instalaciones y presentarle una propuesta ajustada a sus necesidades?\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo info@htk-ingenieria.com\nBarranquilla, Colombia",
       "variables": [
         "Contacto",
         "Empresa"
       ],
-      "detonante": "Si responde 'sí', 'me interesa', pide portafolio, pregunta por servicios o agenda llamada → Alerta: Avisar a Pedro."
+      "detonante": "Si responde \"sí\", \"me interesa\", pide información, portafolio o agenda reunión → 🚨 Avisar a Pedro de inmediato."
     },
     {
       "id": "restaurantes",
       "nombre": "Restaurantes — Mantenimiento y Seguridad",
       "segmentos": [
-        "restaurante"
+        "restaurante",
+        "restaurantes"
       ],
       "lineas_interes": [
         "mantenimiento"
       ],
-      "whatsapp": "Buenos días, ¿cómo está?\n\n• Mantenimiento de neveras, congeladores y equipos de cocina\n• Instalación de cámaras de seguridad\n• Automatización de iluminación y clima\n\nServicio rápido, precios justos, sin contratos largos. ¿Le sirve que le cuente más?",
-      "email": "Asunto: Mantenimiento electrónico y seguridad para [Empresa]\n\nBuenos días [Contacto],\n\nSomos HTK INGENIERIA, empresa barranquillera especializada en mantenimiento electrónico y automatización. Sabemos que en un restaurante la operación no puede parar, por eso ofrecemos:\n\n Mantenimiento de Equipos de Cocina\nNeveras, congeladores, campanas extractoras, sistemas de refrigeración. Prevenimos paradas inesperadas.\n\n Seguridad CCTV\nControl de inventario y seguridad del local con cámaras IP de alta definición.\n\nRápido Automatización\nSistemas de iluminación y climatización inteligentes para reducir costos operativos.\n\nTrabajamos con empresas gastronómicas ofreciendo respuesta rápida, mantenimientos programados y tarifas competitivas.\n\n¿Podemos conversar para conocer sus necesidades?\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo pedroluiscastrofranco@gmail.com",
+      "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque sé que en un restaurante como [Empresa] la cocina no puede parar: una nevera que falla, un congelador que se daña o un aire acondicionado fuera de servicio significa pérdidas directas.\n\nEn HTK ofrecemos servicios pensados para negocios gastronómicos:\n\n❄️ Mantenimiento de equipos de refrigeración\n— Neveras, congeladores, cavas y sistemas de frío. Prevenimos antes de que fallen\n\n🔧 Reparación de equipos electrónicos de cocina\n— Tarjetas de control, hornos, campanas extractoras\n\n📹 Sistemas de seguridad CCTV\n— Cámaras para control de inventario, cocina y salón\n\n💡 Automatización de iluminación y climatización\n— Reduzca costos operativos sin sacrificar ambiente\n\nTrabajamos directo con usted: respuesta rápida, mantenimientos programados a su medida y precios justos. Sin contratos largos.\n\n¿Qué le parece si coordinamos una visita breve para revisar sus equipos sin costo?",
+      "email": "Asunto: Mantenimiento de equipos y seguridad para [Empresa] — HTK INGENIERÍA\n\nBuenos días [Contacto],\n\nSoy Pedro Castro, gerente de HTK INGENIERÍA (HOUSETRONIK S.A.S.), empresa barranquillera especializada en mantenimiento electrónico, automatización y sistemas de seguridad.\n\nSabemos que en un restaurante como [Empresa] la continuidad operativa es crítica: una falla en refrigeración o en los equipos de cocina impacta directamente el servicio y los ingresos. Por eso ofrecemos:\n\n❄️ Mantenimiento de Equipos de Refrigeración\n— Preventivo y correctivo para neveras, congeladores, cavas y sistemas de frío. Minimizamos paradas inesperadas\n\n🔧 Reparación de Electrónica de Cocina\n— Tarjetas de control, hornos, freidoras, campanas y sistemas de extracción\n\n📹 Seguridad CCTV\n— Instalación de cámaras IP de alta definición para control de inventario, cocina y áreas de servicio\n\n💡 Automatización y Eficiencia\n— Control inteligente de iluminación y climatización para reducir costos operativos sin afectar la experiencia del comensal\n\nTrabajamos con negocios gastronómicos ofreciendo respuesta ágil, planes de mantenimiento programado y tarifas competitivas — sin contratos que lo amarren.\n\n¿Podemos coordinar una visita breve para conocer sus equipos y presentarle una propuesta sin compromiso?\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo info@htk-ingenieria.com\nBarranquilla, Colombia",
       "variables": [
         "Contacto",
         "Empresa"
       ],
-      "detonante": "Si responde 'sí', 'me interesa', pide más info, pregunta detalles → Alerta: Avisar a Pedro."
+      "detonante": "Si responde \"sí\", \"me interesa\", pide información, presupuesto o agenda visita → 🚨 Avisar a Pedro de inmediato."
     },
     {
       "id": "energia-solar",
       "nombre": "Energía Solar — Mantenimiento Electrónico",
       "segmentos": [
         "energía solar",
-        "B2B comercio"
+        "B2B comercio",
+        "distribuidor",
+        "energia solar"
       ],
       "lineas_interes": [
         "mantenimiento",
         "instalacion"
       ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque veo que trabajan con energía solar y sé que los inversores, controladores y sistemas de monitoreo electrónico son el corazón de cualquier instalación. Cuando fallan, todo el sistema se detiene.\n\nNosotros ayudamos a que eso no pase. Reparamos tarjetas electrónicas, controladores de carga, inversores y sistemas de monitoreo — con diagnóstico rápido y respuesta ágil.\n\nLa idea es simple: tener un aliado técnico en Barranquilla para cuando algo falle a nivel electrónico. ¿Ha tenido inconvenientes con inversores o controladores que no consigue reparar?",
-      "email": "Asunto: Soporte técnico electrónico para sistemas solares\n\nBuenos días [Contacto],\n\nSoy Pedro Castro, ingeniero de HTK INGENIERÍA (HOUSETRONIK S.A.S.), empresa barranquillera especializada en automatización industrial y mantenimiento electrónico.\n\nSabemos que en instalaciones solares, los inversores, controladores de carga y sistemas de monitoreo son equipos críticos — y cuando fallan, la generación se detiene.\n\nOfrecemos:\nDiagnóstico Servicio de revisión técnica sin costo\nReparación Reparación profesional de tarjetas electrónicas, inversores y controladores\nRespuesta Tiempos ágiles para minimizar el tiempo fuera de servicio\n\nTrabajamos como su aliado técnico para mantener sus sistemas operativos.\n\n¿Podemos coordinar una visita o llamada?\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo pedroluiscastrofranco@gmail.com\nUbicación Barranquilla, Colombia",
+      "email": "Asunto: Soporte técnico electrónico para sistemas solares\n\nBuenos días [Contacto],\n\nSoy Pedro Castro, ingeniero de HTK INGENIERÍA (HOUSETRONIK S.A.S.), empresa barranquillera especializada en automatización industrial y mantenimiento electrónico.\n\nSabemos que en instalaciones solares, los inversores, controladores de carga y sistemas de monitoreo son equipos críticos — y cuando fallan, la generación se detiene.\n\nOfrecemos:\nDiagnóstico Servicio de revisión técnica sin costo\nReparación Reparación profesional de tarjetas electrónicas, inversores y controladores\nRespuesta Tiempos ágiles para minimizar el tiempo fuera de servicio\n\nTrabajamos como su aliado técnico para mantener sus sistemas operativos.\n\n¿Podemos coordinar una visita o llamada?\n\nQuedo atento,\n\nPedro Castro\nGerente — HTK INGENIERÍA\nTeléfono 315 603 2940\nCorreo info@htk-ingenieria.com\nUbicación Barranquilla, Colombia",
       "variables": [
         "Contacto",
         "Empresa"
@@ -165,7 +171,8 @@
       "nombre": "Gimnasios — Mantenimiento de Clima y Electrónica",
       "segmentos": [
         "gimnasios",
-        "B2C consumidor"
+        "B2C consumidor",
+        "consumidor"
       ],
       "lineas_interes": [
         "mantenimiento",

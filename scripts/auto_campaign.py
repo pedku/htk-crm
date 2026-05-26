@@ -201,13 +201,14 @@ if __name__ == '__main__':
         if args.save:
             db = get_db()
             now = datetime.now().isoformat()
-            iid = 'INT-' + now[:19].replace(':', '')
+            import random
+            iid = 'INT-' + now[:19].replace(':', '') + '-' + str(random.randint(100,999))
             db.execute("""INSERT INTO interactions 
-                (id, lead_id, nombre, tipo, direccion, resumen, contenido, fecha, proximo_paso, estado)
+                (id, lead_id, lead_nombre, tipo, direccion, resumen, detalle, fecha, proximo_paso, estado)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (iid, lid, nombre, channel, 'pendiente',
                  'Campana auto-generada para %s' % segmento,
-                 msg[:200], now, 'Enviar mensaje', 'pendiente'))
+                 msg, now, 'Enviar mensaje', 'pendiente'))
             db.commit()
             print('  [Guardado como interaccion pendiente]')
 

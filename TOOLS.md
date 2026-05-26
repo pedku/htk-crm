@@ -20,7 +20,21 @@ Para enviar un archivo al usuario por Telegram, incluye en tu respuesta:
 MEDIA:/ruta/completa/al/archivo
 ```
 
-En una línea aparte. El gateway lo enviará como attachment nativo.
+En una línea aparte, como **texto visible**, NO dentro de tu bloque de razonamiento/thinking. El gateway solo escanea el texto de salida, no los bloques internos de pensamiento. Si pones `MEDIA:` en el thinking, el archivo nunca se envía.
+
+Ejemplo correcto:
+```
+Aquí tienes el archivo que pediste:
+
+MEDIA:/home/peku/reporte.pdf
+```
+
+Ejemplo INCORRECTO (no funciona):
+```
+[thinking: "MEDIA:/home/peku/reporte.pdf"]  ← ❌ el gateway no lo ve aquí
+```
+
+⚠️ Si usas un modelo con razonamiento (DeepSeek), asegúrate de que `MEDIA:` esté en el output final, no en el chain-of-thought.
 
 Ejemplos:
 - `MEDIA:/home/peku/reporte.pdf`

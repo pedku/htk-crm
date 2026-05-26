@@ -1,6 +1,6 @@
 # MEMORY.md — HTK INGENIERIA (HOUSETRONIK S.A.S.)
 
-> Last updated: 2026-05-08 (noche)
+> Last updated: 2026-05-23 (noche)
 
 ---
 
@@ -11,6 +11,9 @@
 | Ubicación | Barranquilla, Colombia |
 | Líneas | Automatización Industrial / IoT / Mantenimiento Electrónico / Cargadores Eléctricos |
 | Propietario | Pedro Castro |
+| Email Corporativo | info@htk-ingenieria.com |
+| WhatsApp Business | +57 315 603 2940 |
+| Teléfono Personal | +57 320 813 0156 |
 
 ---
 
@@ -76,7 +79,28 @@ Backup automático cada 12h via crontab (6am/6pm).
 ### 🎯 Últimos pasos
 - Sáb 9/05 8am: contactar distribuidores cargadores (6 con tel + email)
 
+## 🧠 Recordatorio — Facturación (Pendiente 2026-05-24)
+
+**Pedro enviará plantilla de factura** (hoja de cálculo o PDF) para diseñar el sistema de facturación integrado con el CRM.
+
+**Acordado:**
+- Sistema completo con items, IVA 19%, PDF generado automáticamente
+- Vinculado a órdenes de trabajo
+- Envío de factura al cliente por WhatsApp desde el CRM
+- Esperando plantilla para iniciar desarrollo
+
+---
+
 ## 🏆 Hitos Comerciales
+
+### 2026-05-15 — Reestructuración CRM Completa 🏗️
+Se reestructuró el CRM de monolito a modular:
+- **Frontend:** index.html (5801 líneas) → base.html + 9 templates pages/ + CSS/JS separados
+- **Auth:** Fixed Cloudflare bypass (CF-Connecting-IP header)
+- **Bug fixes:** toastMsg faltante, load functions crash, saveModal sin response.ok
+- **Features:** perfil OT completo con WhatsApp/estado/pagos, links en tabla OT
+- **Branch:** `modular-frontend` en GitHub (8 commits nuevos)
+- **Dev URL:** `dev.htk-ingenieria.com`
 
 ### 2026-05-12 — EDC (Electrolineras de Colombia) ✅
 **PRO-017** — Entrevista virtual concretada. **Acuerdo verbal como distribuidores** de sus equipos de carga EV en Barranquilla y la Costa Caribe.
