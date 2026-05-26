@@ -440,10 +440,20 @@ body {
   <div class="inv-card">
     <div class="inv-card-label">Facturar a</div>
     <div class="inv-card-body">
-      <div class="cliente-nombre">{{ client.nombre if client else '—' }}</div>
+      <div class="cliente-nombre">
+        {% if client and client.tipo_persona == 'juridica' %}
+          {{ client.empresa or client.nombre }}
+        {% else %}
+          {{ client.nombre if client else '—' }}
+        {% endif %}
+      </div>
+      {% if client and client.tipo_persona == 'juridica' and client.nombre_comercial %}
+      <div class="cliente-dir" style="color:var(--htk-primary);">{{ client.nombre_comercial }}</div>
+      {% endif %}
       {% if client and client.documento %}<div class="cliente-doc">{{ client.tipo_documento or 'NIT/CC' }}: {{ client.documento }}</div>{% endif %}
       {% if client and client.direccion %}<div class="cliente-dir">{{ client.direccion }}{% if client.ciudad %}, {{ client.ciudad }}{% endif %}</div>{% endif %}
       {% if client and client.telefono %}<div class="cliente-tel">{{ client.telefono }}</div>{% endif %}
+      {% if client and client.email %}<div class="cliente-dir">{{ client.email }}</div>{% endif %}
     </div>
   </div>
   <div class="inv-card">

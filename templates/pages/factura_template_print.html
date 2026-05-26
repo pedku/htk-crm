@@ -181,10 +181,20 @@
       <div class="card">
         <div class="card-label">Facturar a</div>
         <div class="card-body">
-          <div class="cname">{{ client.nombre if client else '—' }}</div>
+          <div class="cname">
+            {% if client and client.tipo_persona == 'juridica' %}
+              {{ client.empresa or client.nombre }}
+            {% else %}
+              {{ client.nombre if client else '—' }}
+            {% endif %}
+          </div>
+          {% if client and client.tipo_persona == 'juridica' and client.nombre_comercial %}
+          <div class="cinfo" style="color:#059BDA;">{{ client.nombre_comercial }}</div>
+          {% endif %}
           {% if client and client.documento %}<div class="cinfo">{{ client.tipo_documento or 'NIT/CC' }}: {{ client.documento }}</div>{% endif %}
           {% if client and client.direccion %}<div class="cinfo">{{ client.direccion }}{% if client.ciudad %}, {{ client.ciudad }}{% endif %}</div>{% endif %}
           {% if client and client.telefono %}<div class="cinfo">{{ client.telefono }}</div>{% endif %}
+          {% if client and client.email %}<div class="cinfo">{{ client.email }}</div>{% endif %}
         </div>
       </div>
     </td>

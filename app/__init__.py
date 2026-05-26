@@ -18,6 +18,8 @@ def _ensure_columns(conn, table, expected_columns):
             try:
                 if col in ('activo',):
                     col_type = 'BOOLEAN DEFAULT 1'
+                elif col in ('tipo_persona',):
+                    col_type = "TEXT DEFAULT 'natural'"
                 elif col in ('valor_total', 'presupuesto', 'valor_estimado'):
                     col_type = 'TEXT DEFAULT NULL'
                 else:
@@ -40,7 +42,8 @@ def init_db():
         ])
         _ensure_columns(migrate_conn, 'clients', [
             'contacto_nombre', 'direccion', 'ciudad', 'tipo_documento',
-            'documento', 'empresa', 'cargo', 'cumpleanos', 'redes_contacto', 'email'
+            'documento', 'empresa', 'cargo', 'cumpleanos', 'redes_contacto', 'email',
+            'tipo_persona', 'nombre_comercial'
         ])
         _ensure_columns(migrate_conn, 'work_orders', [
             'tipo', 'campos_extra', 'valor_total', 'client_id'

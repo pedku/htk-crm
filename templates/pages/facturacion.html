@@ -57,9 +57,11 @@
     <div class="row g-3">
      <div class="col-md-6">
       <label class="form-label">Cliente *</label>
-      <select class="form-select" id="factClientId">
-       <option value="">Seleccionar...</option>
-      </select>
+      <div class="client-search-wrapper">
+       <input type="text" class="form-control" id="factClientSearch" placeholder="🔍 Buscar por nombre, documento o teléfono..." autocomplete="off" oninput="searchClientsDebounce()">
+       <div class="client-search-dropdown" id="factClientDropdown" style="display:none;"></div>
+      </div>
+      <input type="hidden" id="factClientId">
      </div>
      <div class="col-md-6">
       <label class="form-label">O.T. (opcional)</label>

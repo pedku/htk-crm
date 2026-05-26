@@ -1720,7 +1720,14 @@ async function showModal(type, id) {
  if (id) item = clients.find(c => c.id === id);
  fields = [
  {label:'Nombre', key:'nombre', type:'text', required:true},
+ {label:'Tipo de Persona', key:'tipo_persona', type:'select', options:['natural','juridica']},
+ {label:'Tipo Documento', key:'tipo_documento', type:'select', options:['CC','NIT','CE','Pasaporte']},
+ {label:'N° Documento', key:'documento', type:'text'},
+ {label:'Nombre Comercial', key:'nombre_comercial', type:'text', help:'Solo si es persona jurídica'},
  {label:'Teléfono', key:'telefono', type:'text', placeholder:'+573001234567'},
+ {label:'Email', key:'email', type:'text', placeholder:'correo@ejemplo.com'},
+ {label:'Dirección', key:'direccion', type:'text'},
+ {label:'Ciudad', key:'ciudad', type:'text'},
  {label:'Fuente', key:'fuente', type:'select', options:['whatsapp','prospeccion','referido','web','otro']},
  {label:'Estado', key:'estado', type:'select', options:['lead','contacto','cliente','inactivo']},
  {label:'Segmento', key:'segmento', type:'segment'},
@@ -4586,16 +4593,13 @@ async function showFacturaModal(id) {
   document.getElementById('factEditId').value = id || '';
   document.getElementById('facturaModalTitle').textContent = id ? 'Editar Factura' : 'Nueva Factura';
 
-  try {
-    const cls = await fetchJSON('/api/clients');
-    const sel = document.getElementById('factClientId');
-    sel.innerHTML = '<option value="">Seleccionar...</option>';
-    if (Array.isArray(cls)) {
-      cls.forEach(c => {
-        sel.innerHTML += `<option value="${c.id}">${escHtml(c.nombre||c.id)}</option>`;
-      });
-    }
+  // Reset search
+  document.getElementById('factClientId').value = '';
+  document.getElementById('factClientSearch').value = '';
+  document.getElementById('factClientDropdown').style.display = 'none';
 
+  // Load WO options
+  try {
     const wos = await fetchJSON('/api/work_orders');
     const woSel = document.getElementById('factWoId');
     woSel.innerHTML = '<option value="">Ninguna</option>';
@@ -4621,6 +4625,7 @@ async function showFacturaModal(id) {
       const inv = await fetchJSON(`/api/facturas/${id}`);
       if (inv) {
         document.getElementById('factClientId').value = inv.client_id || '';
+        document.getElementById('factClientSearch').value = (inv.cliente && inv.cliente.nombre) ? inv.cliente.nombre : '';
         document.getElementById('factWoId').value = inv.wo_id || '';
         document.getElementById('factFechaEmision').value = (inv.fecha_emision||'').slice(0,10);
         document.getElementById('factFechaVenc').value = (inv.fecha_vencimiento||'').slice(0,10);
@@ -4830,6 +4835,60 @@ async function loadFacturasStats() {
     }
   } catch(e) {}
 }
+
+// ─── CLIENT SEARCH ──────────────────────────────────────────────────
+
+var clientSearchTimer = null;
+
+function searchClientsDebounce() {
+  clearTimeout(clientSearchTimer);
+  var q = document.getElementById('factClientSearch').value.trim();
+  var dropdown = document.getElementById('factClientDropdown');
+  if (q.length < 2) { dropdown.style.display = 'none'; return; }
+  clientSearchTimer = setTimeout(function() { searchClients(q); }, 200);
+}
+
+async function searchClients(q) {
+  var dropdown = document.getElementById('factClientDropdown');
+  try {
+    var resp = await fetch('/api/clients?search=' + encodeURIComponent(q));
+    var results = await resp.json();
+    if (!Array.isArray(results) || !results.length) {
+      dropdown.innerHTML = '<div style="padding:8px 12px;color:rgba(255,255,255,0.4);font-size:0.85rem;">Sin resultados</div>';
+      dropdown.style.display = '';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < Math.min(results.length, 10); i++) {
+      var c = results[i];
+      var doc = c.documento ? (c.tipo_documento || 'CC') + ': ' + c.documento : '';
+      html += '<div class="client-search-item" onclick="selectFactClient(\'' + c.id + '\', \'' + escHtml(c.nombre || '').replace(/'/g, "\\'") + '\')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);">';
+      html += '<div style="font-weight:600;">' + escHtml(c.nombre || c.id) + '</div>';
+      html += '<div style="font-size:0.8rem;color:rgba(255,255,255,0.5);">' + escHtml(c.telefono || '') + (doc ? ' · ' + escHtml(doc) : '') + '</div>';
+      html += '</div>';
+    }
+    dropdown.innerHTML = html;
+    dropdown.style.display = '';
+  } catch(e) {
+    dropdown.innerHTML = '<div style="padding:8px 12px;color:rgba(255,255,255,0.4);">Error al buscar</div>';
+    dropdown.style.display = '';
+  }
+}
+
+function selectFactClient(id, name) {
+  document.getElementById('factClientId').value = id;
+  document.getElementById('factClientSearch').value = name;
+  document.getElementById('factClientDropdown').style.display = 'none';
+}
+
+// Close dropdown on click outside
+document.addEventListener('click', function(e) {
+  var dropdown = document.getElementById('factClientDropdown');
+  var search = document.getElementById('factClientSearch');
+  if (dropdown && search && !search.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.style.display = 'none';
+  }
+});
 
 // ─── COMPANY CONFIG ─────────────────────────────────────────────────
 
