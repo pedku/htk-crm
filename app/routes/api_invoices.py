@@ -9,10 +9,10 @@ api_invoices_bp = Blueprint('api_invoices', __name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 EMPRESA = {
-    'nombre': 'HOUSETRONIK S.A.S.',
+    'nombre': 'HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S',
     'comercial': 'HTK INGENIERIA',
-    'nit': '901.XXX.XXX-X',
-    'direccion': 'Cra XX #XX-XX, Barranquilla',
+    'nit': '1.124.361.169-2',
+    'direccion': 'Barranquilla, Colombia',
     'telefono': '+57 315 603 2940',
     'email': 'info@htk-ingenieria.com',
     'logo_url': '/static/img/logo_htk.png'
