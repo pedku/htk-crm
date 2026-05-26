@@ -851,7 +851,6 @@ table.dataTable.no-footer {
 }
 
 /* ─── Facturación ───────────────────────────────── */
-#tab-facturacion .modal-content { background: #1c1c1e; color: #fff; }
 #factItemsContainer { max-height: 300px; overflow-y: auto; }
 .fact-item-row { flex-wrap: wrap; }
 #facturaPreviewIframe { background: #fff !important; }

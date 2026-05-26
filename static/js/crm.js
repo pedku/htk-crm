@@ -4504,7 +4504,6 @@ let dtFacturas = null;
 let currentFactViewId = null;
 
 async function loadFacturas() {
-  showLoading('factLoading', 'factContent');
   try {
     const data = await fetchJSON('/api/facturas');
     if (Array.isArray(data)) facturas = data;
@@ -4556,12 +4555,12 @@ function renderFacturasDT() {
     }}
   ];
 
-  dtFacturas = initDT('tableFacturas', data, cols, {
-    drawCallback: function() {
-      hideLoading('factLoading','factContent');
-      emptyState(null, 'factEmpty', this.api().rows({filter:'applied'}).count());
-    }
-  });
+  dtFacturas = initDT('tableFacturas', data, cols, null);
+
+  // Fallback: always show content even if DataTables not loaded
+  if (!dtFacturas) {
+    emptyState(null, 'factEmpty', data.length);
+  }
 }
 
 async function showFacturaModal(id) {
@@ -4635,19 +4634,19 @@ function addFacturaItem(desc, cant, precio, iva) {
   div.style.cssText = 'background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.05);';
   div.innerHTML = `
     <div style="flex:1;min-width:200px;">
-      <input type="text" class="form-control form-control-sm fact-item-desc" value="${escHtml(desc||'')}" placeholder="Descripción" style="background:rgba(255,255,255,0.06);color:inherit;border:1px solid rgba(255,255,255,0.1);" oninput="updateFacturaPreview()">
+      <input type="text" class="form-control form-control-sm fact-item-desc" value="${escHtml(desc||'')}" placeholder="Descripción" oninput="updateFacturaPreview()">
     </div>
     <div style="width:80px;">
-      <input type="number" class="form-control form-control-sm fact-item-cant" value="${cant||1}" min="0.1" step="0.1" style="background:rgba(255,255,255,0.06);color:inherit;border:1px solid rgba(255,255,255,0.1);" oninput="updateFacturaPreview()">
+      <input type="number" class="form-control form-control-sm fact-item-cant" value="${cant||1}" min="0.1" step="0.1" oninput="updateFacturaPreview()">
     </div>
     <div style="width:120px;">
-      <input type="number" class="form-control form-control-sm fact-item-precio" value="${precio||0}" min="0" step="1000" style="background:rgba(255,255,255,0.06);color:inherit;border:1px solid rgba(255,255,255,0.1);" oninput="updateFacturaPreview()">
+      <input type="number" class="form-control form-control-sm fact-item-precio" value="${precio||0}" min="0" step="1000" oninput="updateFacturaPreview()">
     </div>
     <div style="width:80px;">
-      <input type="number" class="form-control form-control-sm fact-item-iva" value="${iva||19}" min="0" max="100" style="background:rgba(255,255,255,0.06);color:inherit;border:1px solid rgba(255,255,255,0.1);" oninput="updateFacturaPreview()">
+      <input type="number" class="form-control form-control-sm fact-item-iva" value="${iva||19}" min="0" max="100" oninput="updateFacturaPreview()">
     </div>
     <div style="width:100px;">
-      <span class="fact-item-total" style="font-weight:600;">$0</span>
+      <span class="fact-item-total" style="font-weight:600;color:#fff;">$0</span>
     </div>
     <button class="btn btn-sm btn-outline-danger" onclick="this.closest('.fact-item-row').remove();updateFacturaPreview();" title="Quitar"><i class="bi bi-trash"></i></button>
   `;
