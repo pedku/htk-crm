@@ -8,15 +8,32 @@ from app.core.auth import login_required
 api_invoices_bp = Blueprint('api_invoices', __name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-EMPRESA = {
+EMPRESA_DEFAULTS = {
     'nombre': 'HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S',
     'comercial': 'HTK INGENIERIA',
     'nit': '1.124.361.169-2',
-    'direccion': 'Barranquilla, Colombia',
+    'direccion': 'Cra 7b #46-108, Barranquilla, Colombia',
     'telefono': '+57 315 603 2940',
     'email': 'info@htk-ingenieria.com',
     'logo_url': '/static/img/logo_htk.png'
 }
+
+def get_empresa_config():
+    """Read company config from DB, fall back to defaults."""
+    config = dict(EMPRESA_DEFAULTS)
+    try:
+        conn = get_db()
+        rows = conn.execute(
+            "SELECT key, value FROM bot_config WHERE key LIKE 'company_%'"
+        ).fetchall()
+        for r in rows:
+            key = r['key'].replace('company_', '')
+            if key in config and r['value']:
+                config[key] = r['value']
+        conn.close()
+    except:
+        pass
+    return config
 
 # ── LISTAR FACTURAS ──────────────────────────────────────────────────
 
@@ -342,7 +359,7 @@ def invoice_pdf(inv_id):
             invoice=dict(inv),
             items=[dict(i) for i in items],
             client=dict(client) if client else None,
-            empresa=EMPRESA)
+            empresa=get_empresa_config())
     finally:
         conn.close()
 
@@ -412,6 +429,6 @@ def public_factura_view(inv_id):
             invoice=dict(inv),
             items=[dict(i) for i in items],
             client=dict(client) if client else None,
-            empresa=EMPRESA)
+            empresa=get_empresa_config())
     finally:
         conn.close()

@@ -3243,7 +3243,7 @@ const PLACEHOLDERS = {
 };
 
 function switchConfigTab(tab) {
-  const validTabs = ['general','bot','templates','prices','segments','usuarios'];
+  const validTabs = ['general','bot','templates','prices','segments','company','usuarios'];
   if (!validTabs.includes(tab)) tab = 'general';
 
   document.querySelectorAll('#configSubtabs .client-profile-tab').forEach(b => b.classList.remove('active'));
@@ -3265,6 +3265,7 @@ function switchConfigTab(tab) {
   else if (tab === 'templates') loadTemplates();
   else if (tab === 'prices') loadPricesTab();
   else if (tab === 'segments') loadSegmentsTab();
+  else if (tab === 'company') loadCompanyConfig();
   else if (tab === 'usuarios') { /* placeholder */ }
 }
 
@@ -4828,5 +4829,45 @@ async function loadFacturasStats() {
       if (elM) elM.textContent = '$' + ((stats.total_mes||0)).toLocaleString('es-CO');
     }
   } catch(e) {}
+}
+
+// ─── COMPANY CONFIG ─────────────────────────────────────────────────
+
+async function loadCompanyConfig() {
+  document.getElementById('companyLoading').style.display = '';
+  document.getElementById('companyForm').style.display = 'none';
+  try {
+    const data = await fetchJSON('/api/company');
+    const fields = ['nombre','comercial','nit','direccion','telefono','email'];
+    fields.forEach(f => {
+      const el = document.getElementById('cfgCompany' + f.charAt(0).toUpperCase() + f.slice(1));
+      if (el && data && data[f]) el.value = data[f];
+    });
+    document.getElementById('companyLoading').style.display = 'none';
+    document.getElementById('companyForm').style.display = '';
+  } catch(e) {
+    document.getElementById('companyLoading').innerHTML = '<p class="text-danger">Error al cargar</p>';
+  }
+}
+
+async function saveCompanyConfig() {
+  const fields = ['nombre','comercial','nit','direccion','telefono','email'];
+  const data = {};
+  fields.forEach(f => {
+    const el = document.getElementById('cfgCompany' + f.charAt(0).toUpperCase() + f.slice(1));
+    if (el) data[f] = el.value.trim();
+  });
+  try {
+    const resp = await fetch('/api/company', {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    if (!resp.ok) throw new Error('Error al guardar');
+    document.getElementById('cfgCompanyMsg').innerHTML = '<span style="color:#059669;">✅ Datos guardados</span>';
+    setTimeout(() => { document.getElementById('cfgCompanyMsg').innerHTML = ''; }, 3000);
+  } catch(e) {
+    document.getElementById('cfgCompanyMsg').innerHTML = '<span style="color:#dc3545;">❌ ' + e.message + '</span>';
+  }
 }
 

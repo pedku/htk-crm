@@ -415,3 +415,44 @@ def api_task(tid):
         return jsonify({'ok': True})
     finally:
         conn.close()
+# ── COMPANY CONFIG ───────────────────────────────────────────────────
+
+DEFAULT_COMPANY = {
+    'nombre': 'HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S',
+    'comercial': 'HTK INGENIERIA',
+    'nit': '1.124.361.169-2',
+    'direccion': 'Cra 7b #46-108, Barranquilla, Colombia',
+    'telefono': '+57 315 603 2940',
+    'email': 'info@htk-ingenieria.com'
+}
+
+@api_misc_bp.route('/api/company', methods=['GET', 'PUT'])
+@login_required
+def api_company():
+    conn = get_db()
+    try:
+        if request.method == 'GET':
+            rows = conn.execute(
+                "SELECT key, value FROM bot_config WHERE key LIKE 'company_%'"
+            ).fetchall()
+            config = dict(DEFAULT_COMPANY)
+            for r in rows:
+                key = r['key'].replace('company_', '')
+                if key in config and r['value']:
+                    config[key] = r['value']
+            return jsonify(config)
+
+        # PUT
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Datos requeridos'}), 400
+        for key in DEFAULT_COMPANY:
+            if key in data:
+                conn.execute(
+                    "INSERT OR REPLACE INTO bot_config (key, value, tipo, categoria) VALUES (?, ?, 'str', 'company')",
+                    (f'company_{key}', str(data[key]))
+                )
+        conn.commit()
+        return jsonify({'ok': True})
+    finally:
+        conn.close()
