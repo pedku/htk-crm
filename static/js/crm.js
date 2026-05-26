@@ -4794,17 +4794,17 @@ async function anularFactura(id) {
   } catch(e) { alert('Error: ' + e.message); }
 }
 
-function imprimirFactura(id) {
-  const w = window.open('', '_blank', 'width=900,height=700');
-  w.document.write('<p style="text-align:center;padding:40px;color:#666;font-family:sans-serif;">Cargando factura...</p>');
-  fetch(API + `/api/facturas/${id}/print`)
-    .then(r => r.text())
-    .then(html => {
-      w.document.write(html);
-      w.document.close();
-      setTimeout(() => w.print(), 500);
-    })
-    .catch(err => { w.document.body.innerHTML = '<p style="color:red;">Error al cargar la factura</p>'; });
+async function imprimirFactura(id) {
+  try {
+    const resp = await fetch(API + `/api/facturas/${id}/print`);
+    const html = await resp.text();
+    const w = window.open('', '_blank', 'width=900,height=700');
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => w.print(), 400);
+  } catch(e) {
+    alert('Error al cargar la factura: ' + e.message);
+  }
 }
 
 async function enviarFacturaWhatsApp(id) {
