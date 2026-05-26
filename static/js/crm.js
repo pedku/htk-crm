@@ -3,6 +3,74 @@ const API = window.location.origin;
 let clients = [], workOrders = [], leads = [], interactions = [];
 let modalInstance = null;
 let currentKanbanView = 'kanban'; // 'kanban' or 'table'
+
+// ─── DataTables instances ────────────────────────────
+let dtClients = null, dtWOs = null, dtLeads = null, dtInteractions = null, dtInv = null;
+
+// ─── DataTables helper — safe init with fallback ─────
+function dtAvailable() {
+  return typeof window.$ !== 'undefined' && window.$.fn && window.$.fn.dataTable;
+}
+
+function initDT(tableId, data, columns, opts) {
+  const $t = document.getElementById(tableId);
+  if (!$t) return null;
+  
+  // Fallback: build HTML directly if DataTables not available
+  if (!dtAvailable()) {
+    const tbody = $t.querySelector('tbody');
+    if (!tbody) return null;
+    if (!data || !data.length) {
+      tbody.innerHTML = '<tr><td colspan="99" class="text-center py-4" style="color:rgba(255,255,255,0.3);">Sin datos</td></tr>';
+      return null;
+    }
+    let html = '';
+    for (var i = 0; i < data.length; i++) {
+      var row = data[i];
+      html += '<tr>';
+      for (var j = 0; j < columns.length; j++) {
+        var col = columns[j];
+        var val = row[col.data];
+        var rendered = col.render ? col.render((col.data ? row[col.data] : null), 'display', row) : (val != null ? escHtml(String(val)) : '');
+        html += '<td>' + rendered + '</td>';
+      }
+      html += '</tr>';
+    }
+    tbody.innerHTML = html;
+    return null;
+  }
+  
+  const $j = $('#' + tableId);
+  if ($.fn.dataTable.isDataTable('#' + tableId)) {
+    $j.DataTable().destroy();
+    $j.find('tbody').empty();
+  }
+  const dt = $j.DataTable(Object.assign({
+    data: data,
+    columns: columns,
+    paging: true,
+    pageLength: 25,
+    lengthMenu: [[10,25,50,100,-1],[10,25,50,100,'Todos']],
+    ordering: true,
+    info: true,
+    searching: true,
+    language: {
+      url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
+      emptyTable: 'Sin datos',
+      zeroRecords: 'Sin resultados'
+    },
+    dom: '<"dt-toolbar d-flex justify-content-between align-items-center mb-2"<"dt-length"l><"dt-search"f>>rt<"dt-bottom d-flex justify-content-between align-items-center mt-2"<"dt-info"i><"dt-paginate"p>>',
+    columnDefs: [{ orderable: false, targets: -1 }],
+    initComplete: function() {
+      var $f = $('#' + tableId + '_filter');
+      if ($f.length) {
+        $f.find('label').contents().filter(function(){ return this.nodeType===3; }).remove();
+        $f.find('input').addClass('form-control form-control-sm').attr('placeholder','Buscar…').css({width:'220px',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',color:'inherit',borderRadius:'8px',padding:'6px 12px'});
+      }
+    }
+  }, opts || {}));
+  return dt;
+}
 let currentKanbanSub = 'wo'; // 'wo' or 'leads'
 
 let TIPOS_OT = {};
@@ -587,41 +655,49 @@ function formatDateTime(iso) {
 }
 
 // CLIENTES 
+// ─── CLIENTS ──────────────────────────────────────────
 async function loadClients() {
  showLoading('clientsLoading','clientsContent');
  try {
  const data = await fetchJSON('/api/clients');
  if (Array.isArray(data)) clients = data;
  } catch(e) {}
- renderClients();
+ renderClientsDT();
  updateNotifications();
 }
 
-function renderClients() {
- const q = (document.getElementById('clientSearch')?.value || '').toLowerCase();
- const filtered = clients.filter(c =>
- (c.nombre || '').toLowerCase().includes(q) || (c.telefono || '').includes(q) || (c.id || '').toLowerCase().includes(q)
- );
- document.getElementById('clientsBody').innerHTML = filtered.map(c => {
- const es = ESTADOS_CLIENTE[c.estado] || {label:c.estado||'nuevo', class:'bg-secondary'};
- return `<tr>
- <td><strong>${c.id}</strong>${c.lead_id?` <small style="color:var(--htk-primary);font-size:0.7em;">← ${c.lead_id}</small>`:''}</td>
- <td><strong>${escHtml(c.nombre || '-')}</strong></td>
- <td>${escHtml(c.telefono || '-')}</td>
- <td><span class="badge ${es.class}">${es.label}</span></td>
- <td>${escHtml(c.segmento || '-')}</td>
- <td>${escHtml(c.linea_interes || '-')}</td>
- <td><span class="badge bg-info">${(c.ordenes||[]).length}</span></td>
- <td><small>${formatDate(c.ultimo_contacto)}</small></td>
- <td>
- <button class="action-btn primary" onclick="showModal('client','${c.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
- <button class="action-btn primary" onclick="showClientDetail('${c.id}')" title="Ver detalle"><i class="bi bi-eye"></i></button>
- <button class="action-btn danger" onclick="deleteItem('clients','${c.id}','${escHtml(c.nombre||'')}')" title="Eliminar"><i class="bi bi-trash"></i></button>
- </td>
- </tr>`;
- }).join('');
- emptyState(null, 'clientsEmpty', filtered.length);
- hideLoading('clientsLoading','clientsContent');
+function renderClientsDT() {
+  _ensureDTFilters();
+  const cols = [
+    { data:'id', render: function(d,t,r) {
+      let h = `<strong>${d}</strong>`;
+      if(r.lead_id) h += ` <small style="color:var(--htk-primary);font-size:0.7em;">← ${r.lead_id}</small>`;
+      return h;
+    }},
+    { data:'nombre', render: function(d) { return `<strong>${escHtml(d||'-')}</strong>`; }},
+    { data:'telefono', render: function(d) { return escHtml(d||'-'); }},
+    { data:'estado', render: function(d) {
+      const es = ESTADOS_CLIENTE[d] || {label:d||'nuevo', class:'bg-secondary'};
+      return `<span class="badge ${es.class}">${es.label}</span>`;
+    }},
+    { data:'segmento', render: function(d) { return escHtml(d||'-'); }},
+    { data:'linea_interes', render: function(d) { return escHtml(d||'-'); }},
+    { data:'ordenes', render: function(d) { return `<span class="badge bg-info">${(d||[]).length}</span>`; }},
+    { data:'ultimo_contacto', render: function(d) { return `<small>${formatDate(d)}</small>`; }},
+    { data:null, render: function(d,t,r) {
+      return `<div class="d-flex gap-1">
+ <button class="action-btn primary" onclick="showModal('client','${r.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
+ <button class="action-btn primary" onclick="showClientDetail('${r.id}')" title="Ver detalle"><i class="bi bi-eye"></i></button>
+ <button class="action-btn danger" onclick="deleteItem('clients','${r.id}','${escHtml(r.nombre||'')}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+ </div>`;
+    }}
+  ];
+  dtClients = initDT('tableClients', clients, cols, {
+    drawCallback: function() {
+      hideLoading('clientsLoading','clientsContent');
+      emptyState(null, 'clientsEmpty', this.api().rows({filter:'applied'}).count());
+    }
+  });
 }
 
 async function showClientDetail(id) {
@@ -832,49 +908,96 @@ async function saveClientField(clientId, field, value) {
 }
 
 // ÓRDENES DE TRABAJO 
+// ─── WORK ORDERS ─────────────────────────────────────
 async function loadWorkOrders() {
  showLoading('woLoading','woContent');
  try {
  const data = await fetchJSON('/api/work_orders');
  if (Array.isArray(data)) workOrders = data;
  } catch(e) {}
- renderWorkOrders();
+ renderWOsDT();
  updateNotifications();
 }
 
-function renderWorkOrders() {
- const q = (document.getElementById('woSearch')?.value || '').toLowerCase();
- const st = document.getElementById('woStatusFilter')?.value || '';
- const filtered = workOrders.filter(o => {
- if (st && o.estado !== st) return false;
- return (o.cliente?.nombre || '').toLowerCase().includes(q) ||
- (o.id || '').toLowerCase().includes(q) ||
- (o.equipo?.marca || '').toLowerCase().includes(q) ||
- (o.falla_reportada || '').toLowerCase().includes(q);
- });
- document.getElementById('woBody').innerHTML = filtered.map(o => {
- const es = ESTADOS_WO[o.estado] || {label:o.estado, class:'bg-secondary'};
- const tipoInfo = TIPOS_OT[o.tipo] || {};
- return `<tr>
- <td><strong><a href="/ordenes/${o.id}" style="color:var(--htk-primary);text-decoration:none;">${o.id}</a></strong></td>
- <td><span class="badge" style="background:${tipoInfo.color||'#f97316'};color:#fff;font-size:0.75em;">${tipoInfo.icono||'🔧'} ${tipoInfo.label||'Reparación'}</span></td>
- <td><a href="/ordenes/${o.id}" style="color:#fff;text-decoration:none;"><span title="${tipoInfo.label||o.tipo||'Reparación'}">${tipoInfo.icono||'🔧'}</span> ${escHtml(o.cliente?.nombre || '-')}</a></td>
- <td>${escHtml(o.cliente?.telefono || '-')}</td>
- <td>${escHtml(o.equipo?.marca || '')} ${escHtml(o.equipo?.modelo || '')} <small class="text-secondary">(${escHtml(o.equipo?.tipo||'')})</small></td>
- <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(o.falla_reportada||'')}">${escHtml(o.falla_reportada||'-')}</td>
- <td>${formatCurrency(o.presupuesto)}</td>
- <td><span class="badge ${es.class}">${es.label}</span></td>
- <td><small>${formatDate(o.fechas?.recibido)}</small></td>
- <td>
- <button class="action-btn primary" onclick="showModal('workorder','${o.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
- <button class="action-btn primary" onclick="showWODetail('${o.id}')" title="Ver detalle + historial"><i class="bi bi-eye"></i></button>
- <button class="action-btn primary" onclick="showStatusModal('${o.id}')" title="Cambiar estado"><i class="bi bi-arrow-right-circle"></i></button>
- <button class="action-btn danger" onclick="deleteItem('work_orders','${o.id}','${o.id}')" title="Eliminar"><i class="bi bi-trash"></i></button>
- </td>
- </tr>`;
- }).join('');
- emptyState(null, 'woEmpty', filtered.length);
- hideLoading('woLoading','woContent');
+function filterWOsDT() {
+  _ensureDTFilters();
+  if (dtWOs) dtWOs.draw();
+}
+
+function renderWOsDT() {
+  _ensureDTFilters();
+  const cols = [
+    { data:'id', render: function(d) { return `<strong><a href="/ordenes/${d}" style="color:var(--htk-primary);text-decoration:none;">${d}</a></strong>`; }},
+    { data:'tipo', render: function(d,t,r) {
+      const ti = TIPOS_OT[d] || {};
+      return `<span class="badge" style="background:${ti.color||'#f97316'};color:#fff;font-size:0.75em;">${ti.icono||'🔧'} ${ti.label||'Reparación'}</span>`;
+    }},
+    { data:null, render: function(d,t,r) {
+      const ti = TIPOS_OT[r.tipo] || {};
+      return `<a href="/ordenes/${r.id}" style="color:#fff;text-decoration:none;"><span title="${ti.label||r.tipo||'Reparación'}">${ti.icono||'🔧'}</span> ${escHtml(r.cliente?.nombre || '-')}</a>`;
+    }},
+    { data:'cliente', render: function(d) { return escHtml(d?.telefono || '-'); }},
+    { data:null, render: function(d,t,r) {
+      const eq = r.equipo || {};
+      return `${escHtml(eq.marca||'')} ${escHtml(eq.modelo||'')} <small class="text-secondary">(${escHtml(eq.tipo||'')})</small>`;
+    }},
+    { data:'falla_reportada', render: function(d) {
+      return `<span title="${escHtml(d||'')}" style="max-width:200px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(d||'-')}</span>`;
+    }},
+    { data:'presupuesto', render: function(d) { return formatCurrency(d); }},
+    { data:'estado', render: function(d) {
+      const es = ESTADOS_WO[d] || {label:d, class:'bg-secondary'};
+      return `<span class="badge ${es.class}">${es.label}</span>`;
+    }},
+    { data:'fechas', render: function(d) { return `<small>${formatDate(d?.recibido)}</small>`; }},
+    { data:null, render: function(d,t,r) {
+      return `<div class="d-flex gap-1">
+ <button class="action-btn primary" onclick="showModal('workorder','${r.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
+ <button class="action-btn primary" onclick="showWODetail('${r.id}')" title="Ver detalle"><i class="bi bi-eye"></i></button>
+ <button class="action-btn primary" onclick="showStatusModal('${r.id}')" title="Cambiar estado"><i class="bi bi-arrow-right-circle"></i></button>
+ <button class="action-btn danger" onclick="deleteItem('work_orders','${r.id}','${r.id}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+ </div>`;
+    }}
+  ];
+  dtWOs = initDT('tableWOs', workOrders, cols, {
+    drawCallback: function() {
+      hideLoading('woLoading','woContent');
+      emptyState(null, 'woEmpty', this.api().rows({filter:'applied'}).count());
+    }
+  });
+  // Connect status filter
+  $('#woStatusFilter').off('change.dt').on('change.dt', filterWOsDT);
+}
+
+// ─── Custom DataTables filters (registered once) ─────
+var _dtFiltersAdded = false;
+function _ensureDTFilters() {
+  if (_dtFiltersAdded || !dtAvailable()) return;
+  _dtFiltersAdded = true;
+  
+  // WO: filter by estado
+  $.fn.dataTable.ext.search.push(function(settings, data, dataIdx) {
+    if (settings.nTable.id !== 'tableWOs') return true;
+    var st = document.getElementById('woStatusFilter');
+    var val = st ? st.value : '';
+    if (!val) return true;
+    var row = dtWOs ? dtWOs.row(dataIdx).data() : null;
+    return row && row.estado === val;
+  });
+  
+  // Leads: filter by segmento, estado, servicio
+  $.fn.dataTable.ext.search.push(function(settings, data, dataIdx) {
+    if (settings.nTable.id !== 'tableLeads') return true;
+    var l = dtLeads ? dtLeads.row(dataIdx).data() : null;
+    if (!l) return true;
+    var seg = (document.getElementById('leadSegmentFilter')||{}).value || '';
+    var est = (document.getElementById('leadEstadoFilter')||{}).value || '';
+    var svc = (document.getElementById('leadServicioFilter')||{}).value || '';
+    if (seg && l.segmento !== seg) return false;
+    if (est && (l.estado || 'nuevo') !== est) return false;
+    if (svc && (l.linea_interes || '') !== svc) return false;
+    return true;
+  });
 }
 
 async function showWODetail(id) {
@@ -1176,64 +1299,64 @@ async function savePayment(woId) {
     await loadWorkOrders();
   } catch(e) { showToast('Error al registrar abono: ' + e.message, 'danger'); }
 }
-// LEADS 
+// ─── LEADS ────────────────────────────────────────────
 async function loadLeads() {
  showLoading('leadsLoading','leadsContent');
  try {
  const data = await fetchJSON('/api/leads');
  if (Array.isArray(data)) leads = data;
  } catch(e) {}
- renderLeads();
+ renderLeadsDT();
  updateNotifications();
 }
 
-function renderLeads() {
- const q = (document.getElementById('leadSearch')?.value || '').toLowerCase();
- const seg = document.getElementById('leadSegmentFilter')?.value || '';
- const est = document.getElementById('leadEstadoFilter')?.value || '';
- const svc = document.getElementById('leadServicioFilter')?.value || '';
- const filtered = leads.filter(l => {
- if (seg && l.segmento !== seg) return false;
- if (est && (l.estado || 'nuevo') !== est) return false;
- if (svc && (l.linea_interes || '') !== svc) return false;
- return (l.nombre || '').toLowerCase().includes(q) || (l.contacto || '').toLowerCase().includes(q) || (l.id || '').toLowerCase().includes(q);
- });
- document.getElementById('leadsBody').innerHTML = filtered.map(l => {
- const es = ESTADOS_LEAD[l.estado] || {label:l.estado||'nuevo', class:'bg-secondary'};
- const canConvert = l.estado !== 'cliente' && l.estado !== 'perdido';
- const stages = ['nuevo','contactado','cotizado','negociacion','ganado','perdido','cliente'];
- const stageIdx = stages.indexOf(l.estado || 'nuevo');
- let stageBtns = '';
- if (stageIdx > 0 && l.estado !== 'cliente' && l.estado !== 'perdido') {
- stageBtns += '<button class="action-btn" onclick="changeLeadStage(\''+l.id+'\',\'prev\')" title="Etapa anterior"><i class="bi bi-chevron-left"></i></button>';
- }
- if (stageIdx < stages.length - 1 && l.estado !== 'cliente' && l.estado !== 'perdido') {
- stageBtns += '<button class="action-btn" onclick="changeLeadStage(\''+l.id+'\',\'next\')" title="Siguiente etapa"><i class="bi bi-chevron-right"></i></button>';
- }
- return `<tr>
- <td><strong>${l.id}${l.estado==='cliente'?' <span class="badge bg-success" style="font-size:0.6em;">✓ Cliente</span>':''}</strong></td>
- <td><strong><a href="/leads/${l.id}" style="color:var(--htk-primary);text-decoration:none;">${escHtml(l.nombre || '-')}</a></strong></td>
- <td>${escHtml(l.contacto || '-')}</td>
- <td>${escHtml(l.segmento || '-')}</td>
- <td>${escHtml(l.linea_interes || '-')}</td>
- <td><span class="badge ${es.class}">${es.label}</span></td>
- <td>${formatCurrency(l.valor_estimado)}</td>
- <td><small>${formatDate(l.fecha_creacion)}</small></td>
- <td>
- <div class="d-flex gap-1 flex-wrap" style="max-width:200px;">
- <button class="action-btn primary" onclick="showLeadDetail('${l.id}')" title="Ver perfil"><i class="bi bi-eye"></i></button>
- ${(()=>{let p=(l.telefono||l.contacto||'').replace(/[^\d+]/g,'');if(p&&!p.startsWith('+'))p='+57'+p.replace(/^57/,'');return p&&p!=='+57'?`<button class="action-btn" style="color:#25D366;" onclick="window.open('https://wa.me/${p.replace(/\+/g,'')}','_blank')" title="WhatsApp rápido"><i class="bi bi-whatsapp"></i></button>`:'';})()}
- ${l.email&&l.email.includes('@')?`<button class="action-btn" style="color:#0dcaf0;" onclick="window.open('mailto:${l.email}','_blank')" title="Enviar email"><i class="bi bi-envelope"></i></button>`:''}
- <button class="action-btn" style="color:var(--htk-primary);" onclick="showModal('lead','${l.id}')" title="Editar lead"><i class="bi bi-pencil"></i></button>
- ${canConvert ? `<button class="action-btn" style="color:#ffc107;" onclick="convertLead('${l.id}')" title="Convertir a Cliente"><i class="bi bi-person-plus"></i></button>` : ''}
- <button class="action-btn danger" onclick="deleteItem('leads','${l.id}','${escHtml(l.nombre||'')}')" title="Eliminar"><i class="bi bi-trash"></i></button>
- ${stageBtns}
- </div>
- </td>
- </tr>`;
- }).join('');
- emptyState(null, 'leadsEmpty', filtered.length);
- hideLoading('leadsLoading','leadsContent');
+function getLeadActions(l) {
+  const canConvert = l.estado !== 'cliente' && l.estado !== 'perdido';
+  const stages = ['nuevo','contactado','cotizado','negociacion','ganado','perdido','cliente'];
+  const stageIdx = stages.indexOf(l.estado || 'nuevo');
+  let btns = '';
+  btns += `<button class="action-btn primary" onclick="showLeadDetail('${l.id}')" title="Ver perfil"><i class="bi bi-eye"></i></button>`;
+  let p = (l.telefono||l.contacto||'').replace(/[^\d+]/g,'');
+  if(p&&!p.startsWith('+'))p='+57'+p.replace(/^57/,'');
+  if(p&&p!=='+57') btns += `<button class="action-btn" style="color:#25D366;" onclick="window.open('https://wa.me/${p.replace(/\+/g,'')}','_blank')" title="WhatsApp"><i class="bi bi-whatsapp"></i></button>`;
+  if(l.email&&l.email.includes('@')) btns += `<button class="action-btn" style="color:#0dcaf0;" onclick="window.open('mailto:${l.email}','_blank')" title="Email"><i class="bi bi-envelope"></i></button>`;
+  btns += `<button class="action-btn" style="color:var(--htk-primary);" onclick="showModal('lead','${l.id}')" title="Editar"><i class="bi bi-pencil"></i></button>`;
+  if(canConvert) btns += `<button class="action-btn" style="color:#ffc107;" onclick="convertLead('${l.id}')" title="Convertir"><i class="bi bi-person-plus"></i></button>`;
+  btns += `<button class="action-btn danger" onclick="deleteItem('leads','${l.id}','${escHtml(l.nombre||'')}')" title="Eliminar"><i class="bi bi-trash"></i></button>`;
+  if(stageIdx > 0 && l.estado !== 'cliente' && l.estado !== 'perdido') btns += `<button class="action-btn" onclick="changeLeadStage('${l.id}','prev')" title="Anterior"><i class="bi bi-chevron-left"></i></button>`;
+  if(stageIdx < stages.length - 1 && l.estado !== 'cliente' && l.estado !== 'perdido') btns += `<button class="action-btn" onclick="changeLeadStage('${l.id}','next')" title="Siguiente"><i class="bi bi-chevron-right"></i></button>`;
+  return `<div class="d-flex gap-1 flex-wrap" style="max-width:200px;">${btns}</div>`;
+}
+
+function filterLeadsDT() {
+  _ensureDTFilters();
+  if (dtLeads) dtLeads.draw();
+}
+
+function renderLeadsDT() {
+  _ensureDTFilters();
+  const cols = [
+    { data:'id', render: function(d,t,r) { return `<strong>${d}${r.estado==='cliente'?' <span class="badge bg-success" style="font-size:0.6em;">✓ Cliente</span>':''}</strong>`; }},
+    { data:'nombre', render: function(d,t,r) { return `<strong><a href="/leads/${r.id}" style="color:var(--htk-primary);text-decoration:none;">${escHtml(d||'-')}</a></strong>`; }},
+    { data:'contacto', render: function(d) { return escHtml(d||'-'); }},
+    { data:'segmento', render: function(d) { return escHtml(d||'-'); }},
+    { data:'linea_interes', render: function(d) { return escHtml(d||'-'); }},
+    { data:'estado', render: function(d) {
+      const es = ESTADOS_LEAD[d] || {label:d||'nuevo', class:'bg-secondary'};
+      return `<span class="badge ${es.class}">${es.label}</span>`;
+    }},
+    { data:'valor_estimado', render: function(d) { return formatCurrency(d); }},
+    { data:'fecha_creacion', render: function(d) { return `<small>${formatDate(d)}</small>`; }},
+    { data:null, render: function(d,t,r) { return getLeadActions(r); }}
+  ];
+  dtLeads = initDT('tableLeads', leads, cols, {
+    drawCallback: function() {
+      hideLoading('leadsLoading','leadsContent');
+      emptyState(null, 'leadsEmpty', this.api().rows({filter:'applied'}).count());
+    }
+  });
+  // Connect filter dropdowns to DataTables search
+  $('#leadEstadoFilter, #leadServicioFilter, #leadSegmentFilter').off('change.dt').on('change.dt', filterLeadsDT);
 }
 
 async function showLeadDetail(id) {
@@ -1524,28 +1647,38 @@ async function changeLeadStage(id, direction) {
 }
 
 // INTERACCIONES 
+// ─── INTERACTIONS ─────────────────────────────────────
 async function loadInteractions() {
  showLoading('interactionsLoading','interactionsContent');
- interactions = await fetchJSON('/api/interactions');
- renderInteractions();
+ interactions = (await fetchJSON('/api/interactions')) || [];
+ renderInteractionsDT();
 }
 
-function renderInteractions() {
- document.getElementById('interactionsBody').innerHTML = interactions.slice().reverse().map(int => `
- <tr>
- <td><strong>${int.id}</strong></td>
- <td>${escHtml(int.lead_nombre || int.cliente?.nombre || '-')}</td>
- <td><span class="badge ${int.direccion==='recibido'?'bg-info':'bg-success'}">${escHtml(int.direccion||'-')}</span></td>
- <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(int.resumen||'')}">${escHtml(int.resumen||'-')}</td>
- <td><span class="badge bg-secondary">${escHtml(int.estado||'-')}</span></td>
- <td><small>${formatDateTime(int.fecha)}</small></td>
- <td>
- <button class="action-btn primary" onclick='showInteractionDetail(${JSON.stringify(int).replace(/'/g,"&#39;")})' title="Ver"><i class="bi bi-eye"></i></button>
- </td>
- </tr>
- `).join('');
- emptyState(null, 'interactionsEmpty', interactions.length);
- hideLoading('interactionsLoading','interactionsContent');
+function renderInteractionsDT() {
+  _ensureDTFilters();
+  // Reverse so newest first
+  const rev = [...interactions].reverse();
+  const cols = [
+    { data:'id', render: function(d) { return `<strong>${d}</strong>`; }},
+    { data:null, render: function(d,t,r) { return escHtml(r.lead_nombre || r.cliente?.nombre || '-'); }},
+    { data:'direccion', render: function(d) {
+      return `<span class="badge ${d==='recibido'?'bg-info':'bg-success'}">${escHtml(d||'-')}</span>`;
+    }},
+    { data:'resumen', render: function(d) {
+      return `<span title="${escHtml(d||'')}" style="max-width:300px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(d||'-')}</span>`;
+    }},
+    { data:'estado', render: function(d) { return `<span class="badge bg-secondary">${escHtml(d||'-')}</span>`; }},
+    { data:'fecha', render: function(d) { return `<small>${formatDateTime(d)}</small>`; }},
+    { data:null, render: function(d,t,r) {
+      return `<button class="action-btn primary" onclick='showInteractionDetail(${JSON.stringify(r).replace(/'/g,"&#39;")})' title="Ver"><i class="bi bi-eye"></i></button>`;
+    }}
+  ];
+  dtInteractions = initDT('tableInteractions', rev, cols, {
+    drawCallback: function() {
+      hideLoading('interactionsLoading','interactionsContent');
+      emptyState(null, 'interactionsEmpty', this.api().rows({filter:'applied'}).count());
+    }
+  });
 }
 
 function showInteractionDetail(int) {
@@ -4098,7 +4231,7 @@ function handleLogout() {
  window.location.href = '/logout';
 }
 
-// ── INVENTARIO ──────────────────────────────────────────────────────
+// ─── INVENTARIO ───────────────────────────────────────
 let inventarioData = [];
 
 async function loadInventario() {
@@ -4130,40 +4263,58 @@ async function loadInventario() {
       badge.style.display = 'none';
     }
     
-    // Renderizar tabla
-    const tbody = document.getElementById('invTableBody');
-    if (inventarioData.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4" style="color:rgba(255,255,255,0.3);"><i class="bi bi-inbox"></i><p class="mt-1">No hay items en inventario</p></td></tr>';
-      return;
-    }
-    
-    tbody.innerHTML = inventarioData.map(item => {
-      const stockClass = item.cantidad < item.stock_minimo ? 'text-danger fw-bold' : 
-                        (item.cantidad > item.stock_minimo * 2 ? 'text-success' : '');
-      const stockIcon = item.cantidad < item.stock_minimo ? ' \u{1f534}' : 
-                       (item.cantidad > item.stock_minimo * 2 ? ' \u{1f7e2}' : '');
-      return `
-      <tr>
-        <td><code>${escHtml(item.codigo)}</code></td>
-        <td>${escHtml(item.nombre)}</td>
-        <td><span class="badge bg-secondary">${escHtml(item.categoria || '-')}</span></td>
-        <td class="${stockClass}">${item.cantidad} ${escHtml(item.unidad)}${stockIcon}</td>
-        <td>${item.stock_minimo} ${escHtml(item.unidad)}</td>
-        <td>${escHtml(item.proveedor || '-')}</td>
-        <td>${formatCurrency(item.costo_unitario)}</td>
-        <td>${escHtml(item.ubicacion || '-')}</td>
-        <td>
-          <button class="action-btn primary" title="Entrada stock" onclick="showAjusteStockModal(${item.id}, 'entrada')"><i class="bi bi-plus-circle"></i></button>
-          <button class="action-btn danger" title="Salida stock" onclick="showAjusteStockModal(${item.id}, 'salida')"><i class="bi bi-dash-circle"></i></button>
-          <button class="action-btn primary" title="Editar" onclick="showInventarioModal(${item.id})"><i class="bi bi-pencil"></i></button>
-          <button class="action-btn danger" title="Eliminar" onclick="deleteInventarioItem(${item.id})"><i class="bi bi-trash"></i></button>
-        </td>
-      </tr>`;
-    }).join('');
+    renderInvDT();
   } catch (e) {
     console.error('loadInventario:', e);
     document.getElementById('invTableBody').innerHTML = '<tr><td colspan="9" class="text-center text-danger py-3">Error al cargar inventario</td></tr>';
   }
+}
+
+function renderInvDT() {
+  _ensureDTFilters();
+  // Hide the manual empty-row element if DataTables will manage it
+  const cols = [
+    { data:'codigo', render: function(d) { return `<code>${escHtml(d)}</code>`; }},
+    { data:'nombre', render: function(d) { return escHtml(d); }},
+    { data:'categoria', render: function(d) { return `<span class="badge bg-secondary">${escHtml(d||'-')}</span>`; }},
+    { data:null, render: function(d,t,r) {
+      const cls = r.cantidad < r.stock_minimo ? 'text-danger fw-bold' : (r.cantidad > r.stock_minimo * 2 ? 'text-success' : '');
+      const icon = r.cantidad < r.stock_minimo ? ' \u{1f534}' : (r.cantidad > r.stock_minimo * 2 ? ' \u{1f7e2}' : '');
+      return `<span class="${cls}">${r.cantidad} ${escHtml(r.unidad)}${icon}</span>`;
+    }},
+    { data:null, render: function(d,t,r) { return `${r.stock_minimo} ${escHtml(r.unidad)}`; }},
+    { data:'proveedor', render: function(d) { return escHtml(d||'-'); }},
+    { data:'costo_unitario', render: function(d) { return formatCurrency(d); }},
+    { data:'ubicacion', render: function(d) { return escHtml(d||'-'); }},
+    { data:null, render: function(d,t,r) {
+      return `<div class="d-flex gap-1">
+ <button class="action-btn primary" title="Entrada" onclick="showAjusteStockModal(${r.id}, 'entrada')"><i class="bi bi-plus-circle"></i></button>
+ <button class="action-btn danger" title="Salida" onclick="showAjusteStockModal(${r.id}, 'salida')"><i class="bi bi-dash-circle"></i></button>
+ <button class="action-btn primary" title="Editar" onclick="showInventarioModal(${r.id})"><i class="bi bi-pencil"></i></button>
+ <button class="action-btn danger" title="Eliminar" onclick="deleteInventarioItem(${r.id})"><i class="bi bi-trash"></i></button>
+ </div>`;
+    }}
+  ];
+  dtInv = initDT('tableInv', inventarioData, cols, {
+    drawCallback: function() {
+      // Update bajo stock badge after draw
+      const visible = this.api().rows({filter:'applied'}).data().toArray();
+      const bs = visible.filter(i => i.cantidad < i.stock_minimo);
+      const badge = document.getElementById('invBajoStockBadge');
+      if (badge) {
+        if (bs.length > 0) {
+          badge.style.display = 'inline-block';
+          badge.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${bs.length} item(s) bajo stock`;
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+      const tbody = document.getElementById('invTableBody');
+      if (tbody && !tbody.children.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4" style="color:rgba(255,255,255,0.3);"><i class="bi bi-inbox"></i><p class="mt-1">No hay items en inventario</p></td></tr>';
+      }
+    }
+  });
 }
 
 function showInventarioModal(itemId) {

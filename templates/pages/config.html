@@ -60,8 +60,8 @@
  <div id="config-tab-bot" class="config-subtab" style="display:none;">
   <div class="row">
    <div class="col-lg-8">
-    <div id="botCfgLoading" class="text-center py-4" style="display:none;"><span class="spinner-border spinner-border-sm"></span> Cargando configuración...</div>
-    <div id="botCfgForm">
+    <div id="botCfgLoading" class="text-center py-4"><span class="spinner-border spinner-border-sm"></span> Cargando configuración...</div>
+    <div id="botCfgForm" style="display:none;">
      <div class="accordion" id="botConfigAccordion">
 
       <!-- ⏰ Horario -->
@@ -126,6 +126,29 @@
            <small class="text-muted">Silencio tras prospección outbound</small>
           </div>
           <div class="col-12"><hr></div>
+          <!-- ⏱ Chat activo e inactividad -->
+          <h6 class="mt-2 mb-2" style="color:rgba(255,255,255,0.5);">⏱ Chat Activo e Inactividad (Pedro atiende desde la bandeja)</h6>
+          <div class="col-md-3">
+           <label class="form-label">Cooldown chat (min)</label>
+           <input type="number" class="form-control" id="cfg_active_chat_cooldown_min" min="1" max="120">
+           <small class="text-muted">Min sin escribir de Pedro antes de que bot retome</small>
+          </div>
+          <div class="col-md-3">
+           <label class="form-label">TTL chat activo (min)</label>
+           <input type="number" class="form-control" id="cfg_active_chat_ttl_min" min="1" max="1440">
+           <small class="text-muted">Tiempo máx total de chat activo</small>
+          </div>
+          <div class="col-md-3">
+           <label class="form-label">Aviso inactividad (min)</label>
+           <input type="number" class="form-control" id="cfg_inactividad_aviso_min" min="1" max="60">
+           <small class="text-muted">Min sin respuesta del cliente para avisar</small>
+          </div>
+          <div class="col-md-3">
+           <label class="form-label">Cierre inactividad (min)</label>
+           <input type="number" class="form-control" id="cfg_inactividad_cierre_min" min="1" max="120">
+           <small class="text-muted">Min sin respuesta del cliente para cerrar</small>
+          </div>
+          <div class="col-12"><hr></div>
           <div class="col-md-4">
            <label class="form-label">Auto-respuesta activa</label>
            <div class="form-check form-switch">
@@ -164,28 +187,53 @@
          <div class="row g-3">
           <div class="col-md-6">
            <label class="form-label">📩 Presentación</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_presentacion" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_presentacion" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+           <textarea class="form-control cfg-msg" id="cfg_msg_presentacion" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <div class="preview-bubble mt-2" id="preview_msg_presentacion" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
           </div>
           <div class="col-md-6">
            <label class="form-label">👋 Bienvenida</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_bienvenida" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_bienvenida" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+           <textarea class="form-control cfg-msg" id="cfg_msg_bienvenida" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <div class="preview-bubble mt-2" id="preview_msg_bienvenida" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
           </div>
           <div class="col-md-6">
            <label class="form-label">🕐 Fuera de horario</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_fuera_horario" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_fuera_horario" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+           <textarea class="form-control cfg-msg" id="cfg_msg_fuera_horario" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <div class="preview-bubble mt-2" id="preview_msg_fuera_horario" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
           </div>
           <div class="col-md-6">
            <label class="form-label">🙌 Derivar a ingeniero</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_derivar" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_derivar" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+           <textarea class="form-control cfg-msg" id="cfg_msg_derivar_ingeniero" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <div class="preview-bubble mt-2" id="preview_msg_derivar" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
           </div>
           <div class="col-md-6">
            <label class="form-label">✅ Despedida</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_despedida" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_despedida" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+           <textarea class="form-control cfg-msg" id="cfg_msg_despedida" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <div class="preview-bubble mt-2" id="preview_msg_despedida" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+          </div>
+          <div class="col-12"><hr><small class="text-muted">Chat Activo — Mensajes automáticos cuando Pedro atiende desde la bandeja</small></div>
+          <div class="col-md-6">
+           <label class="form-label">⏰ Aviso inactividad</label>
+           <textarea class="form-control cfg-msg" id="cfg_msg_aviso_inactividad" rows="2" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <small class="text-muted">Se envía cuando el cliente no responde tras X min (configurable arriba)</small>
+           <div class="preview-bubble mt-2" id="preview_msg_aviso_inactividad" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+          </div>
+          <div class="col-md-6">
+           <label class="form-label">🔚 Cierre inactividad</label>
+           <textarea class="form-control cfg-msg" id="cfg_msg_cierre_inactividad" rows="2" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <small class="text-muted">Se envía cuando se cierra el chat por inactividad</small>
+           <div class="preview-bubble mt-2" id="preview_msg_cierre_inactividad" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+          </div>
+          <div class="col-md-6">
+           <label class="form-label">🔓 Cierre manual (Pedro escribe /FIN)</label>
+           <textarea class="form-control cfg-msg" id="cfg_msg_cierre_chat_activo" rows="2" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <small class="text-muted">Se envía cuando Pedro escribe /FIN para cerrar su sesión</small>
+           <div class="preview-bubble mt-2" id="preview_msg_cierre_chat_activo" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+          </div>
+          <div class="col-md-6">
+           <label class="form-label">🔄 Reapertura</label>
+           <textarea class="form-control cfg-msg" id="cfg_msg_reapertura" rows="2" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <small class="text-muted">Cuando el cliente escribe después de que Pedro dejó el chat</small>
+           <div class="preview-bubble mt-2" id="preview_msg_reapertura" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
           </div>
          </div>
         </div>
@@ -202,62 +250,14 @@
        <div id="cfgConexion" class="accordion-collapse collapse" data-bs-parent="#botConfigAccordion">
         <div class="accordion-body">
          <div class="row g-3 align-items-end">
-          <div class="col-md-6">
+          <div class="col-md-8">
            <label class="form-label">URL del CRM</label>
            <input type="text" class="form-control" id="cfg_crm_api_url" placeholder="http://localhost:18800">
           </div>
-          <div class="col-md-3">
+          <div class="col-md-4">
            <label class="form-label">Estado del Bot</label>
            <div><span id="cfgBotStatus" class="badge bg-secondary">⏳ Verificando...</span></div>
           </div>
-          <div class="col-md-3">
-           <label class="form-label">Número</label>
-           <div><span id="cfgBotNumber" class="text-muted" style="font-size:0.9em;">—</span></div>
-          </div>
-         </div>
-
-         <!-- Botones de control -->
-         <div class="d-flex gap-2 mt-3 flex-wrap">
-          <button class="btn btn-outline-success btn-sm" id="cfgStartBotBtn" onclick="startBot()" style="display:none;">
-           <i class="bi bi-play-fill"></i> Iniciar
-          </button>
-          <button class="btn btn-outline-danger btn-sm" id="cfgStopBotBtn" onclick="stopBot()" style="display:none;">
-           <i class="bi bi-stop-fill"></i> Detener
-          </button>
-          <button class="btn btn-outline-warning btn-sm" id="cfgRestartBotBtn" onclick="restartBot()" style="display:none;">
-           <i class="bi bi-arrow-clockwise"></i> Reiniciar
-          </button>
-          <button class="btn btn-outline-info btn-sm" id="cfgQrBtn" onclick="showBotQR()" style="display:none;">
-           <i class="bi bi-qr-code"></i> Escanear QR
-          </button>
-         </div>
-
-         <!-- QR Code display -->
-         <div id="cfgQrDisplay" class="mt-3 text-center" style="display:none;">
-          <div class="card d-inline-block p-3" style="background:white;">
-           <img id="cfgQrImage" src="" alt="QR Code" style="width:280px;height:280px;">
-          </div>
-          <div class="mt-2">
-           <small class="text-muted">Escanea con WhatsApp → Dispositivos vinculados</small>
-           <br>
-           <a id="cfgQrLink" href="#" target="_blank" class="small">Abrir enlace del QR</a>
-          </div>
-          <button class="btn btn-sm btn-outline-secondary mt-2" onclick="document.getElementById('cfgQrDisplay').style.display='none'">
-           <i class="bi bi-x"></i> Cerrar QR
-          </button>
-         </div>
-
-         <!-- Logs -->
-         <div class="mt-3">
-          <div class="d-flex justify-content-between align-items-center">
-           <label class="form-label mb-0">📋 Log del Bot</label>
-           <button class="btn btn-sm btn-outline-secondary" onclick="loadBotLog()">
-            <i class="bi bi-arrow-repeat"></i> Recargar
-           </button>
-          </div>
-          <pre id="cfgBotLog" class="mt-1 p-2" style="background:rgba(0,0,0,0.3);border-radius:6px;max-height:300px;overflow-y:auto;font-size:0.68em;line-height:1.3;color:rgba(255,255,255,0.7);font-family:'Courier New',monospace;white-space:pre-wrap;">
-⏳ Cargando logs...
-          </pre>
          </div>
         </div>
        </div>
@@ -339,128 +339,8 @@
 
  <!-- Segments Sub-tab -->
  <div id="config-tab-segments" class="config-subtab" style="display:none;">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-   <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Segmentos</h5>
-   <button class="btn btn-htk btn-sm" onclick="showSegmentModal(null)"><i class="bi bi-plus-lg"></i> Nuevo segmento</button>
-  </div>
-  
-  <!-- Tabla de segmentos -->
-  <div class="table-responsive">
-   <table class="table table-dark table-hover">
-    <thead>
-     <tr>
-      <th style="width:40px">Color</th>
-      <th>Segmento</th>
-      <th>Clave</th>
-      <th style="width:80px">Orden</th>
-      <th style="width:60px">Activo</th>
-      <th style="width:120px">Acciones</th>
-     </tr>
-    </thead>
-    <tbody id="segmentTableBody">
-     <tr><td colspan="6" class="text-center text-muted py-3"><span class="spinner-border spinner-border-sm"></span> Cargando...</td></tr>
-    </tbody>
-   </table>
-  </div>
-
-  <hr class="my-4">
-  
-  <!-- Sección de Plantillas (Pitches) -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-   <h5 class="mb-0"><i class="bi bi-chat-square-text"></i> Plantillas de mensajes (Pitches)</h5>
-   <button class="btn btn-htk btn-sm" onclick="showPitchModal(null)"><i class="bi bi-plus-lg"></i> Nueva plantilla</button>
-  </div>
-  <p class="text-muted small mb-3">Cada plantilla se asigna a uno o más segmentos y puede tener contenido para WhatsApp y Email.</p>
-  
-  <div class="table-responsive">
-   <table class="table table-dark table-hover">
-    <thead>
-     <tr>
-      <th>Título</th>
-      <th>Segmentos</th>
-      <th>WhatsApp</th>
-      <th>Email</th>
-      <th style="width:80px">Acción</th>
-     </tr>
-    </thead>
-    <tbody id="pitchTableBody">
-     <tr><td colspan="5" class="text-center text-muted py-3"><span class="spinner-border spinner-border-sm"></span> Cargando...</td></tr>
-    </tbody>
-   </table>
-  </div>
- </div>
-
- <!-- Modal Segmento -->
- <div class="modal fade" id="segmentModal" tabindex="-1">
-  <div class="modal-dialog">
-   <div class="modal-content bg-dark text-light">
-    <div class="modal-header">
-     <h5 class="modal-title" id="segmentModalTitle">Nuevo Segmento</h5>
-     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-    </div>
-    <div class="modal-body">
-     <div class="mb-3">
-      <label class="form-label">Clave única</label>
-      <input class="form-control" id="seg_key" placeholder="ej: hoteles, B2B taller">
-      <small class="text-muted">Se usa como identificador interno. Sin espacios, ej: "B2B_taller"</small>
-     </div>
-     <div class="mb-3">
-      <label class="form-label">Nombre visible</label>
-      <input class="form-control" id="seg_label" placeholder="Ej: Hoteles">
-     </div>
-     <div class="mb-3">
-      <label class="form-label">Color</label>
-      <input class="form-control" id="seg_color" type="color" value="#6f42c1">
-     </div>
-    </div>
-    <div class="modal-footer">
-     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-     <button type="button" class="btn btn-htk" onclick="saveSegment()">Guardar</button>
-    </div>
-   </div>
-  </div>
- </div>
-
- <!-- Modal Pitch -->
- <div class="modal fade" id="pitchModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-   <div class="modal-content bg-dark text-light">
-    <div class="modal-header">
-     <h5 class="modal-title" id="pitchModalTitle">Nueva Plantilla</h5>
-     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-    </div>
-    <div class="modal-body">
-     <div class="mb-3">
-      <label class="form-label">Título</label>
-      <input class="form-control" id="pitch_titulo" placeholder="Ej: Hoteles — Mantenimiento integral">
-     </div>
-     <div class="mb-3">
-      <label class="form-label">Segmentos asignados</label>
-      <div id="pitch_segmentos_container" class="d-flex flex-wrap gap-2"></div>
-      <small class="text-muted">Selecciona los segmentos donde se usará esta plantilla</small>
-     </div>
-     <div class="mb-3">
-      <label class="form-label">Mensaje WhatsApp</label>
-      <textarea class="form-control font-monospace small" id="pitch_whatsapp" rows="6" style="font-size:0.85em;"></textarea>
-      <small class="text-muted">Usa {nombre} para personalizar</small>
-     </div>
-     <div class="row">
-      <div class="col-md-4 mb-3">
-       <label class="form-label">Asunto Email</label>
-       <input class="form-control" id="pitch_asunto_email" placeholder="Asunto del correo">
-      </div>
-      <div class="col-md-8 mb-3">
-       <label class="form-label">Cuerpo Email</label>
-       <textarea class="form-control font-monospace small" id="pitch_email" rows="4" style="font-size:0.85em;"></textarea>
-      </div>
-     </div>
-    </div>
-    <div class="modal-footer">
-     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-     <button type="button" class="btn btn-danger me-auto" id="pitchDeleteBtn" onclick="deletePitch()" style="display:none">Eliminar</button>
-     <button type="button" class="btn btn-htk" onclick="savePitch()">Guardar</button>
-    </div>
-   </div>
+  <div class="text-center py-5">
+   <span class="spinner-border spinner-border-sm"></span> Cargando segmentos...
   </div>
  </div>
 
@@ -480,5 +360,6 @@
 
 <!-- ══════════════════════════════════════════════════════════════════ -->
 
+</div>
 <!-- TAB: INVENTARIO -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
