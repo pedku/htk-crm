@@ -105,6 +105,50 @@ def init_db():
     finally:
         conn.close()
 
+    # ── Tablas de Facturación ───────────────────────
+    conn_fac = sqlite3.connect(DB_PATH)
+    try:
+        conn_fac.execute("PRAGMA journal_mode=WAL")
+        conn_fac.execute("PRAGMA foreign_keys=ON")
+        conn_fac.execute('''
+            CREATE TABLE IF NOT EXISTS invoices (
+                id TEXT PRIMARY KEY,
+                client_id TEXT NOT NULL,
+                wo_id TEXT,
+                numero TEXT NOT NULL UNIQUE,
+                estado TEXT DEFAULT 'borrador',
+                fecha_emision TEXT NOT NULL,
+                fecha_vencimiento TEXT NOT NULL,
+                sub_total REAL DEFAULT 0,
+                descuento REAL DEFAULT 0,
+                iva_total REAL DEFAULT 0,
+                total_general REAL DEFAULT 0,
+                notas TEXT DEFAULT '',
+                terminos TEXT DEFAULT '',
+                metodo_pago TEXT DEFAULT '',
+                pagada_fecha TEXT,
+                activo BOOLEAN DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        ''')
+        conn_fac.execute('''
+            CREATE TABLE IF NOT EXISTS invoice_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                invoice_id TEXT NOT NULL,
+                item_num INTEGER NOT NULL,
+                descripcion TEXT NOT NULL,
+                cantidad REAL NOT NULL DEFAULT 1,
+                precio_unitario REAL NOT NULL DEFAULT 0,
+                iva_porcentaje REAL DEFAULT 19,
+                total_linea REAL NOT NULL DEFAULT 0,
+                FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+            )
+        ''')
+        conn_fac.commit()
+    finally:
+        conn_fac.close()
+
     # ── Tablas Auxiliares (payments, ventas, precios, tareas, segmentos, etapas, tags) ──
     conn_aux = sqlite3.connect(DB_PATH)
     try:
@@ -378,6 +422,7 @@ def create_app():
     from app.routes.api_bot import api_bot_bp
     from app.routes.api_inventory import api_inventory_bp
     from app.routes.api_misc import api_misc_bp
+    from app.routes.api_invoices import api_invoices_bp
 
     app.register_blueprint(views_bp)
     app.register_blueprint(api_leads_bp)
@@ -386,6 +431,7 @@ def create_app():
     app.register_blueprint(api_bot_bp)
     app.register_blueprint(api_inventory_bp)
     app.register_blueprint(api_misc_bp)
+    app.register_blueprint(api_invoices_bp)
 
     # Cache-busting: evitar que el navegador cachee HTML
     @app.after_request

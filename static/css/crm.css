@@ -849,3 +849,14 @@ table.dataTable.no-footer {
   border-color: rgba(0,0,0,0.1) !important;
   color: rgba(0,0,0,0.8) !important;
 }
+
+/* ─── Facturación ───────────────────────────────── */
+#tab-facturacion .modal-content { background: #1c1c1e; color: #fff; }
+#factItemsContainer { max-height: 300px; overflow-y: auto; }
+.fact-item-row { flex-wrap: wrap; }
+#facturaPreviewIframe { background: #fff !important; }
+
+/* Invoice badge colors in dark mode */
+[data-bs-theme="dark"] .badge.bg-warning { background: #d97706 !important; }
+[data-bs-theme="dark"] .badge.bg-success { background: #059669 !important; }
+[data-bs-theme="dark"] .badge.bg-danger { background: #dc2626 !important; }

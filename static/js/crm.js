@@ -232,6 +232,7 @@ document.querySelectorAll('.sidebar .nav-link[data-tab]').forEach(link => {
     if (tab === 'leads') loadLeads();
     if (tab === 'interactions') loadInteractions();
     if (tab === 'inventario') loadInventario();
+    if (tab === 'facturacion') loadFacturas();
     if (tab === 'config') { switchConfigTab('general'); }
   });
 });
@@ -253,6 +254,7 @@ document.querySelectorAll('.mobile-nav-link[data-tab]').forEach(link => {
  if (tab === 'leads') loadLeads();
  if (tab === 'interactions') loadInteractions();
  if (tab === 'inventario') loadInventario();
+ if (tab === 'facturacion') loadFacturas();
  if (tab === 'config') { switchConfigTab('general'); }
  });
 });
@@ -348,6 +350,7 @@ function navigateToTab(tabName) {
  if (tabName === 'leads') loadLeads();
  if (tabName === 'clients') loadClients();
  if (tabName === 'workorders') loadWorkOrders();
+ if (tabName === 'facturacion') loadFacturas();
  }
 }
 
@@ -609,7 +612,10 @@ async function loadDashboard() {
  
  // OT Financial Stats
  loadOTFinancialStats(orders);
- 
+
+ // Invoice Stats
+ loadFacturasStats();
+
  hideLoading('dashboardLoading','dashboardContent');
  } catch(e) { showToast('Error al cargar dashboard', 'danger'); hideLoading('dashboardLoading','dashboardContent'); }
 };
@@ -4487,5 +4493,323 @@ async function ajustarStock(event, itemId) {
   } catch (e) {
     alert('Error: ' + e.message);
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FACTURACIÓN
+// ═══════════════════════════════════════════════════════════════
+
+let facturas = [];
+let dtFacturas = null;
+let currentFactViewId = null;
+
+async function loadFacturas() {
+  showLoading('factLoading', 'factContent');
+  try {
+    const data = await fetchJSON('/api/facturas');
+    if (Array.isArray(data)) facturas = data;
+  } catch(e) {}
+  renderFacturasDT();
+}
+
+function filterFacturasDT() {
+  if (dtFacturas) {
+    const estado = document.getElementById('factEstadoFilter')?.value || '';
+    dtFacturas.column(5).search(estado, true, false).draw();
+  }
+}
+
+function renderFacturasDT() {
+  const estado = document.getElementById('factEstadoFilter')?.value || '';
+  let data = facturas;
+  if (estado) data = data.filter(f => f.estado === estado);
+
+  const cols = [
+    { data:'numero', render: function(d,t,r) {
+      return `<a href="#" onclick="showFacturaDetail('${r.id}');return false;" style="color:var(--htk-primary);text-decoration:none;font-weight:600;">${d}</a>`;
+    }},
+    { data:'cliente_nombre', render: function(d) { return escHtml(d||'—'); }},
+    { data:'fecha_emision', render: function(d) { return (d||'').slice(0,10); }},
+    { data:'fecha_vencimiento', render: function(d) { return (d||'').slice(0,10); }},
+    { data:'total_general', render: function(d) { return `<strong>$${(d||0).toLocaleString('es-CO')}</strong>`; }},
+    { data:'estado', render: function(d) {
+      const badges = {
+        'borrador': 'badge bg-secondary',
+        'emitida': 'badge bg-warning text-dark',
+        'pagada': 'badge bg-success',
+        'vencida': 'badge bg-danger',
+        'anulada': 'badge bg-dark text-decoration-line-through'
+      };
+      return `<span class="${badges[d]||'badge bg-secondary'}">${d.toUpperCase()}</span>`;
+    }},
+    { data:null, render: function(d,t,r) {
+      let btns = '';
+      btns += `<button class="action-btn primary" onclick="showFacturaDetail('${r.id}')" title="Ver"><i class="bi bi-eye"></i></button>`;
+      if (r.estado === 'borrador') {
+        btns += `<button class="action-btn primary" onclick="showFacturaModal('${r.id}')" title="Editar"><i class="bi bi-pencil"></i></button>`;
+        btns += `<button class="action-btn danger" onclick="anularFactura('${r.id}')" title="Anular"><i class="bi bi-x-circle"></i></button>`;
+      }
+      if (r.estado === 'emitida') {
+        btns += `<button class="action-btn primary" style="color:#198754;" onclick="pagarFactura('${r.id}')" title="Pagar"><i class="bi bi-check-circle"></i></button>`;
+      }
+      return `<div class="d-flex gap-1">${btns}</div>`;
+    }}
+  ];
+
+  dtFacturas = initDT('tableFacturas', data, cols, {
+    drawCallback: function() {
+      hideLoading('factLoading','factContent');
+      emptyState(null, 'factEmpty', this.api().rows({filter:'applied'}).count());
+    }
+  });
+}
+
+async function showFacturaModal(id) {
+  document.getElementById('factEditId').value = id || '';
+  document.getElementById('facturaModalTitle').textContent = id ? 'Editar Factura' : 'Nueva Factura';
+
+  try {
+    const cls = await fetchJSON('/api/clients');
+    const sel = document.getElementById('factClientId');
+    sel.innerHTML = '<option value="">Seleccionar...</option>';
+    if (Array.isArray(cls)) {
+      cls.forEach(c => {
+        sel.innerHTML += `<option value="${c.id}">${escHtml(c.nombre||c.id)}</option>`;
+      });
+    }
+
+    const wos = await fetchJSON('/api/work_orders');
+    const woSel = document.getElementById('factWoId');
+    woSel.innerHTML = '<option value="">Ninguna</option>';
+    if (Array.isArray(wos)) {
+      wos.forEach(w => {
+        woSel.innerHTML += `<option value="${w.id}">${w.id} — ${escHtml(w.cliente_nombre||'')}</option>`;
+      });
+    }
+  } catch(e) {}
+
+  const today = new Date().toISOString().slice(0,10);
+  const venc = new Date(Date.now() + 30*86400000).toISOString().slice(0,10);
+  document.getElementById('factFechaEmision').value = today;
+  document.getElementById('factFechaVenc').value = venc;
+
+  document.getElementById('factItemsContainer').innerHTML = '';
+  document.getElementById('factDescuento').value = 0;
+  document.getElementById('factNotas').value = '';
+  document.getElementById('factMetodoPago').value = '';
+
+  if (id) {
+    try {
+      const inv = await fetchJSON(`/api/facturas/${id}`);
+      if (inv) {
+        document.getElementById('factClientId').value = inv.client_id || '';
+        document.getElementById('factWoId').value = inv.wo_id || '';
+        document.getElementById('factFechaEmision').value = (inv.fecha_emision||'').slice(0,10);
+        document.getElementById('factFechaVenc').value = (inv.fecha_vencimiento||'').slice(0,10);
+        document.getElementById('factDescuento').value = inv.descuento || 0;
+        document.getElementById('factNotas').value = inv.notas || '';
+        document.getElementById('factMetodoPago').value = inv.metodo_pago || '';
+
+        const container = document.getElementById('factItemsContainer');
+        container.innerHTML = '';
+        (inv.items || []).forEach(item => {
+          addFacturaItem(item.descripcion, item.cantidad, item.precio_unitario, item.iva_porcentaje);
+        });
+        updateFacturaPreview();
+      }
+    } catch(e) { console.error(e); }
+  } else {
+    addFacturaItem();
+  }
+
+  updateFacturaPreview();
+  const modal = new bootstrap.Modal(document.getElementById('facturaModal'));
+  modal.show();
+}
+
+function addFacturaItem(desc, cant, precio, iva) {
+  const container = document.getElementById('factItemsContainer');
+  const idx = container.children.length;
+  const div = document.createElement('div');
+  div.className = 'fact-item-row d-flex gap-2 align-items-end mb-2 p-2';
+  div.style.cssText = 'background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.05);';
+  div.innerHTML = `
+    <div style="flex:1;min-width:200px;">
+      <input type="text" class="form-control form-control-sm fact-item-desc" value="${escHtml(desc||'')}" placeholder="Descripción" style="background:rgba(255,255,255,0.06);color:inherit;border:1px solid rgba(255,255,255,0.1);" oninput="updateFacturaPreview()">
+    </div>
+    <div style="width:80px;">
+      <input type="number" class="form-control form-control-sm fact-item-cant" value="${cant||1}" min="0.1" step="0.1" style="background:rgba(255,255,255,0.06);color:inherit;border:1px solid rgba(255,255,255,0.1);" oninput="updateFacturaPreview()">
+    </div>
+    <div style="width:120px;">
+      <input type="number" class="form-control form-control-sm fact-item-precio" value="${precio||0}" min="0" step="1000" style="background:rgba(255,255,255,0.06);color:inherit;border:1px solid rgba(255,255,255,0.1);" oninput="updateFacturaPreview()">
+    </div>
+    <div style="width:80px;">
+      <input type="number" class="form-control form-control-sm fact-item-iva" value="${iva||19}" min="0" max="100" style="background:rgba(255,255,255,0.06);color:inherit;border:1px solid rgba(255,255,255,0.1);" oninput="updateFacturaPreview()">
+    </div>
+    <div style="width:100px;">
+      <span class="fact-item-total" style="font-weight:600;">$0</span>
+    </div>
+    <button class="btn btn-sm btn-outline-danger" onclick="this.closest('.fact-item-row').remove();updateFacturaPreview();" title="Quitar"><i class="bi bi-trash"></i></button>
+  `;
+  container.appendChild(div);
+  updateFacturaPreview();
+}
+
+function updateFacturaPreview() {
+  let sub = 0, iva_total = 0;
+  document.querySelectorAll('.fact-item-row').forEach(row => {
+    const cant = parseFloat(row.querySelector('.fact-item-cant')?.value) || 0;
+    const precio = parseFloat(row.querySelector('.fact-item-precio')?.value) || 0;
+    const iva = parseFloat(row.querySelector('.fact-item-iva')?.value) || 0;
+    const total = cant * precio * (1 + iva / 100);
+    const totalEl = row.querySelector('.fact-item-total');
+    if (totalEl) totalEl.textContent = '$' + Math.round(total).toLocaleString('es-CO');
+    sub += cant * precio;
+    iva_total += cant * precio * iva / 100;
+  });
+  const desc = parseFloat(document.getElementById('factDescuento')?.value) || 0;
+  const total = sub + iva_total - desc;
+  document.getElementById('factPreviewSub').textContent = '$' + Math.round(sub).toLocaleString('es-CO');
+  document.getElementById('factPreviewIva').textContent = '$' + Math.round(iva_total).toLocaleString('es-CO');
+  document.getElementById('factPreviewTotal').textContent = '$' + Math.round(total).toLocaleString('es-CO');
+}
+
+function collectFacturaItems() {
+  const items = [];
+  document.querySelectorAll('.fact-item-row').forEach(row => {
+    const desc = row.querySelector('.fact-item-desc')?.value?.trim();
+    if (!desc) return;
+    items.push({
+      descripcion: desc,
+      cantidad: parseFloat(row.querySelector('.fact-item-cant')?.value) || 1,
+      precio_unitario: parseFloat(row.querySelector('.fact-item-precio')?.value) || 0,
+      iva_porcentaje: parseFloat(row.querySelector('.fact-item-iva')?.value) || 19
+    });
+  });
+  return items;
+}
+
+async function saveFactura() {
+  const id = document.getElementById('factEditId').value;
+  const clientId = document.getElementById('factClientId').value;
+  if (!clientId) { alert('Selecciona un cliente'); return; }
+
+  const items = collectFacturaItems();
+  if (!items.length) { alert('Agrega al menos un item'); return; }
+
+  const body = {
+    client_id: clientId,
+    wo_id: document.getElementById('factWoId').value || null,
+    fecha_emision: document.getElementById('factFechaEmision').value,
+    fecha_vencimiento: document.getElementById('factFechaVenc').value,
+    descuento: parseFloat(document.getElementById('factDescuento').value) || 0,
+    notas: document.getElementById('factNotas').value,
+    metodo_pago: document.getElementById('factMetodoPago').value,
+    items: items
+  };
+
+  try {
+    const url = id ? `/api/facturas/${id}` : '/api/facturas';
+    const method = id ? 'PUT' : 'POST';
+    const resp = await fetch(API + url, {
+      method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error || 'Error al guardar');
+    }
+    const data = await resp.json();
+    bootstrap.Modal.getInstance(document.getElementById('facturaModal')).hide();
+    toastMsg(id ? 'Factura actualizada ✅' : `Factura ${data.numero} creada ✅`, 'success');
+    loadFacturas();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function showFacturaDetail(id) {
+  currentFactViewId = id;
+  const modal = new bootstrap.Modal(document.getElementById('facturaViewModal'));
+  modal.show();
+
+  try {
+    const resp = await fetch(API + `/api/facturas/${id}/pdf`);
+    const html = await resp.text();
+    const iframe = document.getElementById('facturaPreviewIframe');
+    iframe.srcdoc = html;
+
+    const inv = await fetchJSON(`/api/facturas/${id}`);
+    const estado = inv?.estado || '';
+    document.getElementById('btnEmitirFact').style.display = (estado === 'borrador') ? '' : 'none';
+    document.getElementById('btnPagarFact').style.display = (estado === 'emitida' || estado === 'vencida') ? '' : 'none';
+  } catch(e) { console.error(e); }
+}
+
+async function emitirFactura(id) {
+  if (!confirm('¿Emitir esta factura? Ya no se podrá editar.')) return;
+  try {
+    const resp = await fetch(API + `/api/facturas/${id}/emitir`, { method:'POST' });
+    if (!resp.ok) { const err = await resp.json(); throw new Error(err.error); }
+    toastMsg('Factura emitida ✅', 'success');
+    bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
+    loadFacturas();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function pagarFactura(id) {
+  if (!confirm('¿Registrar pago de esta factura?')) return;
+  try {
+    const resp = await fetch(API + `/api/facturas/${id}/pagar`, { method:'POST' });
+    if (!resp.ok) { const err = await resp.json(); throw new Error(err.error); }
+    toastMsg('Factura pagada ✅', 'success');
+    bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
+    loadFacturas();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function anularFactura(id) {
+  if (!confirm('¿Anular esta factura?')) return;
+  try {
+    const resp = await fetch(API + `/api/facturas/${id}`, { method:'DELETE' });
+    if (!resp.ok) { const err = await resp.json(); throw new Error(err.error); }
+    toastMsg('Factura anulada', 'warning');
+    bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
+    loadFacturas();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+function imprimirFactura(id) {
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write('<html><head><title>Factura</title></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><p style="color:#666;">Cargando factura...</p></body></html>');
+  fetch(API + `/api/facturas/${id}/pdf`)
+    .then(r => r.text())
+    .then(html => {
+      w.document.write(html);
+      w.document.close();
+      setTimeout(() => w.print(), 600);
+    })
+    .catch(err => { w.document.body.innerHTML = '<p style="color:red;">Error al cargar la factura</p>'; });
+}
+
+async function enviarFacturaWhatsApp(id) {
+  if (!confirm('¿Enviar esta factura por WhatsApp al cliente?')) return;
+  try {
+    const resp = await fetch(API + `/api/facturas/${id}/enviar-whatsapp`, { method:'POST' });
+    const data = await resp.json();
+    if (data.ok) toastMsg('Factura enviada por WhatsApp ✅', 'success');
+    else toastMsg(data.error || 'Error al enviar', 'error');
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function loadFacturasStats() {
+  try {
+    const stats = await fetchJSON('/api/facturas/stats');
+    if (stats) {
+      const elP = document.getElementById('statFactPendientes');
+      const elV = document.getElementById('statFactVencidas');
+      const elM = document.getElementById('statFactTotalMes');
+      if (elP) elP.textContent = stats.pendientes || 0;
+      if (elV) elV.textContent = stats.vencidas || 0;
+      if (elM) elM.textContent = '$' + ((stats.total_mes||0)).toLocaleString('es-CO');
+    }
+  } catch(e) {}
 }
 
