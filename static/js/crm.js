@@ -4796,13 +4796,13 @@ async function anularFactura(id) {
 
 function imprimirFactura(id) {
   const w = window.open('', '_blank', 'width=900,height=700');
-  w.document.write('<html><head><title>Factura</title></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><p style="color:#666;">Cargando factura...</p></body></html>');
-  fetch(API + `/api/facturas/${id}/pdf`)
+  w.document.write('<p style="text-align:center;padding:40px;color:#666;font-family:sans-serif;">Cargando factura...</p>');
+  fetch(API + `/api/facturas/${id}/print`)
     .then(r => r.text())
     .then(html => {
       w.document.write(html);
       w.document.close();
-      setTimeout(() => w.print(), 600);
+      setTimeout(() => w.print(), 500);
     })
     .catch(err => { w.document.body.innerHTML = '<p style="color:red;">Error al cargar la factura</p>'; });
 }

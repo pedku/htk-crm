@@ -355,7 +355,7 @@ def invoice_pdf(inv_id):
         client = conn.execute("SELECT * FROM clients WHERE id = ?",
                               (inv['client_id'],)).fetchone()
 
-        return render_template('pages/factura_template_print.html',
+        return render_template('pages/factura_template.html',
             invoice=dict(inv),
             items=[dict(i) for i in items],
             client=dict(client) if client else None,
@@ -363,7 +363,32 @@ def invoice_pdf(inv_id):
     finally:
         conn.close()
 
-# ── ENVIAR WHATSAPP ───────────────────────────────────────────────────
+# ── PLANTILLA DE IMPRESIÓN (tablas HTML puras) ────────────────────────
+
+@api_invoices_bp.route('/api/facturas/<inv_id>/print')
+@login_required
+def invoice_print(inv_id):
+    conn = get_db()
+    try:
+        inv = conn.execute("SELECT * FROM invoices WHERE id = ?", (inv_id,)).fetchone()
+        if not inv:
+            return '<p>Factura no encontrada</p>', 404
+
+        items = conn.execute(
+            "SELECT * FROM invoice_items WHERE invoice_id = ? ORDER BY item_num",
+            (inv_id,)
+        ).fetchall()
+
+        client = conn.execute("SELECT * FROM clients WHERE id = ?",
+                              (inv['client_id'],)).fetchone()
+
+        return render_template('pages/factura_template_print.html',
+            invoice=dict(inv),
+            items=[dict(i) for i in items],
+            client=dict(client) if client else None,
+            empresa=get_empresa_config())
+    finally:
+        conn.close()
 
 @api_invoices_bp.route('/api/facturas/<inv_id>/enviar-whatsapp', methods=['POST'])
 @login_required
