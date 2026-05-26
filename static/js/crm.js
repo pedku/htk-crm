@@ -751,6 +751,8 @@ async function showClientDetail(id) {
  </p>
  <p><strong>Email:</strong> <span id="cliEmail_${id}">${escHtml(c.email||'-')}</span></p>
  <p><strong>Documento:</strong> ${c.tipo_documento||''} ${escHtml(c.documento||'-')}</p>
+ <p><strong>Tipo Persona:</strong> ${c.tipo_persona === 'juridica' ? 'Jurídica' : 'Natural'}</p>
+ ${c.tipo_persona === 'juridica' && c.nombre_comercial ? `<p><strong>Nombre Comercial:</strong> ${escHtml(c.nombre_comercial)}</p>` : ''}
  <p><strong>Empresa:</strong> ${escHtml(c.empresa||'-')}</p>
  <p><strong>Cargo:</strong> ${escHtml(c.cargo||'-')}</p>
  </div>
@@ -1919,7 +1921,14 @@ async function saveModal(type, id) {
  if (type === 'client') {
  data = {
  nombre: document.getElementById('f_nombre')?.value,
+ tipo_persona: document.getElementById('f_tipo_persona')?.value,
+ tipo_documento: document.getElementById('f_tipo_documento')?.value,
+ documento: document.getElementById('f_documento')?.value,
+ nombre_comercial: document.getElementById('f_nombre_comercial')?.value,
  telefono: document.getElementById('f_telefono')?.value,
+ email: document.getElementById('f_email')?.value,
+ direccion: document.getElementById('f_direccion')?.value,
+ ciudad: document.getElementById('f_ciudad')?.value,
  fuente: document.getElementById('f_fuente')?.value,
  estado: document.getElementById('f_estado')?.value,
  segmento: document.getElementById('f_segmento')?.value,
