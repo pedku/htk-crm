@@ -4504,10 +4504,18 @@ let dtFacturas = null;
 let currentFactViewId = null;
 
 async function loadFacturas() {
+  const statusEl = document.getElementById('factStatusMsg');
+  if (statusEl) statusEl.textContent = 'Cargando...';
   try {
     const data = await fetchJSON('/api/facturas');
-    if (Array.isArray(data)) facturas = data;
-  } catch(e) {}
+    if (Array.isArray(data)) {
+      facturas = data;
+      if (statusEl) statusEl.textContent = `${data.length} facturas · DT: ${dtAvailable() ? 'activado' : 'fallback'}`;
+    }
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Error: ' + e.message;
+    console.error('loadFacturas error:', e);
+  }
   renderFacturasDT();
 }
 

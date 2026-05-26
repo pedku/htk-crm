@@ -436,7 +436,9 @@ def create_app():
     # Cache-busting: evitar que el navegador cachee HTML
     @app.after_request
     def add_no_cache_header(response):
-        if response.content_type and 'text/html' in response.content_type:
+        # Prevent Cloudflare and browser from caching any assets
+        ct = response.content_type or ''
+        if 'text/html' in ct or 'javascript' in ct or 'css' in ct or 'json' in ct or 'image/' in ct:
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
             response.headers['Pragma'] = 'no-cache'
             response.headers['Expires'] = '0'
