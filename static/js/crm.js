@@ -4796,7 +4796,7 @@ async function anularFactura(id) {
 
 async function imprimirFactura(id) {
   try {
-    const resp = await fetch(API + `/api/facturas/${id}/print`);
+    const resp = await fetch(API + `/api/facturas/${id}/pdf`);
     const html = await resp.text();
     const w = window.open('', '_blank', 'width=900,height=700');
     w.document.write(html);

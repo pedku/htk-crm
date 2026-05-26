@@ -207,112 +207,92 @@ body {
 @media print {
   @page {
     size: A4;
-    margin: 15mm;
+    margin: 10mm 12mm;
   }
 
-  /* Reset print colors */
+  /* Enable exact colors on print */
   *, *::before, *::after {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    color-adjust: exact !important;
   }
 
-  /* Full reset for print — no flex, no grid, block layout only */
   body {
     padding: 0 !important;
-    font-size: 10pt;
+    font-size: 10px;
     max-width: 100% !important;
-    color: #000 !important;
-    line-height: 1.4;
+    color: #18181b !important;
+    background: #fff !important;
   }
 
-  /* Kill all flex/grid — they don't print well */
-  .inv-header,
-  .inv-meta,
-  .inv-totals-row,
-  .d-flex,
-  [class*="d-flex"],
-  [class*="justify-content"],
-  [class*="align-items"] {
-    display: block !important;
-    width: 100% !important;
-    gap: 0 !important;
+  /* Ancho máximo para que no desborde */
+  body, .inv-header, .inv-empresa, .inv-meta, .inv-items-section, .inv-totals-row, .inv-pago, .inv-footer {
+    max-width: 100% !important;
+    overflow: visible !important;
   }
 
-  /* Header — logo left, number right using floats */
+  /* Header: mantener flex (2 elementos cabe bien en A4) */
   .inv-header {
-    margin-bottom: 12pt;
-    overflow: hidden;
-  }
-  .inv-header-logo {
-    float: left;
-    width: 40%;
+    margin-bottom: 16px;
   }
   .inv-header-logo img {
-    width: 100px;
+    width: 90px;
     height: auto;
-  }
-  .inv-header-num {
-    float: right;
-    width: 55%;
-    text-align: right;
-  }
-  .inv-header-num .inv-num-label {
-    font-size: 8pt;
   }
   .inv-header-num .inv-num-value {
     animation: none;
-    font-size: 18pt;
+    font-size: 22px;
   }
 
-  /* Clear floats */
+  /* Empresa */
   .inv-empresa {
-    clear: both;
-    margin-bottom: 8pt;
-    font-size: 8pt;
-    line-height: 1.4;
+    margin-bottom: 8px;
+    font-size: 9px;
+    line-height: 1.5;
   }
   .inv-empresa .empresa-nombre {
-    font-size: 10pt;
-    font-weight: 700;
+    font-size: 11px;
   }
 
   /* Divider */
   .inv-divider {
-    height: 1.5pt;
-    margin: 10pt 0 14pt;
+    height: 2px;
+    margin: 10px 0 16px;
   }
 
-  /* Meta — block layout, not grid */
+  /* Meta: 2 columnas con inline-block (más fiable que grid en papel) */
   .inv-meta {
-    margin-bottom: 12pt;
+    display: block !important;
+    gap: 0 !important;
+    margin-bottom: 16px;
+    font-size: 0; /* quitar espacio entre inline-block */
     page-break-inside: avoid;
   }
-  .inv-meta > .inv-card {
+  .inv-meta .inv-card {
     display: inline-block !important;
     vertical-align: top;
-    width: 48% !important;
+    width: 49% !important;
     box-shadow: none;
-    padding: 10pt;
-    page-break-inside: avoid;
+    padding: 14px;
+    font-size: 10px;
+    margin: 0;
   }
-  .inv-meta > .inv-card:first-child {
+  .inv-meta .inv-card:first-child {
     margin-right: 2%;
   }
   .inv-card-label {
-    margin-bottom: 6pt;
-    font-size: 7pt;
+    margin-bottom: 8px;
+    font-size: 7px;
   }
   .inv-card-body {
-    gap: 2pt;
-    font-size: 9pt;
+    gap: 3px;
+    font-size: 9px;
   }
   .inv-card-body .cliente-nombre {
-    font-size: 11pt;
+    font-size: 11px;
   }
   .inv-info-row {
-    padding: 1pt 0;
-    font-size: 9pt;
+    padding: 1px 0;
+    font-size: 9px;
   }
 
   /* Items table */
@@ -320,108 +300,100 @@ body {
     page-break-inside: avoid;
   }
   .inv-items-section .section-label {
-    font-size: 7pt;
-    margin-bottom: 6pt;
+    font-size: 7px;
+    margin-bottom: 8px;
   }
   .inv-table thead th {
-    padding: 5pt 6pt;
-    font-size: 7pt;
+    padding: 6px 10px;
+    font-size: 7px;
   }
   .inv-table tbody td {
-    padding: 5pt 6pt;
-    font-size: 9pt;
+    padding: 6px 10px;
+    font-size: 9px;
   }
   .inv-table tbody tr:hover {
     background: none;
   }
-  .inv-table tbody td.item-desc-detail {
-    font-size: 7pt;
-  }
 
-  /* Totals + notes — side by side using floats */
+  /* Totals: 2 columnas inline-block */
   .inv-totals-row {
-    margin-bottom: 10pt;
+    display: block !important;
+    gap: 0 !important;
+    margin-bottom: 14px;
+    font-size: 0;
     page-break-inside: avoid;
-    overflow: hidden;
   }
   .inv-notes {
-    float: left;
-    width: 48%;
-    padding: 10pt;
+    display: inline-block !important;
+    vertical-align: top;
+    width: 52% !important;
+    flex: none !important;
+    padding: 14px;
+    font-size: 10px;
+    margin: 0;
     box-shadow: none;
-    font-size: 8pt;
   }
   .inv-notes .notes-label {
-    font-size: 7pt;
-    margin-bottom: 4pt;
+    font-size: 7px;
+    margin-bottom: 6px;
   }
   .inv-notes p {
-    font-size: 8pt;
-    line-height: 1.4;
+    font-size: 8px;
+    line-height: 1.5;
   }
   .inv-summary {
-    float: right;
-    width: 48%;
+    display: inline-block !important;
+    vertical-align: top;
+    width: 46% !important;
+    font-size: 10px;
+    margin-left: 2%;
   }
   .inv-summary-row {
-    padding: 2pt 0;
-    font-size: 9pt;
+    padding: 2px 0;
+    font-size: 9px;
   }
   .inv-summary-divider {
-    margin: 5pt 0;
-  }
-  .inv-summary-total .total-label {
-    font-size: 7pt;
+    margin: 6px 0;
   }
   .inv-summary-total .total-value {
-    font-size: 16pt;
+    font-size: 18px;
   }
   .inv-summary-total .total-bar {
-    height: 2pt;
-    margin-top: 3pt;
-  }
-
-  /* Footer divider */
-  .inv-footer-divider {
-    clear: both;
-    margin: 12pt 0 10pt;
-  }
-
-  /* Pago */
-  .inv-pago {
-    clear: both;
-    padding: 8pt;
-    margin-bottom: 10pt;
-    box-shadow: none;
-    page-break-inside: avoid;
-    font-size: 9pt;
-  }
-  .inv-pago .pago-label {
-    font-size: 7pt;
-    margin-bottom: 4pt;
-  }
-  .inv-pago .pago-info {
-    font-size: 9pt;
+    height: 2px;
+    margin-top: 4px;
   }
 
   /* Footer */
-  .inv-footer {
-    clear: both;
+  .inv-footer-divider {
+    margin: 14px 0 10px;
+  }
+  .inv-pago {
+    padding: 8px;
+    margin-bottom: 12px;
+    box-shadow: none;
+    page-break-inside: avoid;
+    font-size: 9px;
+  }
+  .inv-pago .pago-label {
+    font-size: 7px;
+    margin-bottom: 4px;
+  }
+  .inv-pago .pago-info {
+    font-size: 9px;
   }
   .inv-footer .footer-brand {
-    font-size: 10pt;
+    font-size: 11px;
   }
   .inv-footer .footer-tagline {
-    font-size: 8pt;
+    font-size: 8px;
   }
   .inv-footer .footer-legal {
-    font-size: 7pt;
+    font-size: 7px;
   }
 
-  /* Badge */
-  .inv-badge .dot {
-    animation: none;
-  }
+  /* Animaciones off */
+  .inv-badge .dot { animation: none; }
+  .inv-header-num .inv-num-value { animation: none; }
 }
 
 /* ─── RESPONSIVE (screen only) ─── */
