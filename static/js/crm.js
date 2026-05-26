@@ -4503,72 +4503,82 @@ let facturas = [];
 let dtFacturas = null;
 let currentFactViewId = null;
 
+
 async function loadFacturas() {
   const statusEl = document.getElementById('factStatusMsg');
   if (statusEl) statusEl.textContent = 'Cargando...';
   try {
-    const data = await fetchJSON('/api/facturas');
+    const resp = await fetch('/api/facturas');
+    const data = await resp.json();
     if (Array.isArray(data)) {
       facturas = data;
-      if (statusEl) statusEl.textContent = `${data.length} facturas · DT: ${dtAvailable() ? 'activado' : 'fallback'}`;
+      if (statusEl) statusEl.textContent = data.length + ' facturas cargadas';
+    } else if (data && data.error) {
+      if (statusEl) statusEl.textContent = 'Error API: ' + data.error;
+      console.error('Facturas API error:', data);
     }
   } catch(e) {
-    if (statusEl) statusEl.textContent = 'Error: ' + e.message;
-    console.error('loadFacturas error:', e);
+    if (statusEl) statusEl.textContent = 'Error red: ' + e.message;
+    console.error('loadFacturas:', e);
   }
-  renderFacturasDT();
+  renderFacturasTable();
 }
 
 function filterFacturasDT() {
-  if (dtFacturas) {
-    const estado = document.getElementById('factEstadoFilter')?.value || '';
-    dtFacturas.column(5).search(estado, true, false).draw();
-  }
+  renderFacturasTable();
 }
 
-function renderFacturasDT() {
-  const estado = document.getElementById('factEstadoFilter')?.value || '';
-  let data = facturas;
-  if (estado) data = data.filter(f => f.estado === estado);
-
-  const cols = [
-    { data:'numero', render: function(d,t,r) {
-      return `<a href="#" onclick="showFacturaDetail('${r.id}');return false;" style="color:var(--htk-primary);text-decoration:none;font-weight:600;">${d}</a>`;
-    }},
-    { data:'cliente_nombre', render: function(d) { return escHtml(d||'—'); }},
-    { data:'fecha_emision', render: function(d) { return (d||'').slice(0,10); }},
-    { data:'fecha_vencimiento', render: function(d) { return (d||'').slice(0,10); }},
-    { data:'total_general', render: function(d) { return `<strong>$${(d||0).toLocaleString('es-CO')}</strong>`; }},
-    { data:'estado', render: function(d) {
-      const badges = {
-        'borrador': 'badge bg-secondary',
-        'emitida': 'badge bg-warning text-dark',
-        'pagada': 'badge bg-success',
-        'vencida': 'badge bg-danger',
-        'anulada': 'badge bg-dark text-decoration-line-through'
-      };
-      return `<span class="${badges[d]||'badge bg-secondary'}">${d.toUpperCase()}</span>`;
-    }},
-    { data:null, render: function(d,t,r) {
-      let btns = '';
-      btns += `<button class="action-btn primary" onclick="showFacturaDetail('${r.id}')" title="Ver"><i class="bi bi-eye"></i></button>`;
-      if (r.estado === 'borrador') {
-        btns += `<button class="action-btn primary" onclick="showFacturaModal('${r.id}')" title="Editar"><i class="bi bi-pencil"></i></button>`;
-        btns += `<button class="action-btn danger" onclick="anularFactura('${r.id}')" title="Anular"><i class="bi bi-x-circle"></i></button>`;
-      }
-      if (r.estado === 'emitida') {
-        btns += `<button class="action-btn primary" style="color:#198754;" onclick="pagarFactura('${r.id}')" title="Pagar"><i class="bi bi-check-circle"></i></button>`;
-      }
-      return `<div class="d-flex gap-1">${btns}</div>`;
-    }}
-  ];
-
-  dtFacturas = initDT('tableFacturas', data, cols, null);
-
-  // Fallback: always show content even if DataTables not loaded
-  if (!dtFacturas) {
-    emptyState(null, 'factEmpty', data.length);
+function renderFacturasTable() {
+  var tbody = document.getElementById('factBody');
+  var empty = document.getElementById('factEmpty');
+  var filter = document.getElementById('factEstadoFilter');
+  var estadoVal = filter ? filter.value : '';
+  
+  if (!tbody) return;
+  
+  var data = facturas || [];
+  if (estadoVal) {
+    data = data.filter(function(f) { return f.estado === estadoVal; });
   }
+  
+  if (!data.length) {
+    tbody.innerHTML = '';
+    if (empty) empty.style.display = '';
+    return;
+  }
+  
+  if (empty) empty.style.display = 'none';
+  
+  var badges = {
+    'borrador': '<span class="badge bg-secondary">BORRADOR</span>',
+    'emitida': '<span class="badge bg-warning text-dark">EMITIDA</span>',
+    'pagada': '<span class="badge bg-success">PAGADA</span>',
+    'vencida': '<span class="badge bg-danger">VENCIDA</span>',
+    'anulada': '<span class="badge bg-dark">ANULADA</span>'
+  };
+  
+  var rows = '';
+  for (var i = 0; i < data.length; i++) {
+    var f = data[i];
+    var btns = '<button class="action-btn primary" onclick="showFacturaDetail(\'' + f.id + '\')" title="Ver"><i class="bi bi-eye"></i></button>';
+    if (f.estado === 'borrador') {
+      btns += '<button class="action-btn primary" onclick="showFacturaModal(\'' + f.id + '\')" title="Editar"><i class="bi bi-pencil"></i></button>';
+      btns += '<button class="action-btn danger" onclick="anularFactura(\'' + f.id + '\')" title="Anular"><i class="bi bi-x-circle"></i></button>';
+    }
+    if (f.estado === 'emitida' || f.estado === 'vencida') {
+      btns += '<button class="action-btn primary" style="color:#198754;" onclick="pagarFactura(\'' + f.id + '\')" title="Pagar"><i class="bi bi-check-circle"></i></button>';
+    }
+    rows += '<tr>';
+    rows += '<td><a href="#" onclick="showFacturaDetail(\'' + f.id + '\');return false;" style="color:var(--htk-primary);font-weight:600;">' + escHtml(f.numero) + '</a></td>';
+    rows += '<td>' + escHtml(f.cliente_nombre || '—') + '</td>';
+    rows += '<td><small>' + (f.fecha_emision || '').slice(0,10) + '</small></td>';
+    rows += '<td><small>' + (f.fecha_vencimiento || '').slice(0,10) + '</small></td>';
+    rows += '<td><strong>$' + ((f.total_general || 0)).toLocaleString('es-CO') + '</strong></td>';
+    rows += '<td>' + (badges[f.estado] || '<span class="badge bg-secondary">' + f.estado.toUpperCase() + '</span>') + '</td>';
+    rows += '<td><div class="d-flex gap-1">' + btns + '</div></td>';
+    rows += '</tr>';
+  }
+  tbody.innerHTML = rows;
 }
 
 async function showFacturaModal(id) {
