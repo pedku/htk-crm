@@ -4,121 +4,146 @@
 <meta charset="UTF-8">
 <title>{{ empresa.comercial }} — Factura {{ invoice.numero }}</title>
 <style>
-  @page { size: A4; margin: 10mm 13mm; }
+  @page { size: A4; margin: 12mm 14mm; }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    font-size: 11pt;
-    color: #1a1a1a;
-    line-height: 1.35;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 12px;
+    color: #18181b;
+    line-height: 1.5;
+    padding: 0;
   }
 
-  /* ─── COLORS ─── */
-  .blue { color: #059BDA; }
-  .gray { color: #888; }
-  .dark { color: #1a1a1a; }
-  .green { color: #059669; }
-  .red { color: #dc2626; }
-  .orange { color: #d97706; }
+  /* ─── Estilos calcados de la plantilla elegante ─── */
+  .htk-blue   { color: #059BDA; }
+  .text-dim   { color: #71717a; }
+  .text-faint { color: #a1a1aa; }
+  .bg-subtle  { background: #fafaf9; }
+  .border-sub { border: 1px solid #e4e4e7; }
+  .card-pad   { padding: 18px; }
 
   /* ─── HEADER ─── */
-  .header { width: 100%; margin-bottom: 6mm; }
+  .header { width: 100%; margin-bottom: 28px; }
   .header td { vertical-align: top; padding: 0; }
-  .logo-cell { width: 130px; }
-  .logo-cell img { width: 105px; height: auto; }
-  .num-cell { text-align: right; }
-  .factura-num { font-size: 19pt; font-weight: 800; color: #059BDA; line-height: 1; }
-  .factura-label { font-size: 7pt; color: #aaa; text-transform: uppercase; letter-spacing: 1.5pt; margin-bottom: 3pt; }
+  .logo-cell { width: 50%; }
+  .logo-cell img { width: 110px; height: auto; }
+  .num-cell { width: 50%; text-align: right; }
+
+  .factura-label {
+    font-size: 8px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #a1a1aa; margin-bottom: 2px;
+  }
+  .factura-num {
+    font-size: 26px; font-weight: 800; color: #059BDA; line-height: 1;
+  }
 
   /* ─── EMPRESA ─── */
-  .empresa { margin-bottom: 3mm; font-size: 8pt; color: #666; line-height: 1.5; }
-  .empresa strong { color: #1a1a1a; font-size: 9pt; }
+  .empresa { margin-bottom: 14px; font-size: 11px; color: #71717a; line-height: 1.6; }
+  .empresa .nombre { font-size: 13px; font-weight: 700; color: #18181b; margin-bottom: 2px; }
 
-  div.divider { border: none; height: 1.5pt; background: linear-gradient(to right, #059BDA 0%, #059BDA 30%, transparent 100%); margin: 3mm 0 5mm; }
-
-  /* ─── META ─── */
-  .meta { width: 100%; margin-bottom: 4mm; }
-  .meta td { vertical-align: top; width: 50%; padding: 8pt 10pt; background: #fafafa; border: 0.5pt solid #e5e5e5; }
-  .meta .label { font-size: 6.5pt; color: #aaa; text-transform: uppercase; letter-spacing: 1pt; margin-bottom: 3mm; }
-  .meta .info-row { margin-bottom: 1mm; }
-  .meta .info-row .lbl { display: inline-block; width: 65px; font-size: 7pt; color: #999; }
-  .meta .info-row .val { font-size: 8.5pt; }
-  .meta .name { font-size: 10pt; font-weight: 700; margin-bottom: 2mm; }
-
-  .badge {
-    display: inline-block;
-    padding: 1pt 7pt;
-    border-radius: 8pt;
-    font-size: 7pt;
-    font-weight: 600;
-    margin-top: 2mm;
-    border: 1pt solid;
-    letter-spacing: 0.3pt;
+  /* ─── DIVIDER ─── */
+  hr.divider {
+    border: none; height: 2px;
+    background: linear-gradient(to right, #059BDA 0%, #059BDA 30%, rgba(5,155,218,0.1) 70%, transparent 100%);
+    margin: 14px 0 22px;
   }
-  .badge.pagada { color: #059669; border-color: #059669; background: rgba(5,150,105,0.06); }
-  .badge.emitida { color: #059BDA; border-color: #059BDA; background: rgba(5,155,218,0.06); }
-  .badge.borrador { color: #999; border-color: #ccc; }
-  .badge.vencida { color: #dc2626; border-color: #dc2626; background: rgba(220,38,38,0.05); }
-  .badge.anulada { color: #999; border-color: #ccc; text-decoration: line-through; }
+
+  /* ─── CARDS ─── */
+  .cards { width: 100%; margin-bottom: 22px; }
+  .cards td { width: 50%; vertical-align: top; padding: 0; }
+  .cards td:first-child { padding-right: 16px; }
+
+  .card {
+    background: #fafaf9; border: 1px solid #e4e4e7; padding: 18px;
+  }
+  .card-label {
+    font-size: 8px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #a1a1aa; margin-bottom: 10px;
+  }
+  .card-body { font-size: 11px; line-height: 1.6; }
+  .card-body .cname { font-size: 13px; font-weight: 700; color: #18181b; }
+  .card-body .cinfo { font-size: 11px; color: #71717a; }
+
+  .info-row { margin-bottom: 2px; }
+  .info-row .lbl { display: inline-block; width: 75px; font-weight: 500; color: #71717a; font-size: 10px; }
+  .info-row .val { font-weight: 600; color: #18181b; font-size: 10px; }
+
+  /* ─── BADGE ─── */
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    font-size: 9px; font-weight: 600; margin-top: 8px; border: 1px solid;
+  }
+  .badge.pagada  { color: #059669; border-color: #059669; background: rgba(5,150,105,0.08); }
+  .badge.emitida { color: #059BDA; border-color: #059BDA; background: rgba(5,155,218,0.08); }
+  .badge.borrador { color: #a1a1aa; border-color: #d4d4d8; }
+  .badge.vencida { color: #dc2626; border-color: #dc2626; background: rgba(220,38,38,0.06); }
+  .badge.anulada { color: #a1a1aa; border-color: #d4d4d8; text-decoration: line-through; }
 
   /* ─── ITEMS ─── */
-  .section-label { font-size: 6.5pt; color: #aaa; text-transform: uppercase; letter-spacing: 1pt; margin-bottom: 2mm; }
-  .items { width: 100%; border-collapse: collapse; margin-bottom: 4mm; }
+  .section-label {
+    font-size: 8px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #a1a1aa; margin-bottom: 10px;
+  }
+  .items { width: 100%; border-collapse: collapse; margin-bottom: 22px; }
   .items thead th {
-    background: #059BDA; color: #fff;
-    padding: 5pt 8pt;
-    font-size: 7pt;
-    text-transform: uppercase;
-    letter-spacing: 0.5pt;
-    text-align: right;
+    background: #fafaf9; border-bottom: 2px solid #e4e4e7;
+    padding: 10px 10px; font-size: 9px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    color: #a1a1aa; text-align: right;
   }
   .items thead th.left { text-align: left; }
   .items thead th.center { text-align: center; }
   .items tbody td {
-    padding: 5pt 8pt;
-    border-bottom: 0.4pt solid #e5e5e5;
-    font-size: 9pt;
-    text-align: right;
+    padding: 10px 10px; border-bottom: 1px solid #e4e4e7;
+    font-size: 11px; font-weight: 500; color: #18181b; text-align: right;
   }
-  .items tbody td.left { text-align: left; }
-  .items tbody td.center { text-align: center; color: #aaa; }
-  .items tbody tr:nth-child(even) td { background: #fafafa; }
+  .items tbody td.left { text-align: left; font-weight: 600; }
+  .items tbody td.center { text-align: center; font-weight: 600; color: #a1a1aa; }
+  .items tbody tr:nth-child(even) td { background: #fafaf9; }
 
   /* ─── TOTALS ─── */
-  .totals-row { width: 100%; margin-bottom: 4mm; }
-  .totals-row td { vertical-align: top; padding: 0; }
-  .notes-cell { width: 52%; padding-right: 8mm; }
-  .notes-box { padding: 8pt; background: #fafafa; border: 0.4pt solid #e5e5e5; }
-  .notes-box .nl { font-size: 6.5pt; color: #aaa; text-transform: uppercase; letter-spacing: 1pt; margin-bottom: 2mm; }
-  .notes-box .nt { font-size: 8pt; color: #666; line-height: 1.5; white-space: pre-line; }
-  .summary-cell { width: 48%; }
+  .bottom { width: 100%; margin-bottom: 20px; }
+  .bottom td { vertical-align: top; padding: 0; }
+  .notes-cell { width: 55%; padding-right: 18px; }
+  .notes-box { background: #fafaf9; border: 1px solid #e4e4e7; padding: 18px; }
+  .notes-box .nl {
+    font-size: 8px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #a1a1aa; margin-bottom: 8px;
+  }
+  .notes-box .nt { font-size: 10px; color: #71717a; line-height: 1.7; white-space: pre-line; }
+  .summary-cell { width: 45%; }
 
-  .summary-table { width: 100%; }
-  .summary-table td { padding: 2pt 0; font-size: 9pt; }
-  .summary-table td.lbl { color: #888; }
-  .summary-table td.val { text-align: right; font-weight: 600; }
-  .summary-table tr.divider td { border-top: 0.5pt solid #ddd; }
-  .summary-table tr.total td { font-size: 14pt; font-weight: 800; color: #059BDA; padding-top: 3mm; }
+  .sum { width: 100%; }
+  .sum td { padding: 3px 0; font-size: 11px; }
+  .sum td.lbl { color: #71717a; font-weight: 500; }
+  .sum td.val { text-align: right; font-weight: 600; color: #18181b; }
+  .sum hr { border: none; border-top: 1px solid #e4e4e7; margin: 8px 0; }
+  .sum .total td { font-size: 22px; font-weight: 800; color: #059BDA; padding-top: 8px; }
 
   /* ─── PAYMENT ─── */
-  .payment { padding: 3mm 0; margin-bottom: 4mm; border-top: 0.4pt solid #e5e5e5; border-bottom: 0.4pt solid #e5e5e5; }
-  .payment .pl { font-size: 6.5pt; color: #aaa; text-transform: uppercase; letter-spacing: 1pt; margin-bottom: 1mm; }
-  .payment .pi { font-size: 8.5pt; color: #555; }
+  .payment { padding: 10px 0; margin-bottom: 18px; border-top: 1px solid #e4e4e7; border-bottom: 1px solid #e4e4e7; }
+  .payment .pl {
+    font-size: 8px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #a1a1aa; margin-bottom: 4px;
+  }
+  .payment .pi { font-size: 11px; font-weight: 500; color: #71717a; }
 
   /* ─── FOOTER ─── */
-  .footer { text-align: center; margin-top: 5mm; }
-  .footer .brand { font-size: 10pt; font-weight: 700; color: #059BDA; letter-spacing: -0.3pt; }
-  .footer .tagline { font-size: 7.5pt; color: #bbb; margin: 1mm 0; }
-  .footer .legal { font-size: 6.5pt; color: #ccc; }
+  .footer { text-align: center; margin-top: 22px; }
+  .footer .brand { font-size: 12px; font-weight: 700; color: #059BDA; }
+  .footer .tagline { font-size: 9px; color: #a1a1aa; margin: 4px 0; }
+  .footer .legal { font-size: 8px; font-weight: 300; color: #a1a1aa; }
 
-  /* ─── PRINT ─── */
+  /* ─── PRINT ENHANCEMENT ─── */
   @media print {
     *, *::before, *::after {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
+    .items tbody tr:nth-child(even) td { background: #fafaf9 !important; }
+    .card, .notes-box { background: #fafaf9 !important; }
   }
 </style>
 </head>
@@ -141,30 +166,36 @@
 
 <!-- EMPRESA -->
 <div class="empresa">
-  <strong>{{ empresa.nombre }}</strong><br>
+  <div class="nombre">{{ empresa.nombre }}</div>
   NIT: {{ empresa.nit }}<br>
   {{ empresa.direccion }}<br>
   {{ empresa.email }} &nbsp;·&nbsp; {{ empresa.telefono }}
 </div>
 
-<div class="divider"></div>
+<hr class="divider">
 
-<!-- META -->
-<table class="meta">
+<!-- META CARDS -->
+<table class="cards">
   <tr>
     <td>
-      <div class="label">Facturar a</div>
-      <div class="name">{{ client.nombre if client else '—' }}</div>
-      {% if client and client.documento %}<div class="info-row"><span class="lbl">{{ client.tipo_documento or 'NIT/CC' }}</span><span class="val">{{ client.documento }}</span></div>{% endif %}
-      {% if client and client.direccion %}<div class="info-row"><span class="lbl">Dirección</span><span class="val">{{ client.direccion }}{% if client.ciudad %}, {{ client.ciudad }}{% endif %}</span></div>{% endif %}
-      {% if client and client.telefono %}<div class="info-row"><span class="lbl">Teléfono</span><span class="val">{{ client.telefono }}</span></div>{% endif %}
+      <div class="card">
+        <div class="card-label">Facturar a</div>
+        <div class="card-body">
+          <div class="cname">{{ client.nombre if client else '—' }}</div>
+          {% if client and client.documento %}<div class="cinfo">{{ client.tipo_documento or 'NIT/CC' }}: {{ client.documento }}</div>{% endif %}
+          {% if client and client.direccion %}<div class="cinfo">{{ client.direccion }}{% if client.ciudad %}, {{ client.ciudad }}{% endif %}</div>{% endif %}
+          {% if client and client.telefono %}<div class="cinfo">{{ client.telefono }}</div>{% endif %}
+        </div>
+      </div>
     </td>
     <td>
-      <div class="label">Datos de la Factura</div>
-      <div class="info-row"><span class="lbl">Emisión</span><span class="val">{{ invoice.fecha_emision[:10] }}</span></div>
-      <div class="info-row"><span class="lbl">Vence</span><span class="val">{{ invoice.fecha_vencimiento[:10] }}</span></div>
-      {% if invoice.wo_id %}<div class="info-row"><span class="lbl">O.T.</span><span class="val">{{ invoice.wo_id }}</span></div>{% endif %}
-      <div class="badge {{ invoice.estado }}">{{ invoice.estado.upper() }}</div>
+      <div class="card">
+        <div class="card-label">Datos de la Factura</div>
+        <div class="info-row"><span class="lbl">Emisión</span><span class="val">{{ invoice.fecha_emision[:10] }}</span></div>
+        <div class="info-row"><span class="lbl">Vence</span><span class="val">{{ invoice.fecha_vencimiento[:10] }}</span></div>
+        {% if invoice.wo_id %}<div class="info-row"><span class="lbl">O.T.</span><span class="val">{{ invoice.wo_id }}</span></div>{% endif %}
+        <div class="badge {{ invoice.estado }}">{{ invoice.estado.upper() }}</div>
+      </div>
     </td>
   </tr>
 </table>
@@ -174,11 +205,11 @@
 <table class="items">
   <thead>
     <tr>
-      <th class="center" style="width:30px;">#</th>
+      <th class="center" width="35">#</th>
       <th class="left">Descripción</th>
-      <th style="width:45px;">Cant</th>
-      <th style="width:80px;">Vr. Unitario</th>
-      <th style="width:80px;">Total</th>
+      <th width="45">Cant</th>
+      <th width="85">Vr. Unitario</th>
+      <th width="85">Total</th>
     </tr>
   </thead>
   <tbody>
@@ -194,8 +225,8 @@
   </tbody>
 </table>
 
-<!-- TOTALS + NOTES -->
-<table class="totals-row">
+<!-- NOTES + TOTALS -->
+<table class="bottom">
   <tr>
     <td class="notes-cell">
       <div class="notes-box">
@@ -204,13 +235,14 @@
       </div>
     </td>
     <td class="summary-cell">
-      <table class="summary-table">
+      <table class="sum">
         <tr><td class="lbl">Subtotal</td><td class="val">${{ '{:,.0f}'.format(invoice.sub_total) }}</td></tr>
         {% if invoice.descuento and invoice.descuento > 0 %}
         <tr><td class="lbl">Descuento</td><td class="val">−${{ '{:,.0f}'.format(invoice.descuento) }}</td></tr>
         {% endif %}
         <tr><td class="lbl">IVA 19%</td><td class="val">${{ '{:,.0f}'.format(invoice.iva_total) }}</td></tr>
-        <tr class="divider"><td class="lbl" style="font-size:9pt;font-weight:700;">TOTAL</td><td class="val" style="font-size:14pt;font-weight:800;color:#059BDA;">${{ '{:,.0f}'.format(invoice.total_general) }}</td></tr>
+        <tr><td colspan="2"><hr></td></tr>
+        <tr class="total"><td class="lbl" style="font-size:10px;font-weight:600;letter-spacing:1px;">TOTAL</td><td class="val">${{ '{:,.0f}'.format(invoice.total_general) }}</td></tr>
       </table>
     </td>
   </tr>
