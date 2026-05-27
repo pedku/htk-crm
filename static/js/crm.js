@@ -4,6 +4,21 @@ let clients = [], workOrders = [], leads = [], interactions = [];
 let modalInstance = null;
 let currentKanbanView = 'kanban'; // 'kanban' or 'table'
 
+// ─── Modal History (back button) ────────────────────
+let modalHistory = [];
+let lastWOId = null;
+
+function setLastWO(id) { lastWOId = id; }
+
+function backToWODetail() {
+  if (lastWOId) {
+    // Reload WO data first, then show modal
+    loadWorkOrders().then(function() {
+      showWODetail(lastWOId);
+    });
+  }
+}
+
 // ─── DataTables instances ────────────────────────────
 let dtClients = null, dtWOs = null, dtLeads = null, dtInteractions = null, dtInv = null;
 
@@ -928,14 +943,14 @@ function filterWOsDT() {
 function renderWOsDT() {
   _ensureDTFilters();
   const cols = [
-    { data:'id', render: function(d) { return `<strong><a href="/ordenes/${d}" style="color:var(--htk-primary);text-decoration:none;">${d}</a></strong>`; }},
+    { data:'id', render: function(d) { return `<a href="#" onclick="showWODetail('${d}');return false;" style="color:var(--htk-primary);text-decoration:none;font-weight:600;">${d}</a>`; }},
     { data:'tipo', render: function(d,t,r) {
       const ti = TIPOS_OT[d] || {};
       return `<span class="badge" style="background:${ti.color||'#f97316'};color:#fff;font-size:0.75em;">${ti.icono||'🔧'} ${ti.label||'Reparación'}</span>`;
     }},
     { data:null, render: function(d,t,r) {
       const ti = TIPOS_OT[r.tipo] || {};
-      return `<a href="/ordenes/${r.id}" style="color:#fff;text-decoration:none;"><span title="${ti.label||r.tipo||'Reparación'}">${ti.icono||'🔧'}</span> ${escHtml(r.cliente?.nombre || '-')}</a>`;
+      return `<a href="#" onclick="showWODetail('${r.id}');return false;" style="color:#fff;text-decoration:none;"><span title="${ti.label||r.tipo||'Reparación'}">${ti.icono||'🔧'}</span> ${escHtml(r.cliente?.nombre || '-')}</a>`;
     }},
     { data:'cliente', render: function(d) { return escHtml(d?.telefono || '-'); }},
     { data:null, render: function(d,t,r) {
@@ -1002,6 +1017,7 @@ function _ensureDTFilters() {
 }
 
 async function showWODetail(id) {
+ setLastWO(id);
  // Reload fresh data from API to get client_vinculado + payments
  let o;
  try {
@@ -1198,7 +1214,10 @@ function showStatusModal(id) {
  </div>`;
 
  setModal(' Cambiar Estado — ' + o.id, detailHTML,
- `<button class="btn btn-htk" onclick="updateStatus('${id}')"><i class="bi bi-check-lg"></i> Actualizar Estado</button>`
+ `<div class="d-flex gap-2">
+  <button class="btn btn-sm btn-outline-light" onclick="backToWODetail()"><i class="bi bi-arrow-left"></i> Volver a detalles</button>
+  <button class="btn btn-htk" onclick="updateStatus('${id}')"><i class="bi bi-check-lg"></i> Actualizar Estado</button>
+ </div>`
  );
  modalInstance.show();
 }
@@ -1279,7 +1298,10 @@ function showPaymentModal(woId) {
   </div>`;
 
   setModal('💰 Registrar Abono — ' + woId, html,
-    `<button class="btn btn-htk" onclick="savePayment('${woId}')"><i class="bi bi-check-lg"></i> Registrar</button>`
+    `<div class="d-flex gap-2">
+     <button class="btn btn-sm btn-outline-light" onclick="backToWODetail()"><i class="bi bi-arrow-left"></i> Volver a detalles</button>
+     <button class="btn btn-htk" onclick="savePayment('${woId}')"><i class="bi bi-check-lg"></i> Registrar</button>
+    </div>`
   );
   modalInstance.show();
 }
