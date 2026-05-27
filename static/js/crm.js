@@ -5043,7 +5043,12 @@ async function pagarFactura(id) {
   if (!confirm('¿Registrar pago de esta factura?')) return;
   try {
     const resp = await fetch(API + `/api/facturas/${id}/pagar`, { method:'POST' });
-    if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
+    if (!resp.ok) {
+      const text = await resp.text();
+      let msg;
+      try { msg = JSON.parse(text).error || text; } catch(e) { msg = text.slice(0,200); }
+      throw new Error(msg);
+    }
     showToast('Factura pagada ✅', 'success');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
     loadFacturas();

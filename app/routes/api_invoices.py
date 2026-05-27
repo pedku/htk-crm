@@ -381,8 +381,9 @@ def delete_invoice(inv_id):
 # ── ACCIONES ──────────────────────────────────────────────────────────
 
 def _change_status(inv_id, new_estado, extra_updates=None):
-    conn = get_db()
+    conn = None
     try:
+        conn = get_db()
         inv = conn.execute("SELECT * FROM invoices WHERE id = ?", (inv_id,)).fetchone()
         if not inv:
             return None, ('Factura no encontrada', 404)
@@ -403,8 +404,13 @@ def _change_status(inv_id, new_estado, extra_updates=None):
         conn.execute(sql, params)
         conn.commit()
         return {'ok': True, 'estado': new_estado, 'id': inv_id}, None
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return None, (str(e), 500)
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 @api_invoices_bp.route('/api/facturas/<inv_id>/emitir', methods=['POST'])
 @login_required
