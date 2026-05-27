@@ -220,44 +220,31 @@ function emptyState(contentId, emptyId, dataLength) {
 document.querySelectorAll('.sidebar .nav-link[data-tab]').forEach(link => {
   link.addEventListener('click', function(e) {
     e.preventDefault();
-    document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
-    this.classList.add('active');
     const tab = this.dataset.tab;
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    if (tab === 'dashboard') loadDashboard();
-    if (tab === 'kanban') loadKanban();
-    if (tab === 'clients') loadClients();
-    if (tab === 'workorders') loadWorkOrders();
-    if (tab === 'leads') loadLeads();
-    if (tab === 'interactions') loadInteractions();
-    if (tab === 'inventario') loadInventario();
-    if (tab === 'facturacion') loadFacturas();
-    if (tab === 'config') { switchConfigTab('general'); }
+    window.location.hash = tab;
+    navigateToTab(tab);
   });
 });
 document.querySelectorAll('.mobile-nav-link[data-tab]').forEach(link => {
  link.addEventListener('click', function(e) {
  e.preventDefault();
- document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
- document.querySelectorAll('.mobile-nav-link').forEach(l => l.classList.remove('active'));
- this.classList.add('active');
+ const tab = this.dataset.tab;
  const sidebarCounterpart = document.querySelector(`.sidebar .nav-link[data-tab="${this.dataset.tab}"]`);
  if (sidebarCounterpart) sidebarCounterpart.classList.add('active');
- const tab = this.dataset.tab;
- document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
- document.getElementById('tab-' + tab).classList.add('active');
- if (tab === 'dashboard') loadDashboard();
- if (tab === 'kanban') loadKanban();
- if (tab === 'clients') loadClients();
- if (tab === 'workorders') loadWorkOrders();
- if (tab === 'leads') loadLeads();
- if (tab === 'interactions') loadInteractions();
- if (tab === 'inventario') loadInventario();
- if (tab === 'facturacion') loadFacturas();
- if (tab === 'config') { switchConfigTab('general'); }
+ window.location.hash = tab;
+ navigateToTab(tab);
  });
 });
+
+// Hash-based routing: restore tab on reload
+function checkHash() {
+  var hash = window.location.hash.replace('#', '');
+  if (hash && document.getElementById('tab-' + hash)) {
+    navigateToTab(hash);
+  }
+}
+window.addEventListener('hashchange', checkHash);
+if (window.location.hash) { checkHash(); }
 
 // Global Search Keyboard Shortcut 
 document.addEventListener('keydown', function(e) {
@@ -338,19 +325,25 @@ function navigateToResult(type, id) {
 }
 
 function navigateToTab(tabName) {
- document.querySelectorAll('.sidebar .nav-link.active').forEach(l => l.classList.remove('active'));
- document.querySelectorAll('.mobile-nav-link.active').forEach(l => l.classList.remove('active'));
+ document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+ document.querySelectorAll('.mobile-nav-link').forEach(l => l.classList.remove('active'));
  const target = document.querySelector(`.sidebar .nav-link[data-tab="${tabName}"]`);
  const mobileTarget = document.querySelector(`.mobile-nav-link[data-tab="${tabName}"]`);
  if (target) {
  target.classList.add('active');
  if (mobileTarget) mobileTarget.classList.add('active');
- document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
- document.getElementById('tab-' + tabName).classList.add('active');
- if (tabName === 'leads') loadLeads();
+ document.querySelectorAll('.tab-content').forEach(t => { t.style.display = 'none'; t.classList.remove('active'); });
+ var tabEl = document.getElementById('tab-' + tabName);
+ if (tabEl) { tabEl.style.display = 'block'; tabEl.classList.add('active'); }
+ if (tabName === 'dashboard') loadDashboard();
+ if (tabName === 'kanban') loadKanban();
  if (tabName === 'clients') loadClients();
  if (tabName === 'workorders') loadWorkOrders();
+ if (tabName === 'leads') loadLeads();
+ if (tabName === 'interactions') loadInteractions();
+ if (tabName === 'inventario') loadInventario();
  if (tabName === 'facturacion') loadFacturas();
+ if (tabName === 'config') { switchConfigTab('general'); }
  }
 }
 
@@ -676,7 +669,7 @@ function renderClientsDT() {
   _ensureDTFilters();
   const cols = [
     { data:'id', render: function(d,t,r) {
-      let h = `<strong>${d}</strong>`;
+      let h = `<a href="/clients/${d}" style="color:var(--htk-primary);font-weight:600;">${d}</a>`;
       if(r.lead_id) h += ` <small style="color:var(--htk-primary);font-size:0.7em;">← ${r.lead_id}</small>`;
       return h;
     }},
