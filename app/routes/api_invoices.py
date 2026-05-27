@@ -464,6 +464,16 @@ def pagar_factura(inv_id):
         result, err = _change_status(inv_id, 'pagada', {'metodo_pago': data.get('metodo_pago', '')})
         if err:
             return jsonify({'error': err[0]}), err[1]
+        
+        # 🔔 Auto-enviar factura pagada por WhatsApp
+        try:
+            import threading
+            t = threading.Thread(target=_send_invoice_whatsapp_background, args=(inv_id,))
+            t.daemon = True
+            t.start()
+        except Exception as notify_e:
+            print(f"⚠️ Error enviando notificación de pago: {notify_e}")
+        
         return jsonify(result)
     except Exception as e:
         conn.rollback()
@@ -686,45 +696,118 @@ def send_invoice_whatsapp(inv_id):
         FACTURAS_DIR = os.path.join(BOT_DIR, 'facturas')
         pdf_path = os.path.join(FACTURAS_DIR, f'{inv_id}.pdf')
         
-        try:
-            subprocess.run(
-                ['node', 'pdf-gen.js', inv_id],
-                cwd=BOT_DIR, capture_output=True, timeout=30, text=True
+        import subprocess, os, json as py_json, urllib.request
+        BOT_DIR = '/home/peku/htk-whatsapp-bot'
+        pdf_path = os.path.join(BOT_DIR, 'facturas', f'{inv_id}.pdf')
+        
+        def send_via_bot(file_path, msg_caption):
+            payload = py_json.dumps({'to': telefono, 'document': file_path, 'caption': msg_caption}).encode()
+            req = urllib.request.Request(
+                'http://localhost:18802/send-document',
+                data=payload,
+                headers={'Content-Type': 'application/json'},
+                method='POST'
             )
-            
-            if os.path.exists(pdf_path):
-                import urllib.request, json as py_json
-                payload = py_json.dumps({'to': telefono, 'document': pdf_path, 'caption': caption}).encode()
-                req = urllib.request.Request(
-                    'http://localhost:18802/send-document',
-                    data=payload,
-                    headers={'Content-Type': 'application/json'},
-                    method='POST'
-                )
-                with urllib.request.urlopen(req, timeout=30) as resp:
-                    result = py_json.loads(resp.read())
-                return jsonify({'ok': True, 'pdf_path': pdf_path, 'bot_result': result})
-            else:
-                return jsonify({'error': 'No se pudo generar el PDF'}), 500
-                
-        except Exception as e:
-            # Fallback: send text only
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return py_json.loads(resp.read())
+        
+        def send_text_fallback():
+            from app.services.bot_service import send_whatsapp as sw
+            msg = (
+                f"⚡ *HTK INGENIERIA* — Factura {inv['numero']}\n\n"
+                f"Cliente: {client.get('nombre', '—')}\n"
+                f"Total: ${total:,.0f} COP\n"
+                f"Vence: {inv['fecha_vencimiento']}\n\n"
+                f"Gracias por confiar en nosotros ⚡"
+            )
+            return sw(telefono, msg)
+        
+        # 1. Try generating PDF fresh
+        pdf_ok = False
+        if not os.path.exists(pdf_path) or os.path.getsize(pdf_path) < 1000:
             try:
-                from app.services.bot_service import send_whatsapp
-                msg = (
-                    f"⚡ *HTK INGENIERIA* — Factura {inv['numero']}\n\n"
-                    f"Cliente: {client.get('nombre', '—')}\n"
-                    f"Total: ${total:,.0f} COP\n"
-                    f"Vence: {inv['fecha_vencimiento']}\n\n"
-                    f"Gracias por confiar en nosotros ⚡"
+                result = subprocess.run(
+                    ['node', 'pdf-gen.js', inv_id],
+                    cwd=BOT_DIR, capture_output=True, timeout=45, text=True
                 )
-                result = send_whatsapp(telefono, msg)
+                pdf_ok = os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 1000
+                if not pdf_ok:
+                    print(f"PDF gen failed: {result.stderr[-200:] if result.stderr else 'no error'}")
+            except Exception as e:
+                print(f"PDF gen exception: {e}")
+        else:
+            pdf_ok = True
+        
+        # 2. Send PDF if available, else text fallback
+        if pdf_ok:
+            try:
+                result = send_via_bot(pdf_path, caption)
+                return jsonify({'ok': True, 'pdf': pdf_path, 'bot': result})
+            except Exception as e:
+                print(f"Bot send failed: {e}")
+                # Fallback to text
+                try:
+                    result = send_text_fallback()
+                    return jsonify({'ok': True, 'fallback': True, 'bot_result': result})
+                except Exception as e2:
+                    return jsonify({'ok': True, 'simulado': True, 'telefono': telefono,
+                                   'nota': f'Bot no disponible: {e2}'})
+        else:
+            try:
+                result = send_text_fallback()
                 return jsonify({'ok': True, 'fallback': True, 'bot_result': result})
             except Exception as e2:
                 return jsonify({'ok': True, 'simulado': True, 'telefono': telefono,
                                'nota': f'Bot no disponible: {e2}'})
     finally:
         conn.close()
+
+
+def _send_invoice_whatsapp_background(inv_id):
+    """Send invoice PDF via WhatsApp (background thread, no auth needed)."""
+    import subprocess, os, urllib.request, json as py_json
+    BOT_DIR = '/home/peku/htk-whatsapp-bot'
+    pdf_path = os.path.join(BOT_DIR, 'facturas', f'{inv_id}.pdf')
+    
+    # Generate PDF if not exists
+    if not os.path.exists(pdf_path) or os.path.getsize(pdf_path) < 1000:
+        try:
+            subprocess.run(
+                ['node', 'pdf-gen.js', inv_id],
+                cwd=BOT_DIR, capture_output=True, timeout=45, text=True
+            )
+        except:
+            pass
+    
+    # Send if PDF exists
+    if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 1000:
+        conn2 = get_db()
+        try:
+            inv = conn2.execute("SELECT * FROM invoices WHERE id = ?", (inv_id,)).fetchone()
+            if inv:
+                client = conn2.execute("SELECT * FROM clients WHERE id = ?", (inv['client_id'],)).fetchone()
+                if client and client.get('telefono'):
+                    telefono = str(client['telefono']).strip()
+                    total = float(inv['total_general'])
+                    caption = (
+                        f"⚡ *HTK INGENIERIA* — Factura {inv['numero']} ✅ PAGADA\n\n"
+                        f"Cliente: {client.get('nombre', '—')}\n"
+                        f"Total pagado: ${total:,.0f} COP\n\n"
+                        f"¡Gracias por tu pago! ⚡"
+                    )
+                    try:
+                        payload = py_json.dumps({'to': telefono, 'document': pdf_path, 'caption': caption}).encode()
+                        req = urllib.request.Request(
+                            'http://localhost:18802/send-document',
+                            data=payload, headers={'Content-Type': 'application/json'}, method='POST'
+                        )
+                        with urllib.request.urlopen(req, timeout=30) as resp:
+                            print(f"✅ Factura {inv_id} enviada por pago")
+                    except Exception as e:
+                        print(f"⚠️ Error enviando factura pagada: {e}")
+        finally:
+            conn2.close()
+
 
 # ── RUTA PÚBLICA DE VISTA DE FACTURA ─────────────────────────────────
 
