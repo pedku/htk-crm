@@ -347,8 +347,101 @@
 
  <!-- Segments Sub-tab -->
  <div id="config-tab-segments" class="config-subtab" style="display:none;">
-  <div class="text-center py-5">
-   <span class="spinner-border spinner-border-sm"></span> Cargando segmentos...
+  <div class="d-flex justify-content-between align-items-center mb-3">
+   <h5 style="margin:0;"><i class="bi bi-diagram-3"></i> Segmentos</h5>
+   <button class="btn btn-sm btn-htk" onclick="showSegmentModal(null)"><i class="bi bi-plus-lg"></i> Nuevo segmento</button>
+  </div>
+  <div class="table-container">
+   <table class="table table-hover">
+    <thead>
+     <tr><th>Color</th><th>Nombre</th><th>Clave</th><th>Orden</th><th>Activo</th><th>Acciones</th></tr>
+    </thead>
+    <tbody id="segmentTableBody">
+     <tr><td colspan="6" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Cargando segmentos...</td></tr>
+    </tbody>
+   </table>
+  </div>
+
+  <hr class="my-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+   <h5 style="margin:0;"><i class="bi bi-chat-quote"></i> Plantillas de Pitch</h5>
+   <button class="btn btn-sm btn-htk" onclick="showPitchModal(null)"><i class="bi bi-plus-lg"></i> Nueva plantilla</button>
+  </div>
+  <div class="table-container">
+   <table class="table table-hover">
+    <thead>
+     <tr><th>Segmento</th><th>Mensaje</th><th>Multimedia</th><th>Activo</th><th>Acciones</th></tr>
+    </thead>
+    <tbody id="pitchTableBody">
+     <tr><td colspan="5" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Cargando plantillas...</td></tr>
+    </tbody>
+   </table>
+  </div>
+
+  <!-- Modal Segmento -->
+  <div class="modal fade" id="segmentModal" tabindex="-1">
+   <div class="modal-dialog">
+    <div class="modal-content">
+     <div class="modal-header">
+      <h5 class="modal-title" id="segmentModalTitle">Nuevo Segmento</h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+     </div>
+     <div class="modal-body">
+      <input type="hidden" id="segEditKey">
+      <div class="mb-3">
+       <label class="form-label">Nombre del segmento</label>
+       <input type="text" class="form-control" id="segLabel" placeholder="Ej: B2B Taller" oninput="document.getElementById('segKey').value=this.value.toLowerCase().replace(/\s+/g,'_')">
+      </div>
+      <div class="mb-3">
+       <label class="form-label">Clave interna</label>
+       <input type="text" class="form-control" id="segKey" placeholder="b2b_taller">
+       <small class="text-muted">Se genera automáticamente desde el nombre</small>
+      </div>
+      <div class="mb-3">
+       <label class="form-label">Color</label>
+       <input type="color" class="form-control form-control-color" id="segColor" value="#6f42c1" style="width:60px;height:38px;padding:2px;">
+      </div>
+     </div>
+     <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button type="button" class="btn btn-htk" onclick="saveSegment()">Guardar</button>
+     </div>
+    </div>
+   </div>
+  </div>
+
+  <!-- Modal Pitch -->
+  <div class="modal fade" id="pitchModal" tabindex="-1">
+   <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+     <div class="modal-header">
+      <h5 class="modal-title" id="pitchModalTitle">Nueva Plantilla de Pitch</h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+     </div>
+     <div class="modal-body">
+      <input type="hidden" id="pitchEditKey">
+      <div class="mb-3">
+       <label class="form-label">Segmento</label>
+       <select class="form-select" id="pitchSegment">
+        <option value="">Seleccionar segmento...</option>
+       </select>
+      </div>
+      <div class="mb-3">
+       <label class="form-label">Mensaje</label>
+       <textarea class="form-control" id="pitchMensaje" rows="4" placeholder="Hola {nombre}, soy de HTK INGENIERIA..."></textarea>
+      </div>
+      <div class="mb-3">
+       <label class="form-label">Multimedia URL (opcional)</label>
+       <input type="url" class="form-control" id="pitchMultimedia" placeholder="https://...">
+      </div>
+     </div>
+     <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button type="button" class="btn btn-htk" onclick="savePitch()">Guardar</button>
+     </div>
+    </div>
+   </div>
   </div>
  </div>
 
