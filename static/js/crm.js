@@ -5031,8 +5031,8 @@ async function loadFacturaPayments(id, inv) {
 async function emitirFactura(id) {
   if (!confirm('¿Emitir esta factura? Ya no se podrá editar.')) return;
   try {
-    const resp = await fetch(API + `/api/facturas/${id}/emitir`, { method:'POST' });
-    if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
+    const resp = await fetch(API + `/api/facturas/${id}/emitir`, { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' });
+    if (!resp.ok) { const text = await resp.text(); let msg; try { msg = JSON.parse(text).error || text; } catch(e) { msg = text.slice(0,200); } throw new Error(msg); }
     showToast('Factura emitida ✅', 'success');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
     loadFacturas();
@@ -5042,7 +5042,11 @@ async function emitirFactura(id) {
 async function pagarFactura(id) {
   if (!confirm('¿Registrar pago de esta factura?')) return;
   try {
-    const resp = await fetch(API + `/api/facturas/${id}/pagar`, { method:'POST' });
+    const resp = await fetch(API + `/api/facturas/${id}/pagar`, {
+      method:'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({})
+    });
     if (!resp.ok) {
       const text = await resp.text();
       let msg;
@@ -5058,8 +5062,8 @@ async function pagarFactura(id) {
 async function anularFactura(id) {
   if (!confirm('¿Anular esta factura?')) return;
   try {
-    const resp = await fetch(API + `/api/facturas/${id}`, { method:'DELETE' });
-    if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
+    const resp = await fetch(API + `/api/facturas/${id}`, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:'{}' });
+    if (!resp.ok) { const text = await resp.text(); let msg; try { msg = JSON.parse(text).error || text; } catch(e) { msg = text.slice(0,200); } throw new Error(msg); }
     showToast('Factura anulada', 'warning');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
     loadFacturas();
