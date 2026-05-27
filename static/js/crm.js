@@ -669,7 +669,7 @@ function renderClientsDT() {
   _ensureDTFilters();
   const cols = [
     { data:'id', render: function(d,t,r) {
-      let h = `<a href="/clients/${d}" style="color:var(--htk-primary);font-weight:600;">${d}</a>`;
+      let h = `<a href="#" onclick="showClientDetail('${d}');return false;" style="color:var(--htk-primary);font-weight:600;">${d}</a>`;
       if(r.lead_id) h += ` <small style="color:var(--htk-primary);font-size:0.7em;">← ${r.lead_id}</small>`;
       return h;
     }},
@@ -4740,7 +4740,8 @@ async function saveFactura() {
       method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
     });
     if (!resp.ok) {
-      const err = await resp.json();
+      const text = await resp.text();
+      const err = text.startsWith('<!') ? {error:'Sesión expirada'} : JSON.parse(text);
       throw new Error(err.error || 'Error al guardar');
     }
     const data = await resp.json();
@@ -4772,7 +4773,7 @@ async function emitirFactura(id) {
   if (!confirm('¿Emitir esta factura? Ya no se podrá editar.')) return;
   try {
     const resp = await fetch(API + `/api/facturas/${id}/emitir`, { method:'POST' });
-    if (!resp.ok) { const err = await resp.json(); throw new Error(err.error); }
+    if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
     toastMsg('Factura emitida ✅', 'success');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
     loadFacturas();
@@ -4783,7 +4784,7 @@ async function pagarFactura(id) {
   if (!confirm('¿Registrar pago de esta factura?')) return;
   try {
     const resp = await fetch(API + `/api/facturas/${id}/pagar`, { method:'POST' });
-    if (!resp.ok) { const err = await resp.json(); throw new Error(err.error); }
+    if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
     toastMsg('Factura pagada ✅', 'success');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
     loadFacturas();
@@ -4794,7 +4795,7 @@ async function anularFactura(id) {
   if (!confirm('¿Anular esta factura?')) return;
   try {
     const resp = await fetch(API + `/api/facturas/${id}`, { method:'DELETE' });
-    if (!resp.ok) { const err = await resp.json(); throw new Error(err.error); }
+    if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
     toastMsg('Factura anulada', 'warning');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
     loadFacturas();
