@@ -1120,7 +1120,15 @@ async function showWODetail(id) {
  detailHTML += `</div>`;
  }
 
- detailHTML += `<button class="btn btn-sm btn-htk mt-2" onclick="showPaymentModal('${o.id}')"><i class="bi bi-plus-lg"></i> Registrar abono</button>
+ detailHTML += `<div class="mt-3">
+ <div class="d-flex justify-content-between align-items-center mb-2">
+  <strong style="font-size:0.85rem;">💰 Abonos</strong>
+  <div class="d-flex gap-1">
+   <button class="btn btn-sm btn-htk" onclick="showPaymentModal('${o.id}')"><i class="bi bi-plus-lg"></i> Registrar</button>
+   <button class="btn btn-sm btn-outline-success" onclick="emitirFacturaDesdeOT('${o.id}')" title="Emitir factura por esta OT"><i class="bi bi-receipt"></i> Facturar</button>
+  </div>
+ </div>
+ <div id="paymentsList_${o.id}"><span class="spinner-border spinner-border-sm"></span> Cargando...</div>
  </div>`;
 
  // ── Historial ──
@@ -1154,6 +1162,7 @@ async function showWODetail(id) {
  </div>`
  );
  modalInstance.show();
+ loadPaymentsList(o.id);
 }
 
 function showStatusModal(id) {
@@ -1234,13 +1243,17 @@ async function updateStatus(id) {
 function showPaymentModal(woId) {
   const o = workOrders.find(x => x.id === woId);
   if (!o) return;
-  
+
+  const total = parseFloat(o.valor_total || o.presupuesto || 0);
+  const abonado = parseFloat(o.total_abonado || 0);
+  const pendiente = Math.max(0, total - abonado);
+
   const html = `
   <p><strong>Orden:</strong> ${o.id} — ${escHtml(o.cliente?.nombre||'')}</p>
-  <p><strong>Presupuesto:</strong> ${formatCurrency(o.presupuesto)} · <strong>Pendiente:</strong> ${formatCurrency(o.saldo_pendiente !== null ? o.saldo_pendiente : (o.presupuesto||0)-(o.total_abonado||0))}</p>
+  <p><strong>Total OT:</strong> ${formatCurrency(total)} · <strong>Abonado:</strong> ${formatCurrency(abonado)} · <strong style="color:var(--htk-primary);">Pendiente: ${formatCurrency(pendiente)}</strong></p>
   <div class="mb-3">
-    <label class="form-label">Monto <span class="text-danger">*</span></label>
-    <input class="form-control" id="payMonto" type="number" placeholder="Ej: 150000" min="1" step="1">
+    <label class="form-label">Monto <span class="text-danger">*</span> <small class="text-muted">(máx: ${formatCurrency(pendiente)})</small></label>
+    <input class="form-control" id="payMonto" type="number" placeholder="Ej: 150000" min="1" max="${pendiente}" step="1">
   </div>
   <div class="mb-3">
     <label class="form-label">Método de pago</label>
