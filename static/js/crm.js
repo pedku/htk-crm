@@ -1860,12 +1860,12 @@ async function showModal(type, id) {
  } else if (type === 'workorder') {
  title = id ? 'Editar Orden de Trabajo' : 'Nueva Orden de Trabajo';
  if (id) item = workOrders.find(o => o.id === id);
- const clientSearch = id ? '' : `<div class="mb-3"><label class="form-label">Cliente (buscar)</label>
+ const clientSearch = `<div class="mb-3"><label class="form-label">Cliente (buscar)</label>
  <div class="client-search-wrapper">
   <input type="text" class="form-control" id="f_clientSearch" placeholder="🔍 Buscar por nombre, documento o teléfono..." autocomplete="off" oninput="searchWOClient()">
   <div class="client-search-dropdown" id="f_clientDropdown" style="display:none;"></div>
  </div>
- <input type="hidden" id="f_clientId" value="">
+ <input type="hidden" id="f_clientId" value="${item?.client_id||''}">
  <small style="color:rgba(255,255,255,0.4);">Si no encuentras el cliente, déjalo en blanco y llénalo manualmente.</small>
 </div>`;
  
