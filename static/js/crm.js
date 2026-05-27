@@ -4971,14 +4971,11 @@ async function loadFacturaPayments(id, inv) {
   if (!bar) return;
   
   try {
-    const payments = await fetchJSON(`/api/facturas/${id}/payments`);
+    // Use data already returned by get_invoice (incluye payments vinculados + legacy de OT)
+    const payments = Array.isArray(inv?.payments) ? inv.payments : [];
     const total = Number(inv?.total_general || 0);
-    var abonado = 0;
-    if (Array.isArray(payments)) {
-      payments.forEach(p => { abonado += Number(p.monto || 0); });
-    }
-    abonado = Math.round(abonado * 100) / 100;
-    const saldo = Math.round((total - abonado) * 100) / 100;
+    const abonado = Number(inv?.total_abonado_factura || 0);
+    const saldo = Number(inv?.saldo_pendiente_factura || total);
     const pct = total > 0 ? Math.min(100, Math.round((abonado / total) * 100)) : 0;
     
     bar.style.display = '';
@@ -5010,7 +5007,7 @@ async function loadFacturaPayments(id, inv) {
     // Payment list
     const list = document.getElementById('factPaymentList');
     const tbody = document.getElementById('factPaymentListBody');
-    if (Array.isArray(payments) && payments.length > 0) {
+    if (payments.length > 0) {
       list.style.display = '';
       tbody.innerHTML = payments.map(p => {
         const met = p.metodo || '-';

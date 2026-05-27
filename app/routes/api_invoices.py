@@ -433,8 +433,9 @@ def pagar_factura(inv_id):
             ), 2
         )
         if saldo_pendiente > 0:
+            pay_inserted = False
+            wo_id = inv['wo_id'] or None
             try:
-                wo_id = inv['wo_id'] or ''
                 conn.execute('''
                     INSERT INTO payments (wo_id, invoice_id, monto, tipo, metodo, referencia, fecha, registrado_por)
                     VALUES (?, ?, ?, 'pago', ?, ?, ?, 'Sistema')
@@ -444,9 +445,24 @@ def pagar_factura(inv_id):
                     data.get('referencia', ''), now_iso()[:10]
                 ))
                 conn.commit()
-            except Exception as pay_e:
-                # Si falla (ej: wo_id NOT NULL sin OT), solo registrar sin pago
+                pay_inserted = True
+            except Exception:
                 conn.rollback()
+                # Si falló por wo_id NOT NULL sin OT, reintentar con wo_id = inv_id
+                if not wo_id:
+                    try:
+                        conn.execute('''
+                            INSERT INTO payments (wo_id, invoice_id, monto, tipo, metodo, referencia, fecha, registrado_por)
+                            VALUES (?, ?, ?, 'pago', ?, ?, ?, 'Sistema')
+                        ''', (
+                            inv_id, inv_id, saldo_pendiente,
+                            data.get('metodo_pago', ''),
+                            data.get('referencia', ''), now_iso()[:10]
+                        ))
+                        conn.commit()
+                        pay_inserted = True
+                    except Exception:
+                        conn.rollback()
         
         result, err = _change_status(inv_id, 'pagada', {'metodo_pago': data.get('metodo_pago', '')})
         if err:
