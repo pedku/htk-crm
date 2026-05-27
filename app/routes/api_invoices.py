@@ -671,26 +671,46 @@ def send_invoice_whatsapp(inv_id):
         if not telefono:
             return jsonify({'error': 'Cliente sin teléfono'}), 400
 
-        # Build message
         total = inv.get('total_general', 0)
-        mensaje = (
+        caption = (
             f"⚡ *HTK INGENIERIA* — Factura {inv['numero']}\n\n"
             f"Cliente: {client.get('nombre', '—')}\n"
             f"Total: ${total:,.0f} COP\n"
             f"Vence: {inv['fecha_vencimiento']}\n\n"
-            f"Puedes ver tu factura aquí:\n"
-            f"http://localhost:5000/factura/{inv['id']}\n\n"
             f"Gracias por confiar en nosotros ⚡"
         )
 
-        # Try to use bot service
+        # Generate PDF URL and send document via bot
+        pdf_url = f"http://localhost:5000/api/facturas/{inv_id}/pdf"
+        
         try:
-            from app.services.bot_service import send_whatsapp
-            result = send_whatsapp(telefono, mensaje)
+            import urllib.request, json as py_json
+            payload = py_json.dumps({'to': telefono, 'document': pdf_url, 'caption': caption}).encode()
+            req = urllib.request.Request(
+                'http://localhost:18802/send-document',
+                data=payload,
+                headers={'Content-Type': 'application/json'},
+                method='POST'
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                result = py_json.loads(resp.read())
             return jsonify({'ok': True, 'bot_result': result})
         except Exception as e:
-            return jsonify({'ok': True, 'simulado': True, 'telefono': telefono,
-                           'mensaje': mensaje, 'nota': f'Bot no disponible: {e}'})
+            # Fallback: send text only
+            try:
+                from app.services.bot_service import send_whatsapp
+                msg = (
+                    f"⚡ *HTK INGENIERIA* — Factura {inv['numero']}\n\n"
+                    f"Cliente: {client.get('nombre', '—')}\n"
+                    f"Total: ${total:,.0f} COP\n"
+                    f"Vence: {inv['fecha_vencimiento']}\n\n"
+                    f"Gracias por confiar en nosotros ⚡"
+                )
+                result = send_whatsapp(telefono, msg)
+                return jsonify({'ok': True, 'fallback': True, 'bot_result': result})
+            except Exception as e2:
+                return jsonify({'ok': True, 'simulado': True, 'telefono': telefono,
+                               'nota': f'Bot no disponible: {e2}'})
     finally:
         conn.close()
 
