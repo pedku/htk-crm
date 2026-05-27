@@ -86,10 +86,15 @@ def set_iva_config():
 def list_invoices():
     conn = get_db()
     try:
-        where = ['activo = 1']
-        params = []
-
         estado = request.args.get('estado')
+        if estado == 'anulada':
+            # Permitir ver anuladas explícitamente
+            where = ['1=1']
+            params = []
+        else:
+            where = ['activo = 1']
+            params = []
+        
         if estado:
             where.append('estado = ?')
             params.append(estado)
@@ -353,7 +358,7 @@ def delete_invoice(inv_id):
         inv = conn.execute("SELECT * FROM invoices WHERE id = ?", (inv_id,)).fetchone()
         if not inv:
             return jsonify({'error': 'Factura no encontrada'}), 404
-        conn.execute("UPDATE invoices SET estado = 'anulada', updated_at = ? WHERE id = ?",
+        conn.execute("UPDATE invoices SET estado = 'anulada', activo = 0, updated_at = ? WHERE id = ?",
                      (now_iso(), inv_id))
         conn.commit()
         return jsonify({'ok': True, 'estado': 'anulada'})
@@ -374,6 +379,8 @@ def _change_status(inv_id, new_estado, extra_updates=None):
         if new_estado == 'pagada':
             sql += ", pagada_fecha = ?"
             params.append(now_iso()[:10])
+        if new_estado == 'anulada':
+            sql += ", activo = 0"
         if extra_updates:
             for k, v in extra_updates.items():
                 sql += f", {k} = ?"
