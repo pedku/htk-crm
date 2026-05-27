@@ -727,7 +727,7 @@ def send_invoice_whatsapp(inv_id):
         if not os.path.exists(pdf_path) or os.path.getsize(pdf_path) < 1000:
             try:
                 result = subprocess.run(
-                    ['node', 'pdf-gen.js', inv_id],
+                    ['python3', 'pdf-gen.py', inv_id],
                     cwd=BOT_DIR, capture_output=True, timeout=45, text=True
                 )
                 pdf_ok = os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 1000
@@ -773,7 +773,7 @@ def _send_invoice_whatsapp_background(inv_id):
     if not os.path.exists(pdf_path) or os.path.getsize(pdf_path) < 1000:
         try:
             subprocess.run(
-                ['node', 'pdf-gen.js', inv_id],
+                ['python3', 'pdf-gen.py', inv_id],
                 cwd=BOT_DIR, capture_output=True, timeout=45, text=True
             )
         except:
