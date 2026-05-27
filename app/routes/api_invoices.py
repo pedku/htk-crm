@@ -680,21 +680,33 @@ def send_invoice_whatsapp(inv_id):
             f"Gracias por confiar en nosotros ⚡"
         )
 
-        # Generate PDF URL and send document via bot
-        pdf_url = f"http://localhost:18800/factura/{inv_id}"
+        # Generate PDF via puppeteer, then send via bot
+        import subprocess, os
+        BOT_DIR = '/home/peku/htk-whatsapp-bot'
+        FACTURAS_DIR = os.path.join(BOT_DIR, 'facturas')
+        pdf_path = os.path.join(FACTURAS_DIR, f'{inv_id}.pdf')
         
         try:
-            import urllib.request, json as py_json
-            payload = py_json.dumps({'to': telefono, 'document': pdf_url, 'caption': caption}).encode()
-            req = urllib.request.Request(
-                'http://localhost:18802/send-document',
-                data=payload,
-                headers={'Content-Type': 'application/json'},
-                method='POST'
+            subprocess.run(
+                ['node', 'pdf-gen.js', inv_id],
+                cwd=BOT_DIR, capture_output=True, timeout=30, text=True
             )
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                result = py_json.loads(resp.read())
-            return jsonify({'ok': True, 'bot_result': result})
+            
+            if os.path.exists(pdf_path):
+                import urllib.request, json as py_json
+                payload = py_json.dumps({'to': telefono, 'document': pdf_path, 'caption': caption}).encode()
+                req = urllib.request.Request(
+                    'http://localhost:18802/send-document',
+                    data=payload,
+                    headers={'Content-Type': 'application/json'},
+                    method='POST'
+                )
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    result = py_json.loads(resp.read())
+                return jsonify({'ok': True, 'pdf_path': pdf_path, 'bot_result': result})
+            else:
+                return jsonify({'error': 'No se pudo generar el PDF'}), 500
+                
         except Exception as e:
             # Fallback: send text only
             try:
