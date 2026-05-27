@@ -1313,6 +1313,99 @@ async function savePayment(woId) {
     await loadWorkOrders();
   } catch(e) { showToast('Error al registrar abono: ' + e.message, 'danger'); }
 }
+
+async function loadPaymentsList(woId) {
+  var el = document.getElementById('paymentsList_' + woId);
+  if (!el) return;
+  try {
+    var resp = await fetch('/api/work_orders/' + woId + '/payments');
+    var payments = await resp.json();
+    if (!payments || !payments.length) {
+      el.innerHTML = '<small style="color:rgba(255,255,255,0.3);">Sin abonos registrados</small>';
+      return;
+    }
+    var html = '<div style="max-height:250px;overflow-y:auto;">';
+    for (var i = 0; i < payments.length; i++) {
+      var p = payments[i];
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.85rem;">';
+      html += '<div>';
+      html += '<strong style="color:#fff;">$' + (p.monto||0).toLocaleString('es-CO') + '</strong>';
+      html += ' <small style="color:rgba(255,255,255,0.4);">' + escHtml(p.metodo||'') + '</small>';
+      if (p.referencia) html += ' <small style="color:rgba(255,255,255,0.3);">#' + escHtml(p.referencia) + '</small>';
+      html += '<br><small style="color:rgba(255,255,255,0.3);">' + (p.fecha||'').slice(0,10) + '</small>';
+      if (p.notas) html += ' <small style="color:rgba(255,255,255,0.3);">— ' + escHtml(p.notas) + '</small>';
+      html += '</div>';
+      html += '<div class="d-flex gap-1">';
+      html += '<button class="action-btn primary" onclick="editPayment(' + p.id + ',\'' + woId + '\',' + p.monto + ')" title="Editar"><i class="bi bi-pencil"></i></button>';
+      html += '<button class="action-btn danger" onclick="deletePayment(' + p.id + ',\'' + woId + '\')" title="Eliminar"><i class="bi bi-trash"></i></button>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<small style="color:rgba(255,255,255,0.3);">Error al cargar abonos</small>';
+    console.error('loadPaymentsList:', e);
+  }
+}
+
+function editPayment(paymentId, woId, currentMonto) {
+  var nuevo = prompt('Editar monto:', currentMonto);
+  if (!nuevo || isNaN(parseFloat(nuevo)) || parseFloat(nuevo) <= 0) return;
+  fetch('/api/work_orders/' + woId + '/payments/' + paymentId, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({monto: parseFloat(nuevo)})
+  }).then(function() {
+    loadPaymentsList(woId);
+    loadWorkOrders();
+    flashSave();
+    showToast('Abono actualizado ✅', 'success');
+  }).catch(function(e) { showToast('Error: ' + e.message, 'danger'); });
+}
+
+function deletePayment(paymentId, woId) {
+  if (!confirm('¿Eliminar este abono?')) return;
+  fetch('/api/work_orders/' + woId + '/payments/' + paymentId, {method: 'DELETE'})
+    .then(function() {
+      loadPaymentsList(woId);
+      loadWorkOrders();
+      flashSave();
+      showToast('Abono eliminado', 'warning');
+    }).catch(function(e) { showToast('Error: ' + e.message, 'danger'); });
+}
+
+async function emitirFacturaDesdeOT(woId) {
+  var o = workOrders.find(function(x) { return x.id === woId; });
+  if (!o) return;
+  var total = parseFloat(o.valor_total || o.presupuesto || 0);
+  if (!total || total <= 0) { alert('La OT no tiene valor total definido. Edítala primero.'); return; }
+  if (!o.client_id) { alert('La OT no tiene cliente vinculado. Edítala primero.'); return; }
+  if (!confirm('¿Crear factura por ' + formatCurrency(total) + ' para la OT ' + woId + '?')) return;
+  try {
+    var resp = await fetch('/api/facturas', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        client_id: o.client_id,
+        wo_id: woId,
+        fecha_emision: new Date().toISOString().slice(0,10),
+        fecha_vencimiento: new Date(Date.now() + 30*86400000).toISOString().slice(0,10),
+        items: [{
+          descripcion: 'OT ' + woId + ' — ' + (o.equipo?.tipo||'') + ' ' + (o.equipo?.marca||'') + ' ' + (o.equipo?.modelo||''),
+          cantidad: 1,
+          precio_unitario: total,
+          iva_porcentaje: 0
+        }]
+      })
+    });
+    if (!resp.ok) { var txt = await resp.text(); throw new Error(txt.startsWith('<!') ? 'Sesión expirada' : txt); }
+    var data = await resp.json();
+    showToast('Factura ' + data.numero + ' creada ✅', 'success');
+    if (modalInstance) modalInstance.hide();
+    navigateToTab('facturacion');
+  } catch(e) { alert('Error al facturar: ' + e.message); }
+}
+
 // ─── LEADS ────────────────────────────────────────────
 async function loadLeads() {
  showLoading('leadsLoading','leadsContent');
