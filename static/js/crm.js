@@ -3459,7 +3459,8 @@ const BOT_CONFIG_KEYS = [
   'reset_timeout_ms','max_auto_mensajes','silenciar_lead_minutos','silenciar_pitch_dias',
   'auto_respuesta_activa','derivar_sin_respuesta','consulta_ot_activa',
   'mensaje_presentacion','mensaje_bienvenida','mensaje_fuera_horario','mensaje_derivar','mensaje_despedida',
-  'crm_api_url'
+  'crm_api_url',
+  'iva_default'
 ];
 
 const BOT_TOGGLE_KEYS = ['auto_respuesta_activa','derivar_sin_respuesta','consulta_ot_activa'];
@@ -4801,6 +4802,15 @@ async function showFacturaModal(id) {
         container.innerHTML = '';
         (inv.items || []).forEach(item => {
           addFacturaItem(item.descripcion, item.cantidad, item.precio_unitario, item.iva_porcentaje);
+          // Set iva_incluido checkbox if applicable
+          if (item.iva_incluido) {
+            const rows = document.querySelectorAll('.fact-item-row');
+            const lastRow = rows[rows.length - 1];
+            if (lastRow) {
+              const cb = lastRow.querySelector('.fact-item-iva-incl');
+              if (cb) cb.checked = true;
+            }
+          }
         });
         updateFacturaPreview();
       }
@@ -4821,17 +4831,23 @@ function addFacturaItem(desc, cant, precio, iva) {
   div.className = 'fact-item-row d-flex gap-2 align-items-end mb-2 p-2';
   div.style.cssText = 'background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.05);';
   div.innerHTML = `
-    <div style="flex:1;min-width:200px;">
+    <div style="flex:1;min-width:160px;">
       <input type="text" class="form-control form-control-sm fact-item-desc" value="${escHtml(desc||'')}" placeholder="Descripción" oninput="updateFacturaPreview()">
     </div>
-    <div style="width:80px;">
+    <div style="width:70px;">
       <input type="number" class="form-control form-control-sm fact-item-cant" value="${cant||1}" min="0.1" step="0.1" oninput="updateFacturaPreview()">
     </div>
-    <div style="width:120px;">
+    <div style="width:100px;">
       <input type="number" class="form-control form-control-sm fact-item-precio" value="${precio||0}" min="0" step="1000" oninput="updateFacturaPreview()">
     </div>
-    <div style="width:80px;">
-      <input type="number" class="form-control form-control-sm fact-item-iva" value="${iva||19}" min="0" max="100" oninput="updateFacturaPreview()">
+    <div style="width:70px;">
+      <input type="number" class="form-control form-control-sm fact-item-iva" value="${iva||19}" min="0" max="100" step="0.5" oninput="updateFacturaPreview()">
+    </div>
+    <div style="width:60px;text-align:center;">
+      <div class="form-check">
+        <input type="checkbox" class="form-check-input fact-item-iva-incl" onchange="updateFacturaPreview()">
+        <label class="form-check-label" style="font-size:0.65rem;color:rgba(255,255,255,0.5);">Incl.</label>
+      </div>
     </div>
     <div style="width:100px;">
       <span class="fact-item-total" style="font-weight:600;color:#fff;">$0</span>
@@ -4848,11 +4864,22 @@ function updateFacturaPreview() {
     const cant = parseFloat(row.querySelector('.fact-item-cant')?.value) || 0;
     const precio = parseFloat(row.querySelector('.fact-item-precio')?.value) || 0;
     const iva = parseFloat(row.querySelector('.fact-item-iva')?.value) || 0;
-    const total = cant * precio * (1 + iva / 100);
+    const ivaIncl = row.querySelector('.fact-item-iva-incl')?.checked || false;
+    let total;
+    let ivaLinea;
+    if (ivaIncl) {
+      // IVA incluido en el precio
+      total = cant * precio;
+      ivaLinea = cant * precio * iva / (100 + iva);
+    } else {
+      // IVA discriminado (default)
+      total = cant * precio * (1 + iva / 100);
+      ivaLinea = cant * precio * iva / 100;
+    }
     const totalEl = row.querySelector('.fact-item-total');
     if (totalEl) totalEl.textContent = '$' + Math.round(total).toLocaleString('es-CO');
     sub += cant * precio;
-    iva_total += cant * precio * iva / 100;
+    iva_total += ivaLinea;
   });
   const desc = parseFloat(document.getElementById('factDescuento')?.value) || 0;
   const total = sub + iva_total - desc;
@@ -4870,7 +4897,8 @@ function collectFacturaItems() {
       descripcion: desc,
       cantidad: parseFloat(row.querySelector('.fact-item-cant')?.value) || 1,
       precio_unitario: parseFloat(row.querySelector('.fact-item-precio')?.value) || 0,
-      iva_porcentaje: parseFloat(row.querySelector('.fact-item-iva')?.value) || 19
+      iva_porcentaje: parseFloat(row.querySelector('.fact-item-iva')?.value) || 19,
+      iva_incluido: row.querySelector('.fact-item-iva-incl')?.checked ? 1 : 0
     });
   });
   return items;
@@ -4928,7 +4956,75 @@ async function showFacturaDetail(id) {
     const estado = inv?.estado || '';
     document.getElementById('btnEmitirFact').style.display = (estado === 'borrador') ? '' : 'none';
     document.getElementById('btnPagarFact').style.display = (estado === 'emitida' || estado === 'vencida') ? '' : 'none';
+    
+    // Load linked payments
+    await loadFacturaPayments(id, inv);
   } catch(e) { console.error(e); }
+}
+
+async function loadFacturaPayments(id, inv) {
+  const bar = document.getElementById('factPaymentBar');
+  if (!bar) return;
+  
+  try {
+    const payments = await fetchJSON(`/api/facturas/${id}/payments`);
+    const total = Number(inv?.total_general || 0);
+    var abonado = 0;
+    if (Array.isArray(payments)) {
+      payments.forEach(p => { abonado += Number(p.monto || 0); });
+    }
+    abonado = Math.round(abonado * 100) / 100;
+    const saldo = Math.round((total - abonado) * 100) / 100;
+    const pct = total > 0 ? Math.min(100, Math.round((abonado / total) * 100)) : 0;
+    
+    bar.style.display = '';
+    
+    // Progress bar
+    document.getElementById('factPaymentBarFill').style.width = pct + '%';
+    document.getElementById('factPaymentBarFill').style.background = (abonado >= total) ? '#10b981' : 'var(--htk-primary)';
+    document.getElementById('factPaymentText').textContent = '$' + abonado.toLocaleString('es-CO') + ' / $' + total.toLocaleString('es-CO');
+    
+    // Status badge
+    const badge = document.getElementById('factPaymentStatusBadge');
+    if (abonado >= total && total > 0) {
+      badge.textContent = '✅ PAGADA';
+      badge.style.background = 'rgba(16,185,129,0.2)';
+      badge.style.color = '#10b981';
+      document.getElementById('factPaymentDetail').textContent = 'Saldo: $0';
+    } else if (abonado > 0) {
+      badge.textContent = '⏳ PARCIAL';
+      badge.style.background = 'rgba(245,158,11,0.2)';
+      badge.style.color = '#f59e0b';
+      document.getElementById('factPaymentDetail').textContent = 'Saldo: $' + saldo.toLocaleString('es-CO');
+    } else {
+      badge.textContent = '⚪ PENDIENTE';
+      badge.style.background = 'rgba(255,255,255,0.1)';
+      badge.style.color = 'rgba(255,255,255,0.5)';
+      document.getElementById('factPaymentDetail').textContent = '';
+    }
+    
+    // Payment list
+    const list = document.getElementById('factPaymentList');
+    const tbody = document.getElementById('factPaymentListBody');
+    if (Array.isArray(payments) && payments.length > 0) {
+      list.style.display = '';
+      tbody.innerHTML = payments.map(p => {
+        const met = p.metodo || '-';
+        const ref = p.referencia || '';
+        return '<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">' +
+          '<td style="padding:4px 0;">' + (p.fecha || '').slice(0,10) + '</td>' +
+          '<td style="padding:4px 0;color:var(--htk-primary);font-weight:600;">$' + Number(p.monto).toLocaleString('es-CO') + '</td>' +
+          '<td style="padding:4px 0;">' + met + '</td>' +
+          '<td style="padding:4px 0;color:rgba(255,255,255,0.4);">' + (ref || '') + '</td>' +
+          '</tr>';
+      }).join('');
+    } else {
+      list.style.display = 'none';
+    }
+  } catch(e) {
+    console.error('loadFacturaPayments:', e);
+    bar.style.display = 'none';
+  }
 }
 
 async function emitirFactura(id) {

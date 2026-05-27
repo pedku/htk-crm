@@ -226,7 +226,7 @@
     {% for item in items %}
     <tr>
       <td class="center">{{ '%02d' % item.item_num }}</td>
-      <td class="left">{{ item.descripcion }}</td>
+      <td class="left">{{ item.descripcion }}{% if item.iva_incluido %} <small style="color:#a1a1aa;font-size:0.85em;">(IVA incl.)</small>{% endif %}</td>
       <td>{{ item.cantidad }}</td>
       <td>${{ '{:,.0f}'.format(item.precio_unitario) }}</td>
       <td>${{ '{:,.0f}'.format(item.total_linea) }}</td>

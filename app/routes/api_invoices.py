@@ -35,6 +35,50 @@ def get_empresa_config():
         pass
     return config
 
+
+def get_iva_default():
+    """Get default IVA percentage from bot_config."""
+    try:
+        conn = get_db()
+        row = conn.execute("SELECT value FROM bot_config WHERE key = 'iva_default'").fetchone()
+        conn.close()
+        return float(row['value']) if row else 19.0
+    except:
+        return 19.0
+
+
+# ── IVA Config Endpoints ──────────────────────────────────────────
+
+@api_invoices_bp.route('/api/config/iva')
+@login_required
+def get_iva_config():
+    value = get_iva_default()
+    return jsonify({'value': value})
+
+
+@api_invoices_bp.route('/api/config/iva', methods=['POST'])
+@login_required
+def set_iva_config():
+    data = request.get_json()
+    if not data or 'value' not in data:
+        return jsonify({'error': 'value requerido'}), 400
+    try:
+        val = float(data['value'])
+        if val < 0 or val > 100:
+            return jsonify({'error': 'El IVA debe estar entre 0 y 100'}), 400
+        conn = get_db()
+        existing = conn.execute("SELECT id FROM bot_config WHERE key = 'iva_default'").fetchone()
+        if existing:
+            conn.execute("UPDATE bot_config SET value = ? WHERE key = 'iva_default'", (str(val),))
+        else:
+            conn.execute("INSERT INTO bot_config (key, value, tipo, descripcion, categoria) VALUES ('iva_default', ?, 'float', 'IVA por defecto (%)', 'facturacion')", (str(val),))
+        conn.commit()
+        conn.close()
+        return jsonify({'ok': True, 'value': val})
+    except ValueError:
+        return jsonify({'error': 'Valor inválido'}), 400
+
+
 # ── LISTAR FACTURAS ──────────────────────────────────────────────────
 
 @api_invoices_bp.route('/api/facturas')
@@ -137,9 +181,18 @@ def get_invoice(inv_id):
         client = conn.execute("SELECT * FROM clients WHERE id = ?",
                               (inv['client_id'],)).fetchone()
 
+        # Fetch linked payments by invoice_id or by wo_id if invoice references a WO
+        payments = conn.execute(
+            "SELECT * FROM payments WHERE invoice_id = ? ORDER BY fecha DESC",
+            (inv_id,)
+        ).fetchall()
         result = dict(inv)
         result['items'] = [dict(i) for i in items]
         result['cliente'] = dict(client) if client else None
+        result['payments'] = [dict(p) for p in payments]
+        total_abonado = sum(float(p['monto']) for p in payments)
+        result['total_abonado_factura'] = round(total_abonado, 2)
+        result['saldo_pendiente_factura'] = round(float(inv['total_general']) - total_abonado, 2)
         return jsonify(result)
     finally:
         conn.close()
@@ -170,10 +223,20 @@ def create_invoice():
         for item in items:
             cant = float(item.get('cantidad', 0))
             precio = float(item.get('precio_unitario', 0))
-            iva_pct = float(item.get('iva_porcentaje', 19))
-            item['total_linea'] = round(cant * precio * (1 + iva_pct / 100), 2)
-            sub_total += cant * precio
-            iva_total += cant * precio * iva_pct / 100
+            iva_pct = float(item.get('iva_porcentaje', get_iva_default()))
+            iva_incluido = int(item.get('iva_incluido', 0))
+            if iva_incluido:
+                # IVA incluido en el precio: IVA = precio * cant * iva_pct / (100 + iva_pct)
+                item['total_linea'] = round(cant * precio, 2)
+                item['iva_total_linea'] = round(cant * precio * iva_pct / (100 + iva_pct), 2)
+                sub_total += cant * precio
+                iva_total += item['iva_total_linea']
+            else:
+                # IVA discriminado (default): total = precio * cant * (1 + iva_pct/100)
+                item['total_linea'] = round(cant * precio * (1 + iva_pct / 100), 2)
+                item['iva_total_linea'] = round(cant * precio * iva_pct / 100, 2)
+                sub_total += cant * precio
+                iva_total += item['iva_total_linea']
 
         descuento = float(data.get('descuento', 0))
         total_general = round(sub_total + iva_total - descuento, 2)
@@ -193,11 +256,12 @@ def create_invoice():
         for i, item in enumerate(items):
             conn.execute('''
                 INSERT INTO invoice_items (invoice_id, item_num, descripcion,
-                    cantidad, precio_unitario, iva_porcentaje, total_linea)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                    cantidad, precio_unitario, iva_porcentaje, iva_incluido, total_linea)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (inv_id, i + 1, item['descripcion'],
                   float(item.get('cantidad', 1)), float(item.get('precio_unitario', 0)),
-                  float(item.get('iva_porcentaje', 19)), item['total_linea']))
+                  float(item.get('iva_porcentaje', get_iva_default())),
+                  int(item.get('iva_incluido', 0)), item['total_linea']))
 
         conn.commit()
         return jsonify({'id': inv_id, 'numero': numero, 'total_general': total_general}), 201
@@ -228,10 +292,20 @@ def update_invoice(inv_id):
         for item in items:
             cant = float(item.get('cantidad', 0))
             precio = float(item.get('precio_unitario', 0))
-            iva_pct = float(item.get('iva_porcentaje', 19))
-            item['total_linea'] = round(cant * precio * (1 + iva_pct / 100), 2)
-            sub_total += cant * precio
-            iva_total += cant * precio * iva_pct / 100
+            iva_pct = float(item.get('iva_porcentaje', get_iva_default()))
+            iva_incluido = int(item.get('iva_incluido', 0))
+            if iva_incluido:
+                # IVA incluido en el precio
+                item['total_linea'] = round(cant * precio, 2)
+                item['iva_total_linea'] = round(cant * precio * iva_pct / (100 + iva_pct), 2)
+                sub_total += cant * precio
+                iva_total += item['iva_total_linea']
+            else:
+                # IVA discriminado (default)
+                item['total_linea'] = round(cant * precio * (1 + iva_pct / 100), 2)
+                item['iva_total_linea'] = round(cant * precio * iva_pct / 100, 2)
+                sub_total += cant * precio
+                iva_total += item['iva_total_linea']
 
         descuento = float(data.get('descuento', 0))
         total_general = round(sub_total + iva_total - descuento, 2)
@@ -257,11 +331,12 @@ def update_invoice(inv_id):
         for i, item in enumerate(items):
             conn.execute('''
                 INSERT INTO invoice_items (invoice_id, item_num, descripcion,
-                    cantidad, precio_unitario, iva_porcentaje, total_linea)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                    cantidad, precio_unitario, iva_porcentaje, iva_incluido, total_linea)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (inv_id, i + 1, item['descripcion'],
                   float(item.get('cantidad', 1)), float(item.get('precio_unitario', 0)),
-                  float(item.get('iva_porcentaje', 19)), item['total_linea']))
+                  float(item.get('iva_porcentaje', get_iva_default())),
+                  int(item.get('iva_incluido', 0)), item['total_linea']))
 
         conn.commit()
         return jsonify({'ok': True, 'total_general': total_general})
@@ -323,10 +398,130 @@ def emitir_factura(inv_id):
 @login_required
 def pagar_factura(inv_id):
     data = request.get_json() or {}
-    result, err = _change_status(inv_id, 'pagada', {'metodo_pago': data.get('metodo_pago', '')})
-    if err:
-        return jsonify({'error': err[0]}), err[1]
-    return jsonify(result)
+    conn = get_db()
+    try:
+        inv = conn.execute("SELECT * FROM invoices WHERE id = ?", (inv_id,)).fetchone()
+        if not inv:
+            return jsonify({'error': 'Factura no encontrada'}), 404
+        
+        # Create payment record linked to this invoice
+        saldo_pendiente = round(
+            float(inv['total_general']) - sum(
+                float(p['monto']) for p in conn.execute(
+                    "SELECT monto FROM payments WHERE invoice_id = ?", (inv_id,)
+                ).fetchall()
+            ), 2
+        )
+        if saldo_pendiente > 0:
+            conn.execute('''
+                INSERT INTO payments (wo_id, invoice_id, monto, tipo, metodo, referencia, fecha, registrado_por)
+                VALUES (?, ?, ?, 'pago', ?, ?, ?, 'Sistema')
+            ''', (
+                inv['wo_id'] or '', inv_id, saldo_pendiente,
+                data.get('metodo_pago', ''),
+                data.get('referencia', ''), now_iso()[:10]
+            ))
+            conn.commit()
+        
+        result, err = _change_status(inv_id, 'pagada', {'metodo_pago': data.get('metodo_pago', '')})
+        if err:
+            return jsonify({'error': err[0]}), err[1]
+        return jsonify(result)
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+# ── LINK PAYMENTS TO INVOICE ────────────────────────────────────────
+
+@api_invoices_bp.route('/api/facturas/<inv_id>/payments', methods=['GET'])
+@login_required
+def get_invoice_payments(inv_id):
+    """Get payments linked to an invoice."""
+    conn = get_db()
+    try:
+        inv = conn.execute("SELECT * FROM invoices WHERE id = ?", (inv_id,)).fetchone()
+        if not inv:
+            return jsonify({'error': 'Factura no encontrada'}), 404
+        payments = conn.execute(
+            "SELECT * FROM payments WHERE invoice_id = ? ORDER BY fecha DESC", (inv_id,)
+        ).fetchall()
+        return jsonify([dict(p) for p in payments])
+    finally:
+        conn.close()
+
+
+@api_invoices_bp.route('/api/facturas/<inv_id>/payments', methods=['POST'])
+@login_required
+def link_payment_to_invoice(inv_id):
+    """Link an existing payment to this invoice, or create a new one."""
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Datos requeridos'}), 400
+    
+    conn = get_db()
+    try:
+        inv = conn.execute("SELECT * FROM invoices WHERE id = ?", (inv_id,)).fetchone()
+        if not inv:
+            return jsonify({'error': 'Factura no encontrada'}), 404
+        
+        payment_id = data.get('payment_id')
+        if payment_id:
+            # Link existing payment
+            payment = conn.execute(
+                "SELECT * FROM payments WHERE id = ?", (payment_id,)
+            ).fetchone()
+            if not payment:
+                return jsonify({'error': 'Pago no encontrado'}), 404
+            conn.execute(
+                "UPDATE payments SET invoice_id = ? WHERE id = ?", (inv_id, payment_id)
+            )
+        else:
+            # Create new payment linked to invoice
+            monto = data.get('monto')
+            if not monto or float(monto) <= 0:
+                return jsonify({'error': 'Monto requerido'}), 400
+            conn.execute('''
+                INSERT INTO payments (wo_id, invoice_id, monto, tipo, metodo, referencia, fecha, registrado_por)
+                VALUES (?, ?, ?, 'pago', ?, ?, ?, ?)
+            ''', (
+                inv['wo_id'] or '', inv_id, float(monto),
+                data.get('metodo', ''), data.get('referencia', ''),
+                data.get('fecha', now_iso()[:10]), data.get('registrado_por', 'Pedro')
+            ))
+        
+        conn.commit()
+        return jsonify({'ok': True})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@api_invoices_bp.route('/api/facturas/<inv_id>/payments/<int:payment_id>', methods=['DELETE'])
+@login_required
+def unlink_payment_from_invoice(inv_id, payment_id):
+    """Unlink a payment from this invoice."""
+    conn = get_db()
+    try:
+        payment = conn.execute(
+            "SELECT * FROM payments WHERE id = ? AND invoice_id = ?", (payment_id, inv_id)
+        ).fetchone()
+        if not payment:
+            return jsonify({'error': 'Pago no encontrado o no vinculado a esta factura'}), 404
+        conn.execute(
+            "UPDATE payments SET invoice_id = NULL WHERE id = ?", (payment_id,)
+        )
+        conn.commit()
+        return jsonify({'ok': True, 'message': 'Pago desvinculado de la factura'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
 
 @api_invoices_bp.route('/api/facturas/<inv_id>/anular', methods=['POST'])
 @login_required

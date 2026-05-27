@@ -22,6 +22,8 @@ def _ensure_columns(conn, table, expected_columns):
                     col_type = "TEXT DEFAULT 'natural'"
                 elif col in ('valor_total', 'presupuesto', 'valor_estimado'):
                     col_type = 'TEXT DEFAULT NULL'
+                elif col in ('iva_incluido',):
+                    col_type = 'INTEGER DEFAULT 0'
                 else:
                     col_type = "TEXT DEFAULT ''"
                 conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}")
@@ -113,6 +115,8 @@ def init_db():
     try:
         conn_fac.execute("PRAGMA journal_mode=WAL")
         conn_fac.execute("PRAGMA foreign_keys=ON")
+        # Ensure invoice_items has iva_incluido column
+        _ensure_columns(conn_fac, 'invoice_items', ['iva_incluido'])
         conn_fac.execute('''
             CREATE TABLE IF NOT EXISTS invoices (
                 id TEXT PRIMARY KEY,
@@ -144,6 +148,7 @@ def init_db():
                 cantidad REAL NOT NULL DEFAULT 1,
                 precio_unitario REAL NOT NULL DEFAULT 0,
                 iva_porcentaje REAL DEFAULT 19,
+                iva_incluido INTEGER DEFAULT 0,
                 total_linea REAL NOT NULL DEFAULT 0,
                 FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
             )
@@ -160,6 +165,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS payments (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 wo_id TEXT NOT NULL REFERENCES work_orders(id) ON DELETE CASCADE,
+                invoice_id TEXT DEFAULT NULL REFERENCES invoices(id) ON DELETE SET NULL,
                 monto REAL NOT NULL,
                 tipo TEXT DEFAULT 'abono',
                 metodo TEXT DEFAULT '',
@@ -169,6 +175,12 @@ def init_db():
                 registrado_por TEXT DEFAULT ''
             )
         ''')
+        try:
+            conn_aux.execute('''
+                ALTER TABLE payments ADD COLUMN invoice_id TEXT DEFAULT NULL REFERENCES invoices(id) ON DELETE SET NULL
+            ''')
+        except:
+            pass
         conn_aux.execute('''
             CREATE TABLE IF NOT EXISTS ventas (
                 id TEXT PRIMARY KEY,
@@ -327,6 +339,7 @@ def init_db():
                 ('msg_aviso_inactividad', '¿Sigues ahí? Te recordamos que estamos pendientes de tu mensaje. En 5 minutos cerraremos esta conversación si no hay respuesta.', 'str', 'Aviso de inactividad (chat activo)', 'mensajes'),
                 ('msg_cierre_inactividad', 'Conversación cerrada por inactividad. Si necesitas algo más, escribe *HOLA* para continuar.', 'str', 'Cierre por inactividad', 'mensajes'),
                 ('msg_reapertura', 'La conversación anterior ha finalizado. ¿En qué puedo ayudarte?\n\n— *MENU* para ver servicios\n— O cuéntame directamente', 'str', 'Reapertura tras chat activo', 'mensajes'),
+                ('iva_default', '19', 'float', 'IVA por defecto (%)', 'facturacion'),
             ]
             conn2.executemany(
                 "INSERT INTO bot_config (key, value, tipo, descripcion, categoria) VALUES (?, ?, ?, ?, ?)",

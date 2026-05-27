@@ -457,11 +457,28 @@ def api_wo_payments(wo_id):
         if not monto or float(monto) <= 0:
             return jsonify({'error': 'Monto requerido y debe ser > 0'}), 400
 
+        monto_float = float(monto)
+
+        # Validar que no exceda el presupuesto
+        wo_row = conn.execute(
+            "SELECT presupuesto FROM work_orders WHERE id = ?", (wo_id,)
+        ).fetchone()
+        presupuesto = float(wo_row['presupuesto']) if wo_row and wo_row['presupuesto'] else None
+        if presupuesto is not None:
+            existing_total = conn.execute(
+                "SELECT COALESCE(SUM(monto), 0) FROM payments WHERE wo_id = ?", (wo_id,)
+            ).fetchone()[0]
+            if existing_total + monto_float > presupuesto:
+                faltante = presupuesto - existing_total
+                return jsonify({
+                    'error': f'El abono excede el presupuesto. Presupuesto: ${presupuesto:,.0f}, Abonado: ${existing_total:,.0f}, Disponible: ${faltante:,.0f}'
+                }), 400
+
         conn.execute("""
             INSERT INTO payments (wo_id, monto, tipo, metodo, referencia, fecha, notas, registrado_por)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            wo_id, float(monto),
+            wo_id, monto_float,
             data.get('tipo', 'abono'), data.get('metodo', ''),
             data.get('referencia', ''), data.get('fecha', now_iso()),
             data.get('notas', ''), data.get('registrado_por', 'Pedro')
@@ -480,7 +497,7 @@ def api_wo_payments(wo_id):
 
 
 @api_wo_bp.route(
-    '/api/work_orders/<wo_id>/payments/<int:payment_id>', methods=['DELETE']
+    '/api/work_orders/<wo_id>/payments/<int:payment_id>', methods=['DELETE', 'PUT']
 )
 @login_required
 def api_wo_payment(wo_id, payment_id):
@@ -491,9 +508,50 @@ def api_wo_payment(wo_id, payment_id):
         ).fetchone()
         if not row:
             return jsonify({'error': 'Pago no encontrado'}), 404
-        conn.execute("DELETE FROM payments WHERE id = ?", (payment_id,))
+
+        if request.method == 'DELETE':
+            conn.execute("DELETE FROM payments WHERE id = ?", (payment_id,))
+            conn.commit()
+            return jsonify({'success': True, 'message': f'Pago {payment_id} eliminado'})
+
+        # PUT - Editar pago
+        data = request.get_json()
+        monto = data.get('monto')
+        if not monto or float(monto) <= 0:
+            return jsonify({'error': 'Monto requerido y debe ser > 0'}), 400
+
+        monto_float = float(monto)
+
+        # Validar que no exceda el presupuesto (considerando otros pagos)
+        wo_row = conn.execute(
+            "SELECT presupuesto FROM work_orders WHERE id = ?", (wo_id,)
+        ).fetchone()
+        presupuesto = float(wo_row['presupuesto']) if wo_row and wo_row['presupuesto'] else None
+        if presupuesto is not None:
+            existing_total = conn.execute(
+                "SELECT COALESCE(SUM(monto), 0) FROM payments WHERE wo_id = ? AND id != ?",
+                (wo_id, payment_id)
+            ).fetchone()[0]
+            if existing_total + monto_float > presupuesto:
+                faltante = presupuesto - existing_total
+                return jsonify({
+                    'error': f'El monto excede el presupuesto. Presupuesto: ${presupuesto:,.0f}, Abonado (sin este pago): ${existing_total:,.0f}, Disponible: ${faltante:,.0f}'
+                }), 400
+
+        conn.execute(
+            "UPDATE payments SET monto = ?, metodo = ?, referencia = ?, fecha = ? WHERE id = ?",
+            (monto_float,
+             data.get('metodo', row['metodo'] or ''),
+             data.get('referencia', row['referencia'] or ''),
+             data.get('fecha', row['fecha'] or now_iso()),
+             payment_id)
+        )
         conn.commit()
-        return jsonify({'success': True, 'message': f'Pago {payment_id} eliminado'})
+
+        updated = conn.execute(
+            "SELECT * FROM payments WHERE id = ?", (payment_id,)
+        ).fetchone()
+        return jsonify(dict(updated))
     except Exception as e:
         conn.rollback()
         return jsonify({'error': str(e)}), 500

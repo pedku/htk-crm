@@ -491,7 +491,7 @@ body {
         {% for item in items %}
         <tr>
           <td>{{ '%02d' % item.item_num }}</td>
-          <td>{{ item.descripcion }}</td>
+          <td>{{ item.descripcion }}{% if item.iva_incluido %} <small style="color:var(--text-tertiary);font-size:0.8em;">(IVA incl.)</small>{% endif %}</td>
           <td>{{ item.cantidad }}</td>
           <td>${{ '{:,.0f}'.format(item.precio_unitario) }}</td>
           <td>{{ '{:.0f}'.format(item.iva_porcentaje) }}%</td>

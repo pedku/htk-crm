@@ -109,28 +109,12 @@
 
       <!-- Columna derecha -->
       <div class="col-lg-5">
-        <!-- Financiero -->
-        <div class="card-crm">
+        <!-- Financiero (dinámico vía JS) -->
+        <div class="card-crm" id="financialSection">
           <div class="section-title"><i class="bi bi-cash-coin"></i> Financiero</div>
-          <table class="table-crm">
-            <tr><td>Presupuesto</td><td><strong>{% if wo.presupuesto %}${{ "{:,.0f}".format(wo.presupuesto).replace(',','.') }}{% else %}-{% endif %}</strong></td></tr>
-            <tr><td>Total abonado</td><td style="color:var(--htk-primary);">${{ "{:,.0f}".format(wo.total_abonado|default(0)).replace(',','.') }}</td></tr>
-            <tr><td>Saldo pendiente</td><td style="color:#f97316;">${{ "{:,.0f}".format(wo.saldo_pendiente|default(0)).replace(',','.') }}</td></tr>
-          </table>
-          {% if wo.payments and wo.payments|length > 0 %}
-          <h6 class="mt-3 mb-2" style="color:rgba(255,255,255,0.5);font-size:0.85em;">Pagos registrados</h6>
-          <table class="table-crm">
-            <tr style="color:rgba(255,255,255,0.4);font-size:0.8em;"><td>Fecha</td><td>Monto</td><td>Método</td></tr>
-            {% for p in wo.payments %}
-            <tr>
-              <td>{{ (p.fecha or '')[:10] }}</td>
-              <td>${{ "{:,.0f}".format(p.monto).replace(',','.') }}</td>
-              <td>{{ p.metodo or '-' }}</td>
-            </tr>
-            {% endfor %}
-          </table>
-          {% endif %}
-          <button class="btn btn-sm btn-outline-htk mt-2" onclick="addPayment()"><i class="bi bi-plus-circle"></i> Registrar abono</button>
+          <div id="financialContent">
+            <div class="text-center py-3"><div class="spinner-border spinner-border-sm" role="status"></div> Cargando...</div>
+          </div>
         </div>
 
         <!-- Fechas -->
@@ -181,11 +165,13 @@
   const WO_ID = '{{ wo.id }}';
   let woData = null;
 
+  // ── Cargar datos WO ──
   async function loadWO() {
     try {
       const resp = await fetch('/api/work_orders/' + WO_ID);
       woData = await resp.json();
-    } catch(e) { console.error('Error loading WO:', e); }
+      return woData;
+    } catch(e) { console.error('Error loading WO:', e); return null; }
   }
 
   // ── WhatsApp ──
@@ -211,6 +197,7 @@
 
   // ── Notificar por WhatsApp (plantilla automática) ──
   async function notifyWATemplate() {
+    await loadWO();
     if (!confirm('¿Enviar notificación de estado a ' + (woData?.cliente?.nombre || 'cliente') + ' por WhatsApp?')) return;
     try {
       const r = await fetch('/api/work_orders/' + WO_ID + '/notify', { method:'POST' });
@@ -222,7 +209,6 @@
 
   // ── Editar ──
   function editWO() {
-    // Redirigir a la página principal con el modal de edición abierto
     window.location.href = '/?editWO=' + WO_ID;
   }
 
@@ -253,7 +239,6 @@
         body: JSON.stringify({estado: nuevoEstado})
       });
       if (r.ok) {
-        // Auto-notificar al cliente
         try {
           await fetch('/api/work_orders/' + WO_ID + '/notify', { method:'POST' });
         } catch(notifErr) { /* silencioso */ }
@@ -265,30 +250,271 @@
     } catch(e) { alert('Error: ' + e.message); }
   }
 
-  // ── Pago ──
+  // ════════════════════════════════════════════════════════
+  //  FINANCIERO DINÁMICO (Issues #5 & #6)
+  // ════════════════════════════════════════════════════════
+
+  let editingPaymentId = null;
+
+  // ── Refrescar sección financiera completa ──
+  async function refreshFinancials() {
+    const data = await loadWO();
+    if (!data) return;
+
+    const presupuesto = data.presupuesto || 0;
+    const totalAbonado = data.total_abonado || 0;
+    const saldo = data.saldo_pendiente !== null && data.saldo_pendiente !== undefined ? data.saldo_pendiente : (presupuesto - totalAbonado);
+    const pct = presupuesto > 0 ? Math.round((totalAbonado / presupuesto) * 100) : 0;
+    const totalmentePagado = presupuesto > 0 && saldo <= 0;
+
+    const fmt = (n) => '$' + Number(n).toLocaleString('es-CO', {minimumFractionDigits:0, maximumFractionDigits:0});
+
+    // Barra de progreso
+    let barColor = 'success';
+    if (totalAbonado > presupuesto) barColor = 'danger';
+    else if (pct < 50) barColor = 'warning';
+
+    let progressHTML = `
+      <div class="mb-3">
+        <div class="progress" style="height:24px;background:rgba(255,255,255,0.08);border-radius:12px;">
+          <div class="progress-bar progress-bar-striped${pct >= 100 ? '' : ' progress-bar-animated'}" role="progressbar"
+               style="width:${Math.min(pct,100)}%;background:${totalmentePagado ? '#10b981' : (totalAbonado > presupuesto ? '#ef4444' : 'var(--htk-primary)')};border-radius:12px;"
+               aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
+            ${pct}%
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.85em;margin-top:6px;">
+          <span style="color:var(--htk-primary);">Abonado: ${fmt(totalAbonado)}</span>
+          <span style="color:rgba(255,255,255,0.4);">Presupuesto: ${fmt(presupuesto)}</span>
+        </div>
+        ${totalmentePagado ? '<div style="margin-top:6px;color:#10b981;font-weight:600;">✅ Totalmente pagado</div>' : 
+          `<div style="margin-top:6px;">Restante: <strong style="color:#f97316;">${fmt(saldo)}</strong></div>`}
+      </div>`;
+
+    // Tabla resumen
+    let summaryHTML = `<table class="table-crm mb-3">
+      <tr><td>Presupuesto</td><td><strong>${presupuesto ? fmt(presupuesto) : '-'}</strong></td></tr>
+      <tr><td>Total abonado</td><td style="color:var(--htk-primary);">${fmt(totalAbonado)}</td></tr>
+      <tr><td>Saldo pendiente</td><td style="color:${totalmentePagado ? '#10b981' : '#f97316'};">${totalmentePagado ? '✅ $0' : fmt(saldo)}</td></tr>
+    </table>`;
+
+    // Tabla de pagos con botones de acción
+    let paymentsHTML = '';
+    const payments = data.payments || [];
+    if (payments.length > 0) {
+      paymentsHTML = `<h6 class="mb-2" style="color:rgba(255,255,255,0.5);font-size:0.85em;">Pagos registrados</h6>
+      <table class="table-crm">
+        <thead>
+          <tr style="color:rgba(255,255,255,0.4);font-size:0.8em;"><td>Fecha</td><td>Monto</td><td>Método</td><td style="width:70px;">Acción</td></tr>
+        </thead>
+        <tbody id="paymentsTableBody">
+          ${payments.map(p => `
+            <tr>
+              <td>${(p.fecha || '').slice(0,10)}</td>
+              <td>${fmt(p.monto)}</td>
+              <td>${p.metodo || '-'}${p.referencia ? ' <small class="text-muted">('+p.referencia+')</small>' : ''}</td>
+              <td>
+                <button class="action-btn" onclick="editPayment(${p.id})" title="Editar"><i class="bi bi-pencil"></i></button>
+                <button class="action-btn" onclick="deletePayment(${p.id})" title="Eliminar"><i class="bi bi-trash" style="color:#ef4444;"></i></button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+    }
+
+    // Botones de acción
+    let actionsHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-sm btn-outline-htk" onclick="addPayment()"><i class="bi bi-plus-circle"></i> Registrar abono</button>`;
+    if (!totalmentePagado && presupuesto > 0) {
+      actionsHTML += `<button class="btn btn-sm btn-success" onclick="markAsPaid()"><i class="bi bi-check2-circle"></i> Marcar como Pagado</button>`;
+    }
+    actionsHTML += `</div>`;
+
+    document.getElementById('financialContent').innerHTML = progressHTML + summaryHTML + paymentsHTML + actionsHTML;
+  }
+
+  // ── Marcar como Pagado (abono automático del saldo restante) ──
+  async function markAsPaid() {
+    await loadWO();
+    if (!woData) return;
+    const presupuesto = woData.presupuesto || 0;
+    const totalAbonado = woData.total_abonado || 0;
+    const saldoRestante = presupuesto - totalAbonado;
+
+    if (saldoRestante <= 0) {
+      alert('✅ La orden ya está totalmente pagada.');
+      return;
+    }
+
+    setModal('✅ Marcar como Pagado',
+      `<p>Vas a registrar un abono por el saldo restante para marcar la orden como totalmente pagada.</p>
+       <div class="mb-3">
+         <table class="table-crm">
+           <tr><td>Presupuesto</td><td><strong>$${presupuesto.toLocaleString('es-CO')}</strong></td></tr>
+           <tr><td>Ya abonado</td><td>$${totalAbonado.toLocaleString('es-CO')}</td></tr>
+           <tr><td style="color:#f97316;">Saldo a cobrar</td><td style="color:#f97316;font-weight:600;">$${saldoRestante.toLocaleString('es-CO')}</td></tr>
+         </table>
+       </div>
+       <div class="mb-3">
+         <label class="form-label">Método de pago</label>
+         <select class="form-control" id="pmtMetodoFull">
+           <option value="efectivo">Efectivo</option>
+           <option value="transferencia">Transferencia</option>
+           <option value="nequi">Nequi</option>
+           <option value="daviplata">Daviplata</option>
+           <option value="tarjeta">Tarjeta</option>
+         </select>
+       </div>
+       <div class="mb-3">
+         <label class="form-label">Referencia (opcional)</label>
+         <input type="text" class="form-control" id="pmtRefFull" placeholder="Nº de transacción">
+       </div>`,
+      `<button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+       <button class="btn btn-htk" onclick="confirmMarkAsPaid(${saldoRestante})"><i class="bi bi-check2-circle"></i> Confirmar pago total</button>`
+    );
+    new bootstrap.Modal(document.getElementById('genericModal')).show();
+  }
+
+  async function confirmMarkAsPaid(monto) {
+    const metodo = document.getElementById('pmtMetodoFull')?.value || 'efectivo';
+    const ref = document.getElementById('pmtRefFull')?.value || '';
+    try {
+      const r = await fetch('/api/work_orders/' + WO_ID + '/payments', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({monto, metodo, referencia: ref, tipo: 'pago_total'})
+      });
+      if (r.ok) {
+        bootstrap.Modal.getInstance(document.getElementById('genericModal'))?.hide();
+        await refreshFinancials();
+        showToast('✅ Orden marcada como totalmente pagada', 'success');
+      } else {
+        const e = await r.json();
+        alert('❌ ' + (e.error || 'Error al registrar pago'));
+      }
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+
+  // ── Registrar/Editar abono (modal genérico) ──
   async function addPayment() {
     await loadWO();
+    editingPaymentId = null;
     setModal('💰 Registrar Abono',
-      `<div class="mb-3"><label class="form-label">Monto</label><input type="number" class="form-control" id="pmtMonto" step="1000" min="0"></div>
-       <div class="mb-3"><label class="form-label">Método</label><select class="form-control" id="pmtMetodo"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="nequi">Nequi</option><option value="daviplata">Daviplata</option><option value="tarjeta">Tarjeta</option></select></div>
-       <div class="mb-3"><label class="form-label">Referencia</label><input type="text" class="form-control" id="pmtRef"></div>`,
+      `<div class="mb-3"><label class="form-label">Monto</label>
+         <input type="number" class="form-control" id="pmtMonto" step="1000" min="0" placeholder="0"></div>
+       <div class="mb-3"><label class="form-label">Método</label>
+         <select class="form-control" id="pmtMetodo">
+           <option value="efectivo">Efectivo</option>
+           <option value="transferencia">Transferencia</option>
+           <option value="nequi">Nequi</option>
+           <option value="daviplata">Daviplata</option>
+           <option value="tarjeta">Tarjeta</option>
+         </select></div>
+       <div class="mb-3"><label class="form-label">Referencia</label>
+         <input type="text" class="form-control" id="pmtRef" placeholder="Nº de transacción"></div>`,
       `<button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
        <button class="btn btn-htk" onclick="savePayment()"><i class="bi bi-check-lg"></i> Guardar</button>`
     );
     new bootstrap.Modal(document.getElementById('genericModal')).show();
   }
 
+  async function editPayment(paymentId) {
+    await loadWO();
+    if (!woData) return;
+    const pay = (woData.payments || []).find(p => p.id === paymentId);
+    if (!pay) { alert('Pago no encontrado'); return; }
+
+    editingPaymentId = paymentId;
+    setModal('✏️ Editar Abono',
+      `<div class="mb-3"><label class="form-label">Monto</label>
+         <input type="number" class="form-control" id="pmtMonto" step="1000" min="0" value="${pay.monto}"></div>
+       <div class="mb-3"><label class="form-label">Método</label>
+         <select class="form-control" id="pmtMetodo">
+           <option value="efectivo" ${pay.metodo==='efectivo'?'selected':''}>Efectivo</option>
+           <option value="transferencia" ${pay.metodo==='transferencia'?'selected':''}>Transferencia</option>
+           <option value="nequi" ${pay.metodo==='nequi'?'selected':''}>Nequi</option>
+           <option value="daviplata" ${pay.metodo==='daviplata'?'selected':''}>Daviplata</option>
+           <option value="tarjeta" ${pay.metodo==='tarjeta'?'selected':''}>Tarjeta</option>
+         </select></div>
+       <div class="mb-3"><label class="form-label">Referencia</label>
+         <input type="text" class="form-control" id="pmtRef" value="${pay.referencia || ''}" placeholder="Nº de transacción"></div>
+       <div class="mb-3"><label class="form-label">Fecha</label>
+         <input type="date" class="form-control" id="pmtFecha" value="${(pay.fecha || '').slice(0,10)}"></div>`,
+      `<button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+       <button class="btn btn-htk" onclick="savePayment()"><i class="bi bi-check-lg"></i> Actualizar</button>`
+    );
+    new bootstrap.Modal(document.getElementById('genericModal')).show();
+  }
+
+  async function deletePayment(paymentId) {
+    if (!confirm('¿Eliminar este abono? Esta acción no se puede deshacer.')) return;
+    try {
+      const r = await fetch('/api/work_orders/' + WO_ID + '/payments/' + paymentId, { method:'DELETE' });
+      if (r.ok) {
+        await refreshFinancials();
+        showToast('🗑️ Abono eliminado', 'warning');
+      } else {
+        const e = await r.json();
+        alert('❌ ' + (e.error || 'Error al eliminar'));
+      }
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+
   async function savePayment() {
     const monto = parseFloat(document.getElementById('pmtMonto')?.value);
     if (!monto || monto <= 0) { alert('Ingresa un monto válido'); return; }
+
+    const data = {
+      monto,
+      metodo: document.getElementById('pmtMetodo')?.value || '',
+      referencia: document.getElementById('pmtRef')?.value || ''
+    };
+
     try {
-      const r = await fetch('/api/work_orders/' + WO_ID + '/payments', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({monto, metodo: document.getElementById('pmtMetodo')?.value, referencia: document.getElementById('pmtRef')?.value, tipo: 'abono'})
-      });
-      if (r.ok) { location.reload(); }
-      else { const e = await r.json(); alert('Error: ' + (e.error || e.message)); }
+      let r;
+      if (editingPaymentId) {
+        // Editar
+        data.fecha = document.getElementById('pmtFecha')?.value || '';
+        r = await fetch('/api/work_orders/' + WO_ID + '/payments/' + editingPaymentId, {
+          method:'PUT', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(data)
+        });
+      } else {
+        // Nuevo
+        r = await fetch('/api/work_orders/' + WO_ID + '/payments', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({...data, tipo: 'abono'})
+        });
+      }
+
+      if (r.ok) {
+        const wasEdit = !!editingPaymentId;
+        bootstrap.Modal.getInstance(document.getElementById('genericModal'))?.hide();
+        editingPaymentId = null;
+        await refreshFinancials();
+        showToast(wasEdit ? '✅ Abono actualizado' : '✅ Abono registrado', 'success');
+      } else {
+        const e = await r.json();
+        alert('❌ ' + (e.error || 'Error al guardar'));
+      }
     } catch(e) { alert('Error: ' + e.message); }
+  }
+
+  // ── Toast Notification ──
+  function showToast(message, type) {
+    const toastEl = document.createElement('div');
+    toastEl.style.cssText = `
+      position:fixed; top:20px; right:20px; z-index:99999;
+      padding:12px 24px; border-radius:10px;
+      font-weight:600; font-size:0.95em;
+      color:#fff;
+      background:${type === 'danger' ? '#ef4444' : type === 'warning' ? '#f97316' : '#10b981'};
+      box-shadow:0 4px 20px rgba(0,0,0,0.3);
+      transition:opacity 0.3s;
+    `;
+    toastEl.textContent = message;
+    document.body.appendChild(toastEl);
+    setTimeout(() => { toastEl.style.opacity = '0'; setTimeout(() => toastEl.remove(), 300); }, 3000);
   }
 
   // ── Helper Modal ──
@@ -299,7 +525,7 @@
   }
 
   // ── Inicio ──
-  loadWO();
+  loadWO().then(() => refreshFinancials());
   </script>
 </body>
 </html>
