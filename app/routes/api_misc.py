@@ -279,6 +279,7 @@ def api_auto_backup():
 # ── SALES ─────────────────────────────────────────────────────────────
 
 @api_misc_bp.route('/api/sales', methods=['GET', 'POST'])
+@login_required
 def api_sales():
     conn = get_db()
     try:
@@ -302,6 +303,7 @@ def api_sales():
 
 
 @api_misc_bp.route('/api/sales/<sid>', methods=['PATCH', 'DELETE'])
+@login_required
 def api_sale(sid):
     conn = get_db()
     try:
@@ -329,6 +331,7 @@ def api_sale(sid):
 # ── PRICES ────────────────────────────────────────────────────────────
 
 @api_misc_bp.route('/api/prices', methods=['GET', 'POST'])
+@login_required
 def api_prices():
     conn = get_db()
     try:
@@ -351,6 +354,7 @@ def api_prices():
 
 
 @api_misc_bp.route('/api/prices/<int:pid>', methods=['PATCH', 'DELETE'])
+@login_required
 def api_price(pid):
     conn = get_db()
     try:
@@ -375,6 +379,7 @@ def api_price(pid):
 # ── TASKS ─────────────────────────────────────────────────────────────
 
 @api_misc_bp.route('/api/tasks', methods=['GET', 'POST'])
+@login_required
 def api_tasks():
     conn = get_db()
     try:
@@ -397,6 +402,7 @@ def api_tasks():
 
 
 @api_misc_bp.route('/api/tasks/<int:tid>', methods=['PATCH', 'DELETE'])
+@login_required
 def api_task(tid):
     conn = get_db()
     try:

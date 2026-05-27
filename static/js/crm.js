@@ -1754,7 +1754,7 @@ async function changeLeadStage(id, direction) {
  if (newIdx === idx) return;
  // Actualizar local y re-renderizar tabla
  l.estado = stages[newIdx];
- renderLeads();
+ renderLeadsDT();
  
  // Refrescar modal si está abierto
  try {
@@ -1770,7 +1770,7 @@ async function changeLeadStage(id, direction) {
  } catch(e) { 
  // Revertir en caso de error
  l.estado = stages[idx];
- renderLeads();
+ renderLeadsDT();
  showToast('Error al cambiar etapa, revertido', 'danger'); 
  }
 }
@@ -1860,12 +1860,14 @@ async function showModal(type, id) {
  } else if (type === 'workorder') {
  title = id ? 'Editar Orden de Trabajo' : 'Nueva Orden de Trabajo';
  if (id) item = workOrders.find(o => o.id === id);
- const clientOpts = clients.map(c => `<option value="${escHtml(c.nombre)}|${escHtml(c.telefono||'')}">${escHtml(c.nombre)} (${escHtml(c.telefono||'sin tel')})</option>`).join('');
- const clientSelect = id ? '' : `<div class="mb-3"><label class="form-label">Cliente existente (opcional)</label>
- <select class="form-select" id="f_existingClient" onchange="fillClientData()">
- <option value="">— Seleccionar existente —</option>
- ${clientOpts}
- </select></div>`;
+ const clientSearch = id ? '' : `<div class="mb-3"><label class="form-label">Cliente (buscar)</label>
+ <div class="client-search-wrapper">
+  <input type="text" class="form-control" id="f_clientSearch" placeholder="🔍 Buscar por nombre, documento o teléfono..." autocomplete="off" oninput="searchWOClient()">
+  <div class="client-search-dropdown" id="f_clientDropdown" style="display:none;"></div>
+ </div>
+ <input type="hidden" id="f_clientId" value="">
+ <small style="color:rgba(255,255,255,0.4);">Si no encuentras el cliente, déjalo en blanco y llénalo manualmente.</small>
+</div>`;
  
  // Tipo selector
  const tiposOT = TIPOS_OT || {};
@@ -1874,7 +1876,7 @@ async function showModal(type, id) {
  `<option value="${k}" ${k===currentTipo?'selected':''}>${v.icono||''} ${v.label}</option>`
  ).join('');
  
- let formHTML = clientSelect;
+ let formHTML = clientSearch;
  formHTML += `<div class="mb-3"><label class="form-label">Tipo de Orden <span class="text-danger">*</span></label>
  <select class="form-select" id="f_tipo" onchange="onTipoChange()">${tipoOptions}</select></div>`;
  
@@ -2021,11 +2023,46 @@ function formField(f, val) {
 }
 
 function fillClientData() {
- const sel = document.getElementById('f_existingClient');
- if (!sel.value) return;
- const parts = sel.value.split('|');
- document.getElementById('f_cliente_nombre').value = parts[0];
- document.getElementById('f_cliente_telefono').value = parts[1] || '';
+ // This is now handled by searchWOClient — kept for backward compat
+}
+
+var woClientSearchTimer = null;
+function searchWOClient() {
+  clearTimeout(woClientSearchTimer);
+  var q = document.getElementById('f_clientSearch').value.trim();
+  var dropdown = document.getElementById('f_clientDropdown');
+  if (!q || q.length < 2) { dropdown.style.display = 'none'; return; }
+  woClientSearchTimer = setTimeout(async function() {
+    try {
+      var resp = await fetch('/api/clients?search=' + encodeURIComponent(q));
+      var results = await resp.json();
+      if (!results || !results.length) {
+        dropdown.innerHTML = '<div style="padding:8px 12px;color:rgba(255,255,255,0.4);font-size:0.85rem;">Sin resultados — llena los datos manualmente</div>';
+        dropdown.style.display = '';
+        return;
+      }
+      var html = '';
+      for (var i = 0; i < Math.min(results.length, 8); i++) {
+        var c = results[i];
+        var doc = c.documento ? (c.tipo_documento||'CC') + ': ' + c.documento : '';
+        var safeName = (c.nombre||'').replace(/'/g, "\\'");
+        html += '<div class="client-search-item" onclick="selectWOClient(\'' + c.id + '\', \'' + safeName + '\', \'' + (c.telefono||'').replace(/'/g,"\\'") + '\')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);">';
+        html += '<div style="font-weight:600;">' + escHtml(c.nombre||c.id) + '</div>';
+        html += '<div style="font-size:0.8rem;color:rgba(255,255,255,0.5);">' + escHtml(c.telefono||'') + (doc ? ' · ' + escHtml(doc) : '') + '</div>';
+        html += '</div>';
+      }
+      dropdown.innerHTML = html;
+      dropdown.style.display = '';
+    } catch(e) {}
+  }, 200);
+}
+
+function selectWOClient(id, name, phone) {
+  document.getElementById('f_clientId').value = id;
+  document.getElementById('f_clientSearch').value = name;
+  document.getElementById('f_clientDropdown').style.display = 'none';
+  document.getElementById('f_cliente_nombre').value = name;
+  document.getElementById('f_cliente_telefono').value = phone;
 }
 
 function onTipoChange() {
@@ -2093,6 +2130,7 @@ async function saveModal(type, id) {
  data = {
  tipo: tipo,
  campos_extra: camposExtra,
+ client_id: document.getElementById('f_clientId')?.value || null,
  cliente: {
  nombre: clienteNombre,
  telefono: document.getElementById('f_cliente_telefono')?.value || ''
@@ -2180,13 +2218,13 @@ async function deleteItem(endpoint, id, name) {
  if (endpoint === 'leads') {
  const idx = leads.findIndex(x => x.id === id);
  if (idx > -1) leads.splice(idx, 1);
- renderLeads();
+ renderLeadsDT();
  } else if (endpoint === 'clients') {
  const idx = clients.findIndex(x => x.id === id);
- if (idx > -1) { clients.splice(idx, 1); renderClients(); }
+ if (idx > -1) { clients.splice(idx, 1); renderClientsDT(); }
  } else if (endpoint === 'work_orders') {
  const idx = workOrders.findIndex(x => x.id === id);
- if (idx > -1) { workOrders.splice(idx, 1); renderWorkOrders(); }
+ if (idx > -1) { workOrders.splice(idx, 1); renderWOsDT(); }
  }
  
  flashSave();
@@ -3483,10 +3521,6 @@ function updateWaPreview() {
     html += `<div style="margin-bottom:8px;"><small style="color:rgba(255,255,255,0.3);">${label}</small><div style="background:rgba(0,212,170,0.12);padding:8px 12px;border-radius:0 10px 10px 10px;white-space:pre-wrap;word-break:break-word;">${escapeHtml(ta.value.substring(0,200))}</div></div>`;
   });
   wa.innerHTML = html || '<small class="text-muted">Escribe en los mensajes para ver el preview aquí...</small>';
-}
-
-function escapeHtml(text) {
-  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 }
 
 async function guardarConfigBot() {
@@ -4874,7 +4908,7 @@ async function saveFactura() {
     }
     const data = await resp.json();
     bootstrap.Modal.getInstance(document.getElementById('facturaModal')).hide();
-    toastMsg(id ? 'Factura actualizada ✅' : `Factura ${data.numero} creada ✅`, 'success');
+    showToast(id ? 'Factura actualizada ✅' : `Factura ${data.numero} creada ✅`, 'success');
     loadFacturas();
   } catch(e) { alert('Error: ' + e.message); }
 }
@@ -4902,7 +4936,7 @@ async function emitirFactura(id) {
   try {
     const resp = await fetch(API + `/api/facturas/${id}/emitir`, { method:'POST' });
     if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
-    toastMsg('Factura emitida ✅', 'success');
+    showToast('Factura emitida ✅', 'success');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
     loadFacturas();
   } catch(e) { alert('Error: ' + e.message); }
@@ -4913,7 +4947,7 @@ async function pagarFactura(id) {
   try {
     const resp = await fetch(API + `/api/facturas/${id}/pagar`, { method:'POST' });
     if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
-    toastMsg('Factura pagada ✅', 'success');
+    showToast('Factura pagada ✅', 'success');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
     loadFacturas();
   } catch(e) { alert('Error: ' + e.message); }
@@ -4924,7 +4958,7 @@ async function anularFactura(id) {
   try {
     const resp = await fetch(API + `/api/facturas/${id}`, { method:'DELETE' });
     if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
-    toastMsg('Factura anulada', 'warning');
+    showToast('Factura anulada', 'warning');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
     loadFacturas();
   } catch(e) { alert('Error: ' + e.message); }
@@ -4948,8 +4982,8 @@ async function enviarFacturaWhatsApp(id) {
   try {
     const resp = await fetch(API + `/api/facturas/${id}/enviar-whatsapp`, { method:'POST' });
     const data = await resp.json();
-    if (data.ok) toastMsg('Factura enviada por WhatsApp ✅', 'success');
-    else toastMsg(data.error || 'Error al enviar', 'error');
+    if (data.ok) showToast('Factura enviada por WhatsApp ✅', 'success');
+    else showToast(data.error || 'Error al enviar', 'error');
   } catch(e) { alert('Error: ' + e.message); }
 }
 
@@ -4985,7 +5019,8 @@ async function searchClients(q) {
     var resp = await fetch('/api/clients?search=' + encodeURIComponent(q));
     var results = await resp.json();
     if (!Array.isArray(results) || !results.length) {
-      dropdown.innerHTML = '<div style="padding:8px 12px;color:rgba(255,255,255,0.4);font-size:0.85rem;">Sin resultados</div>';
+      dropdown.innerHTML = '<div style="padding:8px 12px;color:rgba(255,255,255,0.4);font-size:0.85rem;border-bottom:1px solid rgba(255,255,255,0.05);">Sin resultados</div>';
+      dropdown.innerHTML += '<div class="client-search-item" onclick="crearClienteDesdeFactura()" style="padding:8px 12px;cursor:pointer;color:var(--htk-primary);font-weight:600;"><i class="bi bi-plus-circle"></i> Crear nuevo cliente</div>';
       dropdown.style.display = '';
       return;
     }
@@ -5061,3 +5096,12 @@ async function saveCompanyConfig() {
   }
 }
 
+
+function crearClienteDesdeFactura() {
+  document.getElementById('factClientDropdown').style.display = 'none';
+  document.getElementById('factClientSearch').value = '';
+  // Close factura modal and open client creation modal
+  if (modalInstance) modalInstance.hide();
+  showModal('client');
+  // Re-open factura after client is saved — handled by saveModal
+}

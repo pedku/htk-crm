@@ -113,5 +113,4 @@ def page_client(cid):
     wo_ids = [o['wo_id'] for o in orders]
     db.close()
     return render_template('client_detail.html', client=client, wo_ids=wo_ids)
-    return render_template('test_fact.html')
 
