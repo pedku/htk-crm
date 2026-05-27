@@ -430,45 +430,36 @@ def pagar_factura(inv_id):
         if not inv:
             return jsonify({'error': 'Factura no encontrada'}), 404
         
-        # Create payment record linked to this invoice
-        saldo_pendiente = round(
-            float(inv['total_general']) - sum(
-                float(p['monto']) for p in conn.execute(
-                    "SELECT monto FROM payments WHERE invoice_id = ?", (inv_id,)
-                ).fetchall()
-            ), 2
-        )
+        # Calcular saldo pendiente: total - (abonos vinculados + abonos legacy de la OT)
+        total = float(inv['total_general'])
+        abonado_total = 0.0
+        
+        # 1. Abonos vinculados directamente a esta factura
+        for p in conn.execute("SELECT monto FROM payments WHERE invoice_id = ?", (inv_id,)).fetchall():
+            abonado_total += float(p['monto'])
+        
+        # 2. Abonos legacy de la OT (sin invoice_id) si la factura tiene OT
+        wo_id = inv['wo_id']
+        if wo_id:
+            for p in conn.execute("SELECT monto FROM payments WHERE wo_id = ? AND (invoice_id IS NULL OR invoice_id = '')", (wo_id,)).fetchall():
+                abonado_total += float(p['monto'])
+        
+        saldo_pendiente = round(max(0, total - abonado_total), 2)
+        
         if saldo_pendiente > 0:
-            pay_inserted = False
-            wo_id = inv['wo_id'] or None
+            pay_wo_id = wo_id or inv_id  # fallback si no hay OT
             try:
                 conn.execute('''
                     INSERT INTO payments (wo_id, invoice_id, monto, tipo, metodo, referencia, fecha, registrado_por)
                     VALUES (?, ?, ?, 'pago', ?, ?, ?, 'Sistema')
                 ''', (
-                    wo_id, inv_id, saldo_pendiente,
+                    pay_wo_id, inv_id, saldo_pendiente,
                     data.get('metodo_pago', ''),
                     data.get('referencia', ''), now_iso()[:10]
                 ))
                 conn.commit()
-                pay_inserted = True
             except Exception:
                 conn.rollback()
-                # Si falló por wo_id NOT NULL sin OT, reintentar con wo_id = inv_id
-                if not wo_id:
-                    try:
-                        conn.execute('''
-                            INSERT INTO payments (wo_id, invoice_id, monto, tipo, metodo, referencia, fecha, registrado_por)
-                            VALUES (?, ?, ?, 'pago', ?, ?, ?, 'Sistema')
-                        ''', (
-                            inv_id, inv_id, saldo_pendiente,
-                            data.get('metodo_pago', ''),
-                            data.get('referencia', ''), now_iso()[:10]
-                        ))
-                        conn.commit()
-                        pay_inserted = True
-                    except Exception:
-                        conn.rollback()
         
         result, err = _change_status(inv_id, 'pagada', {'metodo_pago': data.get('metodo_pago', '')})
         if err:
