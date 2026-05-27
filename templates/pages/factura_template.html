@@ -543,6 +543,40 @@ body {
   </div>
 </div>
 
+<!-- Abonos -->
+{% if payments %}
+<div class="inv-pago" style="margin-top:16px;">
+  <div class="pago-label">💰 Abonos Registrados</div>
+  {% if payments|length > 0 %}
+  <table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:12px;">
+    <tr style="border-bottom:1px solid #e4e4e7;">
+      <th style="text-align:left;padding:4px 8px;color:#71717a;font-weight:500;">Fecha</th>
+      <th style="text-align:right;padding:4px 8px;color:#71717a;font-weight:500;">Monto</th>
+      <th style="text-align:left;padding:4px 8px;color:#71717a;font-weight:500;">Método</th>
+    </tr>
+    {% for p in payments %}
+    <tr style="border-bottom:1px solid #f4f4f5;">
+      <td style="padding:4px 8px;">{{ (p.fecha or '')[:10] }}</td>
+      <td style="padding:4px 8px;text-align:right;font-weight:600;color:#059669;">${{ '{:,.0f}'.format(p.monto) }}</td>
+      <td style="padding:4px 8px;">{{ p.metodo or '-' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <div style="margin-top:8px;text-align:right;font-size:13px;">
+    <strong>Total abonado:</strong> <span style="color:#059669;font-weight:700;">${{ '{:,.0f}'.format(total_abonado) }}</span>
+    {% set saldo = invoice.total_general - total_abonado %}
+    {% if saldo > 0 %}
+      &nbsp;·&nbsp; <strong>Saldo:</strong> <span style="color:#dc2626;font-weight:700;">${{ '{:,.0f}'.format(saldo) }}</span>
+    {% else %}
+      &nbsp;·&nbsp; <span style="color:#059669;font-weight:600;">✅ CANCELADA</span>
+    {% endif %}
+  </div>
+  {% else %}
+  <div style="color:#71717a;font-size:12px;margin-top:4px;">Sin abonos registrados</div>
+  {% endif %}
+</div>
+{% endif %}
+
 <!-- Footer -->
 <div class="inv-footer">
   <div class="footer-brand">⚡ {{ empresa.comercial }}</div>

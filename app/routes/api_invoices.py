@@ -588,11 +588,27 @@ def invoice_pdf(inv_id):
         client = conn.execute("SELECT * FROM clients WHERE id = ?",
                               (inv['client_id'],)).fetchone()
 
+        # Fetch payments
+        linked = conn.execute(
+            "SELECT * FROM payments WHERE invoice_id = ? ORDER BY fecha DESC",
+            (inv_id,)
+        ).fetchall()
+        all_pay = [dict(p) for p in linked]
+        if inv['wo_id']:
+            wo_rows = conn.execute(
+                "SELECT * FROM payments WHERE wo_id = ? AND (invoice_id IS NULL OR invoice_id = '') ORDER BY fecha DESC",
+                (inv['wo_id'],)
+            ).fetchall()
+            all_pay.extend(dict(p) for p in wo_rows)
+        total_abonado = sum(float(p['monto']) for p in all_pay)
+
         return render_template('pages/factura_template.html',
             invoice=dict(inv),
             items=[dict(i) for i in items],
             client=dict(client) if client else None,
-            empresa=get_empresa_config())
+            empresa=get_empresa_config(),
+            payments=all_pay,
+            total_abonado=round(total_abonado, 2))
     finally:
         conn.close()
 
@@ -615,11 +631,25 @@ def invoice_print(inv_id):
         client = conn.execute("SELECT * FROM clients WHERE id = ?",
                               (inv['client_id'],)).fetchone()
 
+        linked = conn.execute(
+            "SELECT * FROM payments WHERE invoice_id = ? ORDER BY fecha DESC",
+            (inv_id,)
+        ).fetchall()
+        all_pay = [dict(p) for p in linked]
+        if inv['wo_id']:
+            wo_rows = conn.execute(
+                "SELECT * FROM payments WHERE wo_id = ? AND (invoice_id IS NULL OR invoice_id = '') ORDER BY fecha DESC",
+                (inv['wo_id'],)
+            ).fetchall()
+            all_pay.extend(dict(p) for p in wo_rows)
+
         return render_template('pages/factura_template_print.html',
             invoice=dict(inv),
             items=[dict(i) for i in items],
             client=dict(client) if client else None,
-            empresa=get_empresa_config())
+            empresa=get_empresa_config(),
+            payments=all_pay,
+            total_abonado=round(sum(float(p['monto']) for p in all_pay), 2))
     finally:
         conn.close()
 
@@ -683,10 +713,24 @@ def public_factura_view(inv_id):
         client = conn.execute("SELECT * FROM clients WHERE id = ?",
                               (inv['client_id'],)).fetchone()
 
+        linked = conn.execute(
+            "SELECT * FROM payments WHERE invoice_id = ? ORDER BY fecha DESC",
+            (inv_id,)
+        ).fetchall()
+        all_pay = [dict(p) for p in linked]
+        if inv['wo_id']:
+            wo_rows = conn.execute(
+                "SELECT * FROM payments WHERE wo_id = ? AND (invoice_id IS NULL OR invoice_id = '') ORDER BY fecha DESC",
+                (inv['wo_id'],)
+            ).fetchall()
+            all_pay.extend(dict(p) for p in wo_rows)
+
         return render_template('pages/factura_template_print.html',
             invoice=dict(inv),
             items=[dict(i) for i in items],
             client=dict(client) if client else None,
-            empresa=get_empresa_config())
+            empresa=get_empresa_config(),
+            payments=all_pay,
+            total_abonado=round(sum(float(p['monto']) for p in all_pay), 2))
     finally:
         conn.close()
