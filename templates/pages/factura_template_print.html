@@ -283,15 +283,20 @@
    </tr>
    {% endfor %}
   </table>
-  <div style="margin-top:6px;text-align:right;font-size:12px;">
-   <strong>Total abonado:</strong> <span style="color:#059669;font-weight:700;">${{ '{:,.0f}'.format(total_abonado) }}</span>
-   {% set saldo = invoice.total_general - total_abonado %}
-   {% if saldo > 0 %}
-     · <strong>Saldo:</strong> <span style="color:#dc2626;font-weight:700;">${{ '{:,.0f}'.format(saldo) }}</span>
-   {% else %}
-     · <span style="color:#059669;font-weight:600;">✅ CANCELADA</span>
-   {% endif %}
+  {% set saldo = invoice.total_general - total_abonado %}
+  {% if saldo > 0 %}
+  <div style="margin-top:10px;padding:10px 14px;background:#f0f9ff;border:1px solid #059bda;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+    <div style="font-size:12px;font-weight:600;color:#059bda;">TOTAL A PAGAR</div>
+    <div style="font-size:18px;font-weight:800;color:#059bda;">${{ '{:,.0f}'.format(saldo) }}</div>
   </div>
+  <div style="margin-top:4px;text-align:right;font-size:11px;color:#71717a;">
+    Total factura: ${{ '{:,.0f}'.format(invoice.total_general) }} · Abonado: ${{ '{:,.0f}'.format(total_abonado) }}
+  </div>
+  {% else %}
+  <div style="margin-top:10px;padding:10px 14px;background:#ecfdf5;border:1px solid #059669;border-radius:8px;text-align:center;">
+    <span style="color:#059669;font-size:16px;font-weight:700;">✅ TOTALMENTE PAGADA</span>
+  </div>
+  {% endif %}
   {% else %}
   <div style="color:#71717a;font-size:11px;margin-top:4px;">Sin abonos registrados</div>
   {% endif %}
