@@ -231,13 +231,15 @@ def create_invoice():
             iva_pct = float(item.get('iva_porcentaje', get_iva_default()))
             iva_incluido = int(item.get('iva_incluido', 0))
             if iva_incluido:
-                # IVA incluido en el precio: IVA = precio * cant * iva_pct / (100 + iva_pct)
-                item['total_linea'] = round(cant * precio, 2)
-                item['iva_total_linea'] = round(cant * precio * iva_pct / (100 + iva_pct), 2)
-                sub_total += cant * precio
-                iva_total += item['iva_total_linea']
+                # IVA incluido en el precio: el precio ya trae IVA
+                total_linea = round(cant * precio, 2)
+                iva_linea = round(cant * precio * iva_pct / (100 + iva_pct), 2)
+                item['total_linea'] = total_linea
+                item['iva_total_linea'] = iva_linea
+                sub_total += total_linea - iva_linea  # Base imponible (sin IVA)
+                iva_total += iva_linea
             else:
-                # IVA discriminado (default): total = precio * cant * (1 + iva_pct/100)
+                # IVA discriminado (default): total = precio * cant + IVA aparte
                 item['total_linea'] = round(cant * precio * (1 + iva_pct / 100), 2)
                 item['iva_total_linea'] = round(cant * precio * iva_pct / 100, 2)
                 sub_total += cant * precio
@@ -301,10 +303,12 @@ def update_invoice(inv_id):
             iva_incluido = int(item.get('iva_incluido', 0))
             if iva_incluido:
                 # IVA incluido en el precio
-                item['total_linea'] = round(cant * precio, 2)
-                item['iva_total_linea'] = round(cant * precio * iva_pct / (100 + iva_pct), 2)
-                sub_total += cant * precio
-                iva_total += item['iva_total_linea']
+                total_linea = round(cant * precio, 2)
+                iva_linea = round(cant * precio * iva_pct / (100 + iva_pct), 2)
+                item['total_linea'] = total_linea
+                item['iva_total_linea'] = iva_linea
+                sub_total += total_linea - iva_linea  # Base imponible (sin IVA)
+                iva_total += iva_linea
             else:
                 # IVA discriminado (default)
                 item['total_linea'] = round(cant * precio * (1 + iva_pct / 100), 2)

@@ -4868,17 +4868,21 @@ function updateFacturaPreview() {
     let total;
     let ivaLinea;
     if (ivaIncl) {
-      // IVA incluido en el precio
+      // IVA incluido en el precio — el precio ya lo incluye
       total = cant * precio;
       ivaLinea = cant * precio * iva / (100 + iva);
     } else {
-      // IVA discriminado (default)
+      // IVA discriminado (default) — precio sin IVA + IVA aparte
       total = cant * precio * (1 + iva / 100);
       ivaLinea = cant * precio * iva / 100;
     }
     const totalEl = row.querySelector('.fact-item-total');
     if (totalEl) totalEl.textContent = '$' + Math.round(total).toLocaleString('es-CO');
-    sub += cant * precio;
+    if (ivaIncl) {
+      sub += total - ivaLinea;  // Base imponible (precio sin IVA)
+    } else {
+      sub += cant * precio;     // Precio sin IVA
+    }
     iva_total += ivaLinea;
   });
   const desc = parseFloat(document.getElementById('factDescuento')?.value) || 0;
