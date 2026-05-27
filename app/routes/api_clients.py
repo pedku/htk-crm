@@ -27,13 +27,68 @@ def client_to_dict(row, conn=None):
     return d
 
 
+@api_clients_bp.route('/api/clients/by-phone/<phone>', methods=['GET'])
+@login_required
+def api_clients_by_phone(phone):
+    """Buscar cliente por número de teléfono."""
+    conn = get_db()
+    try:
+        # Buscar en tabla clients
+        row = conn.execute(
+            "SELECT id, nombre, telefono, estado FROM clients WHERE telefono LIKE ? LIMIT 1",
+            (f'%{phone}%',)
+        ).fetchone()
+        
+        if not row:
+            # Buscar en tabla leads
+            row = conn.execute(
+                "SELECT id, nombre, telefono, estado FROM leads WHERE telefono LIKE ? LIMIT 1",
+                (f'%{phone}%',)
+            ).fetchone()
+        
+        if not row:
+            return jsonify({'error': 'No encontrado'}), 404
+        
+        return jsonify(dict(row))
+    finally:
+        conn.close()
+
+
+@api_clients_bp.route('/api/clients/by-lid/<lid>', methods=['GET'])
+@login_required
+def api_clients_by_lid(lid):
+    """Buscar cliente/lead por @lid de WhatsApp."""
+    conn = get_db()
+    try:
+        # Buscar en tabla leads primero (más probable para WhatsApp)
+        row = conn.execute(
+            "SELECT id, nombre, telefono, estado, lid FROM leads WHERE lid = ? LIMIT 1",
+            (lid,)
+        ).fetchone()
+        
+        if not row:
+            return jsonify({'error': 'No encontrado'}), 404
+        
+        return jsonify(dict(row))
+    finally:
+        conn.close()
+
+
 @api_clients_bp.route('/api/clients', methods=['GET', 'POST'])
 @login_required
 def api_clients():
     if request.method == 'GET':
         conn = get_db()
         try:
-            rows = conn.execute("SELECT * FROM clients ORDER BY id").fetchall()
+            search = request.args.get('search', '').strip()
+            if search:
+                like = f'%{search}%'
+                rows = conn.execute(
+                    "SELECT * FROM clients WHERE nombre LIKE ? OR documento LIKE ? OR telefono LIKE ? OR empresa LIKE ? OR email LIKE ? ORDER BY nombre",
+                    (like, like, like, like, like)
+                ).fetchall()
+            else:
+                rows = conn.execute("SELECT * FROM clients ORDER BY id").fetchall()
             return jsonify([client_to_dict(r, conn) for r in rows])
         finally:
             conn.close()
@@ -47,8 +102,10 @@ def api_clients():
         conn.execute("""
             INSERT INTO clients (id, telefono, nombre, fuente, primer_contacto,
                 ultimo_contacto, interacciones_totales, estado, segmento,
-                linea_interes, lead_id, notas, contacto_nombre, email)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                linea_interes, lead_id, notas, contacto_nombre, email,
+                tipo_documento, documento, direccion, ciudad, empresa, cargo,
+                tipo_persona, nombre_comercial)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             new_id,
             data.get('telefono', ''),
@@ -63,7 +120,15 @@ def api_clients():
             data.get('lead_id'),
             data.get('notas', ''),
             data.get('contacto_nombre', ''),
-            data.get('email', '')
+            data.get('email', ''),
+            data.get('tipo_documento', ''),
+            data.get('documento', ''),
+            data.get('direccion', ''),
+            data.get('ciudad', ''),
+            data.get('empresa', ''),
+            data.get('cargo', ''),
+            data.get('tipo_persona', 'natural'),
+            data.get('nombre_comercial', '')
         ))
         conn.commit()
 
@@ -140,7 +205,8 @@ def api_client(client_id):
         for key in ['nombre', 'telefono', 'fuente', 'estado', 'segmento', 'linea_interes',
                      'notas', 'lead_id', 'contacto_nombre', 'direccion', 'ciudad',
                      'tipo_documento', 'documento', 'empresa', 'cargo',
-                     'cumpleanos', 'redes_contacto', 'email']:
+                     'cumpleanos', 'redes_contacto', 'email',
+                     'tipo_persona', 'nombre_comercial']:
             if key in data:
                 updates.append(f"{key} = ?")
                 params.append(data[key])

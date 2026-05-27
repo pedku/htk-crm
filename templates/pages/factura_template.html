@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ empresa.comercial }} — Factura {{ invoice.numero }}</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --htk-blue:     #059BDA;
+  --htk-blue-dark:#038BC5;
+  --bg-primary:   #ffffff;
+  --bg-subtle:    #fafaf9;
+  --bg-hover:     #f0f9ff;
+  --text-primary:    #18181b;
+  --text-secondary:  #71717a;
+  --text-tertiary:   #a1a1aa;
+  --border-subtle:   #e4e4e7;
+  --border-decorative: #059BDA;
+  --success:      #059669;
+  --warning:      #d97706;
+  --danger:       #dc2626;
+  --shadow-sm:    0 1px 2px rgba(0,0,0,0.04);
+  --radius-md:    12px;
+  --radius-lg:    16px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 56px;
+  -webkit-font-smoothing: antialiased;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes pulseDot {
+  0%,100% { opacity:1; }
+  50%     { opacity:0.4; }
+}
+
+/* Header */
+.inv-header {
+  display:flex; justify-content:space-between; align-items:flex-start;
+  margin-bottom:48px;
+}
+.inv-header-logo img { width:120px; height:auto; }
+.inv-header-num { text-align:right; }
+.inv-header-num .inv-num-label {
+  font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.12em;
+  color:var(--text-tertiary); margin-bottom:4px;
+}
+.inv-header-num .inv-num-value {
+  font-size:32px; font-weight:800; color:var(--htk-blue); line-height:1;
+  animation: fadeSlideUp 400ms ease-out;
+}
+
+/* Empresa info */
+.inv-empresa {
+  margin-bottom:28px; color:var(--text-secondary); font-size:13px; line-height:1.7;
+}
+.inv-empresa .empresa-nombre {
+  font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;
+}
+
+/* Divider */
+.inv-divider {
+  height:3px;
+  background: linear-gradient(90deg, var(--border-decorative) 0%, var(--border-decorative) 30%, rgba(5,155,218,0.1) 70%, transparent 100%);
+  border:none; border-radius:1.5px; margin:28px 0 36px;
+}
+
+/* Meta grid */
+.inv-meta {
+  display:grid; grid-template-columns:1fr 1fr; gap:48px; margin-bottom:40px;
+}
+.inv-card {
+  background:var(--bg-subtle); border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg); padding:28px; box-shadow:var(--shadow-sm);
+}
+.inv-card-label {
+  font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.12em;
+  color:var(--text-tertiary); margin-bottom:16px;
+}
+.inv-card-body { display:flex; flex-direction:column; gap:10px; }
+.inv-card-body .cliente-nombre { font-size:15px; font-weight:700; color:var(--text-primary); }
+.inv-card-body .cliente-doc,
+.inv-card-body .cliente-dir,
+.inv-card-body .cliente-tel { font-size:13px; font-weight:400; color:var(--text-secondary); }
+
+.inv-info-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:6px 0; font-size:13px;
+}
+.inv-info-row .info-label { font-weight:500; color:var(--text-secondary); }
+.inv-info-row .info-value { font-weight:600; color:var(--text-primary); }
+
+/* Badge */
+.inv-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:11px; font-weight:600; padding:4px 12px; border-radius:20px;
+}
+.inv-badge .dot { width:7px; height:7px; border-radius:50%; background:currentColor; }
+.inv-badge.pagada    { color:var(--success); background:rgba(5,150,105,0.1); }
+.inv-badge.emitida   { color:var(--htk-blue); background:rgba(5,155,218,0.1); }
+.inv-badge.pendiente { color:var(--warning); background:rgba(217,119,6,0.1); }
+.inv-badge.pendiente .dot { animation:pulseDot 2s infinite; }
+.inv-badge.vencida   { color:var(--danger); background:rgba(220,38,38,0.1); }
+.inv-badge.borrador  { color:var(--text-tertiary); background:rgba(161,161,170,0.1); }
+.inv-badge.anulada   { color:var(--text-tertiary); background:rgba(161,161,170,0.1); text-decoration:line-through; }
+
+/* Items table */
+.inv-items-section { margin-bottom:36px; }
+.inv-items-section .section-label {
+  font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.12em;
+  color:var(--text-tertiary); margin-bottom:16px;
+}
+.inv-table-wrapper {
+  border:1px solid var(--border-subtle); border-radius:var(--radius-md); overflow:hidden;
+}
+.inv-table { width:100%; border-collapse:collapse; }
+.inv-table thead th {
+  padding:14px 16px; font-size:10px; font-weight:600; text-transform:uppercase;
+  letter-spacing:0.08em; color:var(--text-tertiary); background:var(--bg-subtle);
+  border-bottom:2px solid var(--border-subtle); text-align:right;
+}
+.inv-table thead th:first-child { text-align:center; width:44px; }
+.inv-table thead th:nth-child(2) { text-align:left; }
+.inv-table tbody td {
+  padding:14px 16px; font-size:13px; font-weight:500; color:var(--text-primary);
+  border-bottom:1px solid var(--border-subtle); text-align:right;
+  transition:background 150ms ease;
+}
+.inv-table tbody td:first-child { text-align:center; font-weight:600; color:var(--text-tertiary); width:44px; }
+.inv-table tbody td:nth-child(2) { text-align:left; font-weight:600; }
+.inv-table tbody td.item-desc-detail { display:block; font-weight:400; font-size:11px; color:var(--text-tertiary); margin-top:2px; }
+.inv-table tbody tr:hover { background:var(--bg-hover); }
+.inv-table tbody tr:last-child td { border-bottom:none; }
+.inv-table tbody tr:nth-child(even) { background:var(--bg-subtle); }
+.inv-table tbody tr:nth-child(even):hover { background:var(--bg-hover); }
+
+/* Totals */
+.inv-totals-row { display:flex; justify-content:space-between; align-items:flex-start; gap:48px; margin-bottom:36px; }
+.inv-notes {
+  flex:1; background:var(--bg-subtle); border:1px solid var(--border-subtle);
+  border-radius:var(--radius-md); padding:24px;
+}
+.inv-notes .notes-label {
+  font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.12em;
+  color:var(--text-tertiary); margin-bottom:10px;
+}
+.inv-notes p { font-size:12px; font-weight:400; color:var(--text-secondary); line-height:1.8; white-space:pre-line; }
+.inv-summary { width:280px; }
+.inv-summary-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; font-size:13px; }
+.inv-summary-row .sum-label { font-weight:500; color:var(--text-secondary); }
+.inv-summary-row .sum-value { font-weight:600; color:var(--text-primary); }
+.inv-summary-divider { height:1px; background:var(--border-subtle); margin:12px 0; }
+.inv-summary-total { display:flex; flex-direction:column; align-items:flex-end; padding-top:12px; }
+.inv-summary-total .total-label {
+  font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.1em;
+  color:var(--text-tertiary); margin-bottom:4px;
+}
+.inv-summary-total .total-value {
+  font-size:28px; font-weight:800; color:var(--htk-blue); line-height:1.1;
+}
+.inv-summary-total .total-bar {
+  width:100%; height:4px;
+  background:linear-gradient(90deg, transparent 0%, rgba(5,155,218,0.2) 20%, var(--htk-blue) 100%);
+  border-radius:2px; margin-top:8px;
+}
+
+/* Footer divider */
+.inv-footer-divider { height:1px; background:var(--border-subtle); margin:36px 0 28px; position:relative; }
+.inv-footer-divider::after {
+  content:''; position:absolute; top:-1.5px; left:50%; transform:translateX(-50%);
+  width:40px; height:3px; background:var(--htk-blue); border-radius:1.5px;
+}
+
+/* Pago */
+.inv-pago {
+  text-align:center; margin-bottom:36px; padding:20px;
+  background:var(--bg-subtle); border:1px solid var(--border-subtle); border-radius:var(--radius-md);
+}
+.inv-pago .pago-label {
+  font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.12em;
+  color:var(--text-tertiary); margin-bottom:10px;
+}
+.inv-pago .pago-info { font-size:13px; font-weight:500; color:var(--text-secondary); }
+
+/* Footer */
+.inv-footer { text-align:center; }
+.inv-footer .footer-brand { font-size:14px; font-weight:700; color:var(--htk-blue); letter-spacing:-0.02em; }
+.inv-footer .footer-tagline { font-size:11px; font-weight:400; color:var(--text-tertiary); margin:6px 0 4px; }
+.inv-footer .footer-legal { font-size:10px; font-weight:300; color:var(--text-tertiary); letter-spacing:0.02em; }
+
+/* ─── PRINT ─── */
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm 12mm;
+  }
+
+  /* Enable exact colors on print */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    padding: 0 !important;
+    font-size: 10px;
+    max-width: 100% !important;
+    color: #18181b !important;
+    background: #fff !important;
+  }
+
+  /* Ancho máximo para que no desborde */
+  body, .inv-header, .inv-empresa, .inv-meta, .inv-items-section, .inv-totals-row, .inv-pago, .inv-footer {
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* Header: mantener flex (2 elementos cabe bien en A4) */
+  .inv-header {
+    margin-bottom: 16px;
+  }
+  .inv-header-logo img {
+    width: 90px;
+    height: auto;
+  }
+  .inv-header-num .inv-num-value {
+    animation: none;
+    font-size: 22px;
+  }
+
+  /* Empresa */
+  .inv-empresa {
+    margin-bottom: 8px;
+    font-size: 9px;
+    line-height: 1.5;
+  }
+  .inv-empresa .empresa-nombre {
+    font-size: 11px;
+  }
+
+  /* Divider */
+  .inv-divider {
+    height: 2px;
+    margin: 10px 0 16px;
+  }
+
+  /* Meta: 2 columnas con inline-block (más fiable que grid en papel) */
+  .inv-meta {
+    display: block !important;
+    gap: 0 !important;
+    margin-bottom: 16px;
+    font-size: 0; /* quitar espacio entre inline-block */
+    page-break-inside: avoid;
+  }
+  .inv-meta .inv-card {
+    display: inline-block !important;
+    vertical-align: top;
+    width: 49% !important;
+    box-shadow: none;
+    padding: 14px;
+    font-size: 10px;
+    margin: 0;
+  }
+  .inv-meta .inv-card:first-child {
+    margin-right: 2%;
+  }
+  .inv-card-label {
+    margin-bottom: 8px;
+    font-size: 7px;
+  }
+  .inv-card-body {
+    gap: 3px;
+    font-size: 9px;
+  }
+  .inv-card-body .cliente-nombre {
+    font-size: 11px;
+  }
+  .inv-info-row {
+    padding: 1px 0;
+    font-size: 9px;
+  }
+
+  /* Items table */
+  .inv-items-section {
+    page-break-inside: avoid;
+  }
+  .inv-items-section .section-label {
+    font-size: 7px;
+    margin-bottom: 8px;
+  }
+  .inv-table thead th {
+    padding: 6px 10px;
+    font-size: 7px;
+  }
+  .inv-table tbody td {
+    padding: 6px 10px;
+    font-size: 9px;
+  }
+  .inv-table tbody tr:hover {
+    background: none;
+  }
+
+  /* Totals: 2 columnas inline-block */
+  .inv-totals-row {
+    display: block !important;
+    gap: 0 !important;
+    margin-bottom: 14px;
+    font-size: 0;
+    page-break-inside: avoid;
+  }
+  .inv-notes {
+    display: inline-block !important;
+    vertical-align: top;
+    width: 52% !important;
+    flex: none !important;
+    padding: 14px;
+    font-size: 10px;
+    margin: 0;
+    box-shadow: none;
+  }
+  .inv-notes .notes-label {
+    font-size: 7px;
+    margin-bottom: 6px;
+  }
+  .inv-notes p {
+    font-size: 8px;
+    line-height: 1.5;
+  }
+  .inv-summary {
+    display: inline-block !important;
+    vertical-align: top;
+    width: 46% !important;
+    font-size: 10px;
+    margin-left: 2%;
+  }
+  .inv-summary-row {
+    padding: 2px 0;
+    font-size: 9px;
+  }
+  .inv-summary-divider {
+    margin: 6px 0;
+  }
+  .inv-summary-total .total-value {
+    font-size: 18px;
+  }
+  .inv-summary-total .total-bar {
+    height: 2px;
+    margin-top: 4px;
+  }
+
+  /* Footer */
+  .inv-footer-divider {
+    margin: 14px 0 10px;
+  }
+  .inv-pago {
+    padding: 8px;
+    margin-bottom: 12px;
+    box-shadow: none;
+    page-break-inside: avoid;
+    font-size: 9px;
+  }
+  .inv-pago .pago-label {
+    font-size: 7px;
+    margin-bottom: 4px;
+  }
+  .inv-pago .pago-info {
+    font-size: 9px;
+  }
+  .inv-footer .footer-brand {
+    font-size: 11px;
+  }
+  .inv-footer .footer-tagline {
+    font-size: 8px;
+  }
+  .inv-footer .footer-legal {
+    font-size: 7px;
+  }
+
+  /* Animaciones off */
+  .inv-badge .dot { animation: none; }
+  .inv-header-num .inv-num-value { animation: none; }
+}
+
+/* ─── RESPONSIVE (screen only) ─── */
+@media screen and (max-width:768px) {
+  body { padding:24px; font-size:12px; }
+  .inv-header { flex-direction:column; gap:20px; align-items:flex-start; }
+  .inv-header-num { text-align:left; }
+  .inv-header-num .inv-num-value { font-size:26px; }
+  .inv-meta { grid-template-columns:1fr; gap:24px; }
+  .inv-totals-row { flex-direction:column; gap:20px; }
+  .inv-summary { width:100%; }
+  .inv-table thead th, .inv-table tbody td { padding:10px 8px; font-size:11px; }
+  .inv-card { padding:20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="inv-header">
+  <div class="inv-header-logo">
+    {% if empresa.logo_url %}
+    <img src="{{ empresa.logo_url }}" alt="{{ empresa.comercial }}" onerror="this.style.display='none'">
+    {% endif %}
+  </div>
+  <div class="inv-header-num">
+    <div class="inv-num-label">Factura N°</div>
+    <div class="inv-num-value">{{ invoice.numero }}</div>
+  </div>
+</div>
+
+<!-- Empresa -->
+<div class="inv-empresa">
+  <div class="empresa-nombre">{{ empresa.nombre }}</div>
+  NIT: {{ empresa.nit }}<br>
+  {{ empresa.direccion }}<br>
+  {{ empresa.email }} &nbsp;·&nbsp; {{ empresa.telefono }}
+</div>
+
+<div class="inv-divider"></div>
+
+<!-- Cliente + Detalles -->
+<div class="inv-meta">
+  <div class="inv-card">
+    <div class="inv-card-label">Facturar a</div>
+    <div class="inv-card-body">
+      <div class="cliente-nombre">
+        {% if client and client.tipo_persona == 'juridica' %}
+          {{ client.empresa or client.nombre }}
+        {% else %}
+          {{ client.nombre if client else '—' }}
+        {% endif %}
+      </div>
+      {% if client and client.tipo_persona == 'juridica' and client.nombre_comercial %}
+      <div class="cliente-dir" style="color:var(--htk-primary);">{{ client.nombre_comercial }}</div>
+      {% endif %}
+      {% if client and client.documento %}<div class="cliente-doc">{{ client.tipo_documento or 'NIT/CC' }}: {{ client.documento }}</div>{% endif %}
+      {% if client and client.direccion %}<div class="cliente-dir">{{ client.direccion }}{% if client.ciudad %}, {{ client.ciudad }}{% endif %}</div>{% endif %}
+      {% if client and client.telefono %}<div class="cliente-tel">{{ client.telefono }}</div>{% endif %}
+      {% if client and client.email %}<div class="cliente-dir">{{ client.email }}</div>{% endif %}
+    </div>
+  </div>
+  <div class="inv-card">
+    <div class="inv-card-label">Datos de la Factura</div>
+    <div class="inv-info-row"><span class="info-label">Emisión</span><span class="info-value">{{ invoice.fecha_emision[:10] }}</span></div>
+    <div class="inv-info-row"><span class="info-label">Vencimiento</span><span class="info-value">{{ invoice.fecha_vencimiento[:10] }}</span></div>
+    <div class="inv-info-row">
+      <span class="info-label">Estado</span>
+      <span class="inv-badge {{ invoice.estado }}">
+        <span class="dot"></span>{{ invoice.estado.upper() }}
+      </span>
+    </div>
+    {% if invoice.wo_id %}
+    <div class="inv-info-row"><span class="info-label">O.T.</span><span class="info-value">{{ invoice.wo_id }}</span></div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Items -->
+<div class="inv-items-section">
+  <div class="section-label">Detalle de Servicios</div>
+  <div class="inv-table-wrapper">
+    <table class="inv-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Descripción</th>
+          <th>Cant</th>
+          <th>Vr. Unitario</th>
+          <th>IVA</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ '%02d' % item.item_num }}</td>
+          <td>{{ item.descripcion }}{% if item.iva_incluido %} <small style="color:var(--text-tertiary);font-size:0.8em;">(IVA incl.)</small>{% endif %}</td>
+          <td>{{ item.cantidad }}</td>
+          <td>${{ '{:,.0f}'.format(item.precio_unitario) }}</td>
+          <td>{{ '{:.0f}'.format(item.iva_porcentaje) }}%</td>
+          <td>${{ '{:,.0f}'.format(item.total_linea) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Totals + Notas -->
+<div class="inv-totals-row">
+  <div class="inv-notes">
+    <div class="notes-label">Notas</div>
+    <p>{{ invoice.notas or 'Sin notas adicionales.' }}</p>
+  </div>
+  <div class="inv-summary">
+    <div class="inv-summary-row">
+      <span class="sum-label">Subtotal</span>
+      <span class="sum-value">${{ '{:,.0f}'.format(invoice.sub_total) }}</span>
+    </div>
+    {% if invoice.descuento and invoice.descuento > 0 %}
+    <div class="inv-summary-row">
+      <span class="sum-label">Descuento</span>
+      <span class="sum-value">−${{ '{:,.0f}'.format(invoice.descuento) }}</span>
+    </div>
+    {% endif %}
+    <div class="inv-summary-row">
+      <span class="sum-label">IVA 19%</span>
+      <span class="sum-value">${{ '{:,.0f}'.format(invoice.iva_total) }}</span>
+    </div>
+    <div class="inv-summary-divider"></div>
+    <div class="inv-summary-total">
+      <span class="total-label">Total</span>
+      <span class="total-value">${{ '{:,.0f}'.format(invoice.total_general) }}</span>
+      <div class="total-bar"></div>
+    </div>
+  </div>
+</div>
+
+<div class="inv-footer-divider"></div>
+
+<!-- Pago -->
+<div class="inv-pago">
+  <div class="pago-label">💳 Forma de Pago</div>
+  <div class="pago-info">
+    {{ invoice.metodo_pago or 'Transferencia Bancaria · Efectivo · Datafono' }}
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="inv-footer">
+  <div class="footer-brand">⚡ {{ empresa.comercial }}</div>
+  <div class="footer-tagline">Gracias por confiar en nosotros</div>
+  <div class="footer-legal">{{ empresa.nombre }} · {{ empresa.direccion }} · Colombia</div>
+</div>
+
+</body>
+</html>

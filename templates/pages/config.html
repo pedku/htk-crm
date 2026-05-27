@@ -8,6 +8,7 @@
   <button type="button" class="client-profile-tab" data-config-tab="templates" onclick="switchConfigTab('templates')"><i class="bi bi-chat-square-text"></i> Plantillas OT</button>
   <button type="button" class="client-profile-tab" data-config-tab="prices" onclick="switchConfigTab('prices')"><i class="bi bi-tags"></i> Precios</button>
   <button type="button" class="client-profile-tab" data-config-tab="segments" onclick="switchConfigTab('segments')"><i class="bi bi-diagram-3"></i> Segmentos</button>
+  <button type="button" class="client-profile-tab" data-config-tab="company" onclick="switchConfigTab('company')"><i class="bi bi-building"></i> Empresa</button>
   <button type="button" class="client-profile-tab" data-config-tab="usuarios" onclick="switchConfigTab('usuarios')"><i class="bi bi-people-fill"></i> Usuarios</button>
  </div>
 
@@ -54,6 +55,7 @@
    </div>
   </div>
  </div><!-- /config-tab-general -->
+</div>
 
  <!-- Bot WhatsApp Sub-tab -->
  <div id="config-tab-bot" class="config-subtab" style="display:none;">
@@ -125,6 +127,29 @@
            <small class="text-muted">Silencio tras prospección outbound</small>
           </div>
           <div class="col-12"><hr></div>
+          <!-- ⏱ Chat activo e inactividad -->
+          <h6 class="mt-2 mb-2" style="color:rgba(255,255,255,0.5);">⏱ Chat Activo e Inactividad (Pedro atiende desde la bandeja)</h6>
+          <div class="col-md-3">
+           <label class="form-label">Cooldown chat (min)</label>
+           <input type="number" class="form-control" id="cfg_active_chat_cooldown_min" min="1" max="120">
+           <small class="text-muted">Min sin escribir de Pedro antes de que bot retome</small>
+          </div>
+          <div class="col-md-3">
+           <label class="form-label">TTL chat activo (min)</label>
+           <input type="number" class="form-control" id="cfg_active_chat_ttl_min" min="1" max="1440">
+           <small class="text-muted">Tiempo máx total de chat activo</small>
+          </div>
+          <div class="col-md-3">
+           <label class="form-label">Aviso inactividad (min)</label>
+           <input type="number" class="form-control" id="cfg_inactividad_aviso_min" min="1" max="60">
+           <small class="text-muted">Min sin respuesta del cliente para avisar</small>
+          </div>
+          <div class="col-md-3">
+           <label class="form-label">Cierre inactividad (min)</label>
+           <input type="number" class="form-control" id="cfg_inactividad_cierre_min" min="1" max="120">
+           <small class="text-muted">Min sin respuesta del cliente para cerrar</small>
+          </div>
+          <div class="col-12"><hr></div>
           <div class="col-md-4">
            <label class="form-label">Auto-respuesta activa</label>
            <div class="form-check form-switch">
@@ -146,6 +171,13 @@
             <label class="form-check-label" for="cfg_consulta_ot_activa">Activar consulta de OT</label>
            </div>
           </div>
+          <div class="col-12"><hr></div>
+          <h6 class="mt-2 mb-2" style="color:rgba(255,255,255,0.5);">🧾 Facturación</h6>
+          <div class="col-md-4">
+           <label class="form-label">IVA por defecto (%)</label>
+           <input type="number" class="form-control" id="cfg_iva_default" min="0" max="100" step="0.5">
+           <small class="text-muted">Porcentaje de IVA para nuevas facturas</small>
+          </div>
          </div>
         </div>
        </div>
@@ -163,28 +195,53 @@
          <div class="row g-3">
           <div class="col-md-6">
            <label class="form-label">📩 Presentación</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_presentacion" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_presentacion" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+           <textarea class="form-control cfg-msg" id="cfg_msg_presentacion" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <div class="preview-bubble mt-2" id="preview_msg_presentacion" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
           </div>
           <div class="col-md-6">
            <label class="form-label">👋 Bienvenida</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_bienvenida" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_bienvenida" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+           <textarea class="form-control cfg-msg" id="cfg_msg_bienvenida" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <div class="preview-bubble mt-2" id="preview_msg_bienvenida" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
           </div>
           <div class="col-md-6">
            <label class="form-label">🕐 Fuera de horario</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_fuera_horario" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_fuera_horario" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+           <textarea class="form-control cfg-msg" id="cfg_msg_fuera_horario" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <div class="preview-bubble mt-2" id="preview_msg_fuera_horario" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
           </div>
           <div class="col-md-6">
            <label class="form-label">🙌 Derivar a ingeniero</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_derivar" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_derivar" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+           <textarea class="form-control cfg-msg" id="cfg_msg_derivar_ingeniero" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <div class="preview-bubble mt-2" id="preview_msg_derivar" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
           </div>
           <div class="col-md-6">
            <label class="form-label">✅ Despedida</label>
-           <textarea class="form-control cfg-msg" id="cfg_mensaje_despedida" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
-           <div class="preview-bubble mt-2" id="preview_despedida" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+           <textarea class="form-control cfg-msg" id="cfg_msg_despedida" rows="3" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <div class="preview-bubble mt-2" id="preview_msg_despedida" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+          </div>
+          <div class="col-12"><hr><small class="text-muted">Chat Activo — Mensajes automáticos cuando Pedro atiende desde la bandeja</small></div>
+          <div class="col-md-6">
+           <label class="form-label">⏰ Aviso inactividad</label>
+           <textarea class="form-control cfg-msg" id="cfg_msg_aviso_inactividad" rows="2" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <small class="text-muted">Se envía cuando el cliente no responde tras X min (configurable arriba)</small>
+           <div class="preview-bubble mt-2" id="preview_msg_aviso_inactividad" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+          </div>
+          <div class="col-md-6">
+           <label class="form-label">🔚 Cierre inactividad</label>
+           <textarea class="form-control cfg-msg" id="cfg_msg_cierre_inactividad" rows="2" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <small class="text-muted">Se envía cuando se cierra el chat por inactividad</small>
+           <div class="preview-bubble mt-2" id="preview_msg_cierre_inactividad" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+          </div>
+          <div class="col-md-6">
+           <label class="form-label">🔓 Cierre manual (Pedro escribe /FIN)</label>
+           <textarea class="form-control cfg-msg" id="cfg_msg_cierre_chat_activo" rows="2" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <small class="text-muted">Se envía cuando Pedro escribe /FIN para cerrar su sesión</small>
+           <div class="preview-bubble mt-2" id="preview_msg_cierre_chat_activo" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
+          </div>
+          <div class="col-md-6">
+           <label class="form-label">🔄 Reapertura</label>
+           <textarea class="form-control cfg-msg" id="cfg_msg_reapertura" rows="2" style="font-size:0.85em;" oninput="updateMsgPreview(this)"></textarea>
+           <small class="text-muted">Cuando el cliente escribe después de que Pedro dejó el chat</small>
+           <div class="preview-bubble mt-2" id="preview_msg_reapertura" style="background:rgba(0,212,170,0.08);border-left:3px solid var(--htk-primary);padding:8px 12px;border-radius:0 8px 8px 0;font-size:0.78em;max-height:80px;overflow-y:auto;white-space:pre-wrap;"></div>
           </div>
          </div>
         </div>
@@ -295,6 +352,45 @@
   </div>
  </div>
 
+ <!-- Company Sub-tab -->
+ <div id="config-tab-company" class="config-subtab" style="display:none;">
+  <div id="companyLoading" class="text-center py-4">
+   <span class="spinner-border spinner-border-sm"></span> Cargando...
+  </div>
+  <div id="companyForm" style="display:none;">
+   <div class="row g-3">
+    <div class="col-md-6">
+     <label class="form-label">Razón Social</label>
+     <input type="text" class="form-control" id="cfgCompanyNombre">
+    </div>
+    <div class="col-md-6">
+     <label class="form-label">Nombre Comercial / Sigla</label>
+     <input type="text" class="form-control" id="cfgCompanyComercial">
+    </div>
+    <div class="col-md-4">
+     <label class="form-label">NIT</label>
+     <input type="text" class="form-control" id="cfgCompanyNit">
+    </div>
+    <div class="col-md-8">
+     <label class="form-label">Dirección</label>
+     <input type="text" class="form-control" id="cfgCompanyDireccion">
+    </div>
+    <div class="col-md-6">
+     <label class="form-label">Teléfono</label>
+     <input type="text" class="form-control" id="cfgCompanyTelefono">
+    </div>
+    <div class="col-md-6">
+     <label class="form-label">Email</label>
+     <input type="email" class="form-control" id="cfgCompanyEmail">
+    </div>
+   </div>
+   <div class="mt-3">
+    <button class="btn btn-htk" onclick="saveCompanyConfig()"><i class="bi bi-check-lg"></i> Guardar</button>
+    <span id="cfgCompanyMsg" class="ms-2"></span>
+   </div>
+  </div>
+ </div>
+
  <!-- Usuarios Sub-tab -->
  <div id="config-tab-usuarios" class="config-subtab" style="display:none;">
   <div class="text-center text-muted py-5">
@@ -308,9 +404,3 @@
 
 </div>
 
-
-<!-- ══════════════════════════════════════════════════════════════════ -->
-
-</div>
-<!-- TAB: INVENTARIO -->
-<!-- ══════════════════════════════════════════════════════════════════ -->

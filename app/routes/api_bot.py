@@ -9,12 +9,14 @@ from app.core.auth import login_required
 from app.services.bot_service import (
     cast_config_value, get_bot_config_flat,
     get_bot_config_verbose, reload_bot_config,
-    send_whatsapp, bot_action
+    send_whatsapp, bot_action, send_email
 )
 
 api_bot_bp = Blueprint('api_bot', __name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BOT_LOG_PATH = '/home/peku/htk-whatsapp-bot/bot.log'
+BOT_DIR = '/home/peku/htk-whatsapp-bot'
 
 
 def actividad_crear(lead_id, tipo, resumen, detalle=''):
@@ -47,7 +49,8 @@ def api_bot_config():
         return jsonify(get_bot_config_flat())
 
     if request.method == 'PUT':
-        if not is_authenticated:
+        # Allow localhost PUT without auth for config
+        if not is_authenticated and not is_local:
             return jsonify({'error': 'Unauthorized'}), 401
         # PUT: bulk update with type casting
         data = request.get_json()
@@ -85,9 +88,19 @@ def api_bot_config():
             conn.close()
 
 
+@api_bot_bp.route('/api/bot/config/categorias', methods=['GET'])
+def api_bot_config_categorias():
+    """Return config grouped by category for the UI."""
+    from app.services.bot_service import get_bot_config_categorias
+    return jsonify(get_bot_config_categorias())
+
+
 @api_bot_bp.route('/api/bot/config/reload', methods=['POST'])
-@login_required
 def api_bot_config_reload():
+    # Allow localhost without auth
+    is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1') and not request.headers.get('CF-Connecting-IP')
+    if 'user' not in session and not is_local:
+        return jsonify({'error': 'No autenticado'}), 401
     result = reload_bot_config()
     return jsonify(result)
 
@@ -138,15 +151,19 @@ def api_bot_unsilence():
 # ── GLOBAL ON / OFF ───────────────────────────────────────────────────
 
 @api_bot_bp.route('/api/bot/global-off', methods=['POST'])
-@login_required
 def api_bot_global_off():
+    is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1') and not request.headers.get('CF-Connecting-IP')
+    if 'user' not in session and not is_local:
+        return jsonify({'error': 'No autenticado'}), 401
     result = bot_action('global-off')
     return jsonify(result)
 
 
 @api_bot_bp.route('/api/bot/global-on', methods=['POST'])
-@login_required
 def api_bot_global_on():
+    is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1') and not request.headers.get('CF-Connecting-IP')
+    if 'user' not in session and not is_local:
+        return jsonify({'error': 'No autenticado'}), 401
     result = bot_action('global-on')
     return jsonify(result)
 
@@ -194,16 +211,262 @@ def api_bot_restart():
 @api_bot_bp.route('/api/bot/log')
 @login_required
 def api_bot_log():
-    log_path = os.path.join(BASE_DIR, 'bot', 'bot.log')
+    log_path = BOT_LOG_PATH
     try:
         if os.path.exists(log_path):
-            with open(log_path) as f:
-                lines = f.readlines()
-                last = lines[-200:]
-            return jsonify({'log': ''.join(last), 'ok': True})
+            with open(log_path, 'rb') as f:
+                # Read last 200 lines (log can be huge — 50MB+)
+                f.seek(0, 2)
+                size = f.tell()
+                if size > 100000:
+                    f.seek(size - 100000)
+                    chunk = f.read(100000).decode('utf-8', errors='replace')
+                    lines = chunk.split('\n')
+                    last = lines[-200:]
+                else:
+                    f.seek(0)
+                    last = f.read().decode('utf-8', errors='replace').split('\n')[-200:]
+            return jsonify({'log': '\n'.join(last), 'ok': True})
         return jsonify({'log': '', 'ok': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# ── BOT START / STOP ─────────────────────────────────────────────────
+
+@api_bot_bp.route('/api/bot/start', methods=['POST'])
+@login_required
+def api_bot_start():
+    """Start WhatsApp bot via systemd user service."""
+    import subprocess
+    try:
+        r = subprocess.run(['systemctl', '--user', 'start', 'htk-whatsapp-bot'],
+                          capture_output=True, text=True, timeout=10)
+        if r.returncode == 0:
+            return jsonify({'ok': True, 'message': 'Bot iniciado correctamente'})
+        return jsonify({'ok': False, 'error': r.stderr[:300]}), 500
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@api_bot_bp.route('/api/send-pending', methods=['POST'])
+@login_required
+def api_send_pending():
+    """Send a single pending interaction via WhatsApp."""
+    data = request.get_json()
+    interaction_id = data.get('interaction_id')
+    if not interaction_id:
+        return jsonify({'ok': False, 'error': 'interaction_id requerido'}), 400
+    
+    conn = get_db()
+    try:
+        row = conn.execute("""
+            SELECT i.*, l.telefono, l.nombre AS lead_nombre
+            FROM interactions i
+            LEFT JOIN leads l ON i.lead_id = l.id
+            WHERE i.id = ?
+        """, (interaction_id,)).fetchone()
+        if not row:
+            return jsonify({'ok': False, 'error': 'Interacción no encontrada'}), 404
+        
+        telefono = row['telefono'] or ''
+        # Extract phone from contacto if telefono is empty
+        if not telefono:
+            import re
+            tm = re.search(r'3\d{9}', row['lead_contacto'] or '')
+            if tm:
+                telefono = tm.group()
+        if not telefono:
+            # Try to extract any 10+ digit number from contacto
+            tm = re.search(r'(\d{10,13})', row['lead_contacto'] or '')
+            if tm:
+                telefono = tm.group(1)
+        
+        if not telefono:
+            return jsonify({'ok': False, 'error': 'El lead no tiene teléfono'}), 400
+        
+        mensaje = row['detalle'] or ''
+        if not mensaje:
+            return jsonify({'ok': False, 'error': 'La interacción no tiene contenido'}), 400
+        
+        # Send
+        result = send_whatsapp(telefono, mensaje)
+        
+        if result.get('ok'):
+            # Update interaction status
+            conn.execute(
+                "UPDATE interactions SET estado = 'enviado', proximo_paso = 'Esperar respuesta' WHERE id = ?",
+                (interaction_id,)
+            )
+            # Update lead estado: nuevo -> contactado
+            conn.execute(
+                "UPDATE leads SET estado = 'contactado', proximo_seguimiento = date('now','+2 days') WHERE id = ? AND estado = 'nuevo'",
+                (row['lead_id'],)
+            )
+            conn.commit()
+        
+        return jsonify({
+            'ok': result.get('ok', False),
+            'to': telefono,
+            'lead': row['lead_nombre'],
+            'error': result.get('error'),
+            'interaction_id': interaction_id
+        })
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@api_bot_bp.route('/api/send-campaign', methods=['POST'])
+@login_required
+def api_send_campaign():
+    """Send ALL pending WhatsApp interactions. Returns results per lead."""
+    conn = get_db()
+    try:
+        # Get all pending WhatsApp interactions with lead data
+        rows = conn.execute("""
+            SELECT i.id AS int_id, i.detalle, i.lead_id, l.telefono, l.nombre, l.contacto
+            FROM interactions i
+            LEFT JOIN leads l ON i.lead_id = l.id
+            WHERE (i.estado = 'pendiente' OR i.estado IS NULL OR i.estado = '')
+              AND (i.tipo = 'whatsapp' OR i.tipo = 'WhatsApp')
+              AND i.direccion IN ('saliente', 'pendiente')
+              AND l.telefono IS NOT NULL AND l.telefono != ''
+            ORDER BY l.nombre
+        """).fetchall()
+        
+        if not rows:
+            return jsonify({'ok': False, 'error': 'No hay interacciones pendientes con teléfono'})
+        
+        results = []
+        sent_count = 0
+        skip_count = 0
+        
+        for r in rows:
+            telefono = r['telefono'] or ''
+            if not telefono:
+                import re
+                tm = re.search(r'3\d{9}', r['contacto'] or '')
+                if tm:
+                    telefono = tm.group()
+            
+            if not telefono:
+                results.append({
+                    'lead': r['nombre'],
+                    'ok': False,
+                    'error': 'Sin teléfono'
+                })
+                skip_count += 1
+                continue
+            
+            mensaje = r['detalle'] or ''
+            if not mensaje:
+                results.append({
+                    'lead': r['nombre'],
+                    'ok': False,
+                    'error': 'Sin contenido'
+                })
+                skip_count += 1
+                continue
+            
+            result = send_whatsapp(telefono, mensaje)
+            if result.get('ok'):
+                conn.execute(
+                    "UPDATE interactions SET estado = 'enviado', proximo_paso = 'Esperar respuesta' WHERE id = ?",
+                    (r['int_id'],)
+                )
+                # Update lead estado: nuevo -> contactado
+                conn.execute(
+                    "UPDATE leads SET estado = 'contactado', proximo_seguimiento = date('now','+2 days') WHERE id = ? AND estado = 'nuevo'",
+                    (r['lead_id'],)
+                )
+                sent_count += 1
+            else:
+                skip_count += 1
+            
+            results.append({
+                'lead': r['nombre'],
+                'to': telefono,
+                'ok': result.get('ok', False),
+                'error': result.get('error')
+            })
+        
+        conn.commit()
+        return jsonify({
+            'ok': True,
+            'total': len(rows),
+            'sent': sent_count,
+            'skipped': skip_count,
+            'results': results
+        })
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@api_bot_bp.route('/api/bot/stop', methods=['POST'])
+@login_required
+def api_bot_stop():
+    """Stop WhatsApp bot via systemd user service."""
+    import subprocess
+    try:
+        r = subprocess.run(['systemctl', '--user', 'stop', 'htk-whatsapp-bot'],
+                          capture_output=True, text=True, timeout=10)
+        subprocess.run(['pkill', '-f', 'node.*bot\\.js'], capture_output=True, timeout=5)
+        return jsonify({'ok': True, 'message': 'Bot detenido'})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+# ── BOT QR ────────────────────────────────────────────────────────────
+import subprocess, time as _time_module
+NODE_BIN = '/home/peku/.config/nvm/versions/node/v24.15.0/bin/node'
+
+@api_bot_bp.route('/api/bot/qr')
+def api_bot_qr():
+    """QR login: stop bot, restart it, wait for QR, return image."""
+    qr_path = os.path.join(BOT_DIR, 'qr-code.png')
+    
+    try:
+        # 1. Stop and restart bot to generate fresh QR
+        try:
+            subprocess.run(['systemctl', '--user', 'stop', 'htk-whatsapp-bot'],
+                          capture_output=True, timeout=8)
+        except:
+            pass
+        subprocess.run(['pkill', '-9', '-f', 'bot\\.js'], capture_output=True, timeout=5)
+        _time_module.sleep(2)
+        
+        # 2. Start bot (it will generate QR internally)
+        subprocess.run(['systemctl', '--user', 'start', 'htk-whatsapp-bot'],
+                      capture_output=True, timeout=8)
+        
+        # 3. Wait for QR image to be generated (bot.js saves it)
+        for _ in range(20):
+            _time_module.sleep(1)
+            if os.path.exists(qr_path) and os.path.getsize(qr_path) > 100:
+                age = _time_module.time() - os.path.getmtime(qr_path)
+                if age < 5:  # Fresh QR
+                    from flask import send_file
+                    resp = send_file(qr_path, mimetype='image/png')
+                    resp.headers['Cache-Control'] = 'no-cache'
+                    return resp
+        
+        return jsonify({'ok': False, 'error': 'QR no generado aún, intenta de nuevo'}), 202
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@api_bot_bp.route('/api/bot/qr-status')
+def api_bot_qr_status():
+    """Check QR auth status."""
+    status_path = os.path.join(BOT_DIR, 'qr-status.json')
+    if os.path.exists(status_path):
+        with open(status_path) as f:
+            return jsonify(json.load(f))
+    return jsonify({'status': 'unknown'})
 
 
 # ── LID STATS ─────────────────────────────────────────────────────────
@@ -226,3 +489,23 @@ def api_lid_stats():
         return jsonify({'ok': False, 'error': str(e)}), 500
     finally:
         conn.close()
+
+# ── SEND EMAIL ───────────────────────────────────────────────────────
+
+@api_bot_bp.route('/api/send-email', methods=['POST'])
+@login_required
+def api_send_email():
+    data = request.get_json()
+    to = data.get('to')
+    subject = data.get('subject')
+    body = data.get('body')
+    lead_id = data.get('lead_id')
+    html = data.get('html', False)
+    
+    if not to or not subject or not body:
+        return jsonify({'ok': False, 'error': 'to, subject y body requeridos'}), 400
+    
+    result = send_email(to, subject, body, html)
+    if lead_id and result.get('ok'):
+        actividad_crear(lead_id, 'email', 'Email enviado: ' + subject, body[:150])
+    return jsonify(result)

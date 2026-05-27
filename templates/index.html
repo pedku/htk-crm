@@ -1518,6 +1518,13 @@
             <label class="form-check-label" for="cfg_consulta_ot_activa">Activar consulta de OT</label>
            </div>
           </div>
+          <div class="col-12"><hr></div>
+          <h6 class="mt-2 mb-2" style="color:rgba(255,255,255,0.5);">🧾 Facturación</h6>
+          <div class="col-md-4">
+           <label class="form-label">IVA por defecto (%)</label>
+           <input type="number" class="form-control" id="cfg_iva_default" min="0" max="100" step="0.5">
+           <small class="text-muted">Porcentaje de IVA para nuevas facturas</small>
+          </div>
          </div>
         </div>
        </div>
@@ -2395,6 +2402,56 @@ function formatDateTime(iso) {
  if (!iso) return '-';
  try { const d = new Date(iso); return d.toLocaleString('es-CO'); }
  catch(e) { return iso; }
+}
+
+// ── WHATSAPP SEND ─────────────────────────────────────────────────
+
+async function sendPending(interactionId) {
+ if (!confirm('¿Enviar este mensaje por WhatsApp ahora?')) return;
+ try {
+ const r = await fetchJSON('/api/send-pending', {
+ method: 'POST',
+ body: { interaction_id: interactionId }
+ });
+ if (r.ok) {
+ showToast('✅ Mensaje enviado a ' + (r.lead || r.to || ''), 'success');
+ loadInteractions();
+ } else {
+ showToast('❌ Error: ' + (r.error || 'desconocido'), 'danger');
+ }
+ } catch(e) {
+ showToast('❌ Error de conexión: ' + e.message, 'danger');
+ }
+}
+
+async function sendCampaign() {
+ if (!confirm('¿Enviar TODAS las interacciones WhatsApp pendientes ahora?\n\nEsto enviará mensajes a todos los leads con teléfono y mensaje pendiente.')) return;
+ const btn = document.querySelector('[onclick="sendCampaign()"]');
+ if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...'; }
+ try {
+ const r = await fetchJSON('/api/send-campaign', {
+ method: 'POST',
+ body: {}
+ });
+ if (r.ok) {
+ let msg = `✅ Campaña completada\nEnviados: ${r.sent}\nSaltados: ${r.skipped}\nTotal: ${r.total}`;
+ if (r.results) {
+ const errors = r.results.filter(x => !x.ok);
+ if (errors.length) {
+ msg += `\n\n⚠️ Fallos (${errors.length}):`;
+ errors.slice(0,5).forEach(e => { msg += `\n- ${e.lead}: ${e.error || 'error'}`; });
+ }
+ }
+ showToast(msg, r.sent > 0 ? 'success' : 'warning');
+ loadInteractions();
+ } else {
+ showToast('❌ ' + (r.error || 'Error al enviar campaña'), 'danger');
+ }
+ } catch(e) {
+ showToast('❌ Error de conexión: ' + e.message, 'danger');
+ } finally {
+ if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-send"></i> Enviar todos pendientes'; }
+ }
 }
 
 // CLIENTES 
@@ -3339,8 +3396,10 @@ function renderInteractions() {
  <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(int.resumen||'')}">${escHtml(int.resumen||'-')}</td>
  <td><span class="badge bg-secondary">${escHtml(int.estado||'-')}</span></td>
  <td><small>${formatDateTime(int.fecha)}</small></td>
- <td>
+ <td class="text-nowrap">
  <button class="action-btn primary" onclick='showInteractionDetail(${JSON.stringify(int).replace(/'/g,"&#39;")})' title="Ver"><i class="bi bi-eye"></i></button>
+ ${(int.estado==='pendiente'||!int.estado||int.estado==='') && (int.lead_telefono||int.tipo?.toLowerCase()==='whatsapp') ?
+   `<button class="action-btn success ms-1" onclick="sendPending('${int.id}')" title="Enviar WhatsApp"><i class="bi bi-whatsapp"></i></button>` : ''}
  </td>
  </tr>
  `).join('');
@@ -3359,6 +3418,9 @@ function showInteractionDetail(int) {
  <p class="mt-2"><strong>Estado:</strong> <span class="badge bg-secondary">${escHtml(int.estado||'-')}</span></p>
  <p><strong>Próximo Paso:</strong> ${escHtml(int.proximo_paso || '-')}</p>
  <p><strong>Fecha:</strong> ${formatDateTime(int.fecha)}</p>
+ ${(int.estado==='pendiente'||!int.estado||int.estado==='') && (int.lead_telefono||int.lead_id) ?
+   `<hr><div class="text-center"><button class="btn btn-success" onclick="sendPending('${int.id}');modalInstance.hide()">
+   <i class="bi bi-whatsapp"></i> Enviar por WhatsApp Ahora</button></div>` : ''}
  `;
  setModal('Interacción: ' + int.id, html, '');
  modalInstance.show();
@@ -3413,7 +3475,7 @@ async function showModal(type, id) {
  const tipoFieldsCommon = [
  {label:'Nombre del Cliente', key:'cliente_nombre', type:'text', required:true},
  {label:'Teléfono del Cliente', key:'cliente_telefono', type:'text', placeholder:'+573001234567'},
- {label:'Tipo de Equipo', key:'equipo_tipo', type:'select', options:['aire_acondicionado','lavadora','refrigerador','plc','variador','fuente','electrodomestico','cargador','otro']},
+ {label:'Tipo de Equipo', key:'equipo_tipo', type:'select', options:['aire_acondicionado','lavadora','refrigerador','elevador','estabilizador','plc','variador','fuente','electrodomestico','cargador','otro'], otherText:true},
  {label:'Marca', key:'equipo_marca', type:'text'},
  {label:'Modelo', key:'equipo_modelo', type:'text'}
  ];
@@ -3539,7 +3601,23 @@ function formField(f, val) {
  </div>`;
  }
  if (f.type === 'select') {
- const opts = f.options.map(o => `<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('');
+ const opts = f.options.map(o => `<option value="${o}" ${val===o?'selected':''}>${o.replace(/_/g,' ')}</option>`).join('');
+ // Si tiene otherText, agregar input text inline para 'otro'
+ if (f.otherText) {
+ const isOther = val && !f.options.includes(val);
+ const selectedOther = val === 'otro' || isOther ? 'selected' : '';
+ const optsWithOther = f.options.filter(o => o !== 'otro').map(o => 
+ `<option value="${o}" ${val===o?'selected':''}>${o.replace(/_/g,' ')}</option>`
+ ).join('') + 
+ `<option value="otro" ${selectedOther}>Otro (especificar)</option>`;
+ return `<div class="mb-3">
+ <label class="form-label">${f.label}</label>
+ <div style="display:flex;gap:8px;align-items:start">
+ <select class="form-select" id="f_${f.key}" style="flex:1" onchange="document.getElementById('f_${f.key}_other').style.display=this.value==='otro'?'block':'none'">${optsWithOther}</select>
+ <input class="form-control" id="f_${f.key}_other" type="text" placeholder="Especificar..." style="flex:1;display:${selectedOther?'block':'none'}" value="${escHtml(isOther?val:'')}">
+ </div>
+ </div>`;
+ }
  return `<div class="mb-3">
  <label class="form-label">${f.label}</label>
  <select class="form-select" id="f_${f.key}">${opts}</select>
@@ -3622,7 +3700,7 @@ async function saveModal(type, id) {
  telefono: document.getElementById('f_cliente_telefono')?.value || ''
  },
  equipo: {
- tipo: document.getElementById('f_equipo_tipo')?.value || 'otro',
+ tipo: (document.getElementById('f_equipo_tipo')?.value === 'otro' && document.getElementById('f_equipo_tipo_other')?.value) ? document.getElementById('f_equipo_tipo_other').value.trim() : (document.getElementById('f_equipo_tipo')?.value || 'otro'),
  marca: document.getElementById('f_equipo_marca')?.value || '',
  modelo: document.getElementById('f_equipo_modelo')?.value || ''
  },
@@ -4918,9 +4996,9 @@ function switchConfigTab(tab) {
 
   if (tab === 'general') loadGeneralConfig();
   else if (tab === 'bot') loadBotConfig();
+  else if (tab === 'segments') loadSegmentsTab();
   else if (tab === 'templates') loadTemplates();
   else if (tab === 'prices') loadPricesTab();
-  else if (tab === 'segments') loadSegmentsTab();
   else if (tab === 'usuarios') { /* placeholder */ }
 }
 
@@ -4936,6 +5014,210 @@ function initConfigSubtabs() {
     const tab = button.dataset.configTab;
     if (tab) switchConfigTab(tab);
   });
+}
+
+// ══════════════════════════════════════════════════
+// CONFIGURACIÓN: Segmentos y Pitches
+// ══════════════════════════════════════════════════
+
+let segmentList = [];
+let pitchList = [];
+
+async function loadSegmentsTab() {
+  await Promise.all([loadSegmentsList(), loadPitchesList()]);
+}
+
+async function loadSegmentsList() {
+  try {
+    const data = await fetchJSON('/api/segments');
+    segmentList = data || [];
+    renderSegmentsTable();
+  } catch(e) {
+    document.getElementById('segmentTableBody').innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function renderSegmentsTable() {
+  const tbody = document.getElementById('segmentTableBody');
+  if (!tbody) return;
+  if (!segmentList.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox"></i> No hay segmentos creados</td></tr>';
+    return;
+  }
+  tbody.innerHTML = segmentList.map(s => `
+    <tr>
+      <td><span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:${s.color||'#6f42c1'};border:2px solid rgba(255,255,255,0.2)"></span></td>
+      <td>${escHtml(s.label||s.key)}</td>
+      <td><code>${escHtml(s.key)}</code></td>
+      <td>${s.orden||'-'}</td>
+      <td>${s.activo ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-htk me-1" onclick="showSegmentModal('${s.key}')" title="Editar"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteSegment('${s.key}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function showSegmentModal(key) {
+  const modal = new bootstrap.Modal(document.getElementById('segmentModal'));
+  if (key) {
+    const seg = segmentList.find(s => s.key === key);
+    if (!seg) return;
+    document.getElementById('segmentModalTitle').textContent = 'Editar Segmento';
+    document.getElementById('seg_key').value = seg.key;
+    document.getElementById('seg_key').disabled = true;
+    document.getElementById('seg_label').value = seg.label || '';
+    document.getElementById('seg_color').value = seg.color || '#6f42c1';
+  } else {
+    document.getElementById('segmentModalTitle').textContent = 'Nuevo Segmento';
+    document.getElementById('seg_key').value = '';
+    document.getElementById('seg_key').disabled = false;
+    document.getElementById('seg_label').value = '';
+    document.getElementById('seg_color').value = '#6f42c1';
+  }
+  modal.show();
+}
+
+async function saveSegment() {
+  const key = document.getElementById('seg_key').value.trim().toLowerCase().replace(/\s+/g, '_');
+  const label = document.getElementById('seg_label').value.trim();
+  const color = document.getElementById('seg_color').value;
+  if (!key) { showToast('La clave es requerida', 'danger'); return; }
+  
+  const existing = segmentList.find(s => s.key === key);
+  try {
+    if (existing) {
+      await fetch('/api/segments/' + key, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({label, color}) });
+    } else {
+      await fetch('/api/segments', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({key, label, color}) });
+    }
+    bootstrap.Modal.getInstance(document.getElementById('segmentModal')).hide();
+    showToast(existing ? 'Segmento actualizado' : 'Segmento creado');
+    await loadSegmentsList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+async function deleteSegment(key) {
+  if (!confirm('¿Eliminar segmento "' + key + '"?')) return;
+  try {
+    await fetch('/api/segments/' + key, { method:'DELETE' });
+    showToast('Segmento eliminado');
+    await loadSegmentsList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+// ── PITCHES ────────────────────────────────────────
+
+async function loadPitchesList() {
+  try {
+    const data = await fetchJSON('/api/pitches');
+    pitchList = (data && data.plantillas_cuerpo) ? data.plantillas_cuerpo : [];
+    renderPitchesTable();
+  } catch(e) {
+    document.getElementById('pitchTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function renderPitchesTable() {
+  const tbody = document.getElementById('pitchTableBody');
+  if (!tbody) return;
+  if (!pitchList.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox"></i> No hay plantillas. Crea la primera.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = pitchList.map(p => `
+    <tr>
+      <td><strong>${escHtml(p.titulo||'Sin título')}</strong></td>
+      <td>${(p.segmentos||[]).map(s => `<span class="badge bg-secondary me-1">${escHtml(s)}</span>`).join('') || '<span class="text-muted">—</span>'}</td>
+      <td>${p.whatsapp ? '<span class="text-success"><i class="bi bi-check-lg"></i> Sí</span>' : '<span class="text-muted">—</span>'}</td>
+      <td>${p.email ? '<span class="text-success"><i class="bi bi-check-lg"></i> Sí</span>' : '<span class="text-muted">—</span>'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-htk" onclick="showPitchModal('${escHtml(p.id)}')" title="Editar"><i class="bi bi-pencil"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function showPitchModal(id) {
+  const modal = new bootstrap.Modal(document.getElementById('pitchModal'));
+  const container = document.getElementById('pitch_segmentos_container');
+  
+  // Cargar segmentos disponibles
+  let segs = segmentList;
+  if (!segs.length) {
+    try { segs = await fetchJSON('/api/segments'); segmentList = segs; } catch(e) {}
+  }
+  
+  let pitch = null;
+  if (id) {
+    pitch = pitchList.find(p => p.id === id);
+    document.getElementById('pitchModalTitle').textContent = 'Editar Plantilla';
+    document.getElementById('pitchDeleteBtn').style.display = 'block';
+  } else {
+    document.getElementById('pitchModalTitle').textContent = 'Nueva Plantilla';
+    document.getElementById('pitchDeleteBtn').style.display = 'none';
+  }
+  
+  const selectedSegs = (pitch && pitch.segmentos) || [];
+  container.innerHTML = (segs||[]).map(s => {
+    const checked = selectedSegs.includes(s.key) ? 'checked' : '';
+    return `<label class="btn btn-sm ${checked?'btn-htk':'btn-outline-secondary'}" style="cursor:pointer" onclick="this.classList.toggle('btn-htk');this.classList.toggle('btn-outline-secondary');">
+      <input type="checkbox" value="${escHtml(s.key)}" ${checked} style="display:none"> ${escHtml(s.label||s.key)}
+    </label>`;
+  }).join('') || '<p class="text-muted">Crea segmentos primero</p>';
+  
+  document.getElementById('pitch_titulo').value = (pitch && pitch.titulo) || '';
+  document.getElementById('pitch_whatsapp').value = (pitch && pitch.whatsapp) || '';
+  document.getElementById('pitch_email').value = (pitch && pitch.email) || '';
+  document.getElementById('pitch_asunto_email').value = (pitch && pitch.asunto_email) || '';
+  
+  // Guardar id para edición
+  container.dataset.pitchId = id || '';
+  
+  modal.show();
+}
+
+async function savePitch() {
+  const container = document.getElementById('pitch_segmentos_container');
+  const checkboxes = container.querySelectorAll('input[type=checkbox]:checked');
+  const segmentos = Array.from(checkboxes).map(cb => cb.value);
+  
+  const data = {
+    titulo: document.getElementById('pitch_titulo').value.trim(),
+    segmentos,
+    whatsapp: document.getElementById('pitch_whatsapp').value,
+    email: document.getElementById('pitch_email').value,
+    asunto_email: document.getElementById('pitch_asunto_email').value
+  };
+  
+  const existingId = container.dataset.pitchId;
+  
+  try {
+    if (existingId) {
+      data.id = existingId;
+      await fetch('/api/pitches', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      showToast('Plantilla actualizada');
+    } else {
+      data.id = 'pitch_' + Date.now();
+      await fetch('/api/pitches', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      showToast('Plantilla creada');
+    }
+    bootstrap.Modal.getInstance(document.getElementById('pitchModal')).hide();
+    await loadPitchesList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+async function deletePitch() {
+  const container = document.getElementById('pitch_segmentos_container');
+  const id = container.dataset.pitchId;
+  if (!id || !confirm('¿Eliminar esta plantilla?')) return;
+  try {
+    await fetch('/api/pitches', { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) });
+    bootstrap.Modal.getInstance(document.getElementById('pitchModal')).hide();
+    showToast('Plantilla eliminada');
+    await loadPitchesList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
 }
 
 // ══════════════════════════════════════════════════
@@ -5348,26 +5630,6 @@ async function sendNotification(woId) {
 // PRICES TAB (placeholder)
 // ═══════════════════════════════════════════════════════════════
 
-async function loadSegmentsTab() {
-  const container = document.getElementById('config-tab-segments');
-  if (!container) return;
-  container.innerHTML = '<div class="text-center py-5"><span class="spinner-border spinner-border-sm"></span> Cargando segmentos...</div>';
-  try {
-    const segs = await loadSegments();
-    if (!segs.length) {
-      container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-diagram-3" style="font-size:3em;"></i><p class="mt-3">No hay segmentos configurados.</p><button class="btn btn-htk btn-sm" onclick="showModal(\'lead\',null)"><i class="bi bi-plus-lg"></i> Crear un lead con segmento</button></div>';
-      return;
-    }
-    let html = '<div class="table-container mt-3"><table class="table table-hover mb-0"><thead><tr><th>Key</th><th>Label</th><th>Prioridad</th><th>Color</th><th>Leads</th></tr></thead><tbody>';
-    segs.forEach(s => {
-      html += `<tr><td><code>${escHtml(s.key||'')}</code></td><td><strong>${escHtml(s.label||'')}</strong></td><td><span class="badge bg-${s.prioridad==='alta'?'danger':s.prioridad==='media'?'warning text-dark':'secondary'}">${s.prioridad||'-'}</span></td><td><span class="badge" style="background:${s.color||'#888'};color:#fff;">${escHtml(s.color||'')}</span></td><td>${s.leads_count||0}</td></tr>`;
-    });
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
-  } catch(e) {
-    container.innerHTML = '<div class="alert alert-warning">Error al cargar segmentos: ' + e.message + '</div>';
-  }
-}
 
 async function loadGeneralConfig() {
   // Load system stats
@@ -5486,6 +5748,17 @@ document.addEventListener('DOMContentLoaded', async function() {
  // Limpiar URL para evitar que el tab quede "linkeado" al recargar
  window.history.replaceState({}, '', '/');
  }
+ 
+ // Parámetro editWO: abrir modal de edición de OT directamente
+ const editWOParam = params.get('editWO');
+ if (editWOParam) {
+ // Asegurar que estamos en el tab de órdenes
+ const woLink = document.querySelector('.sidebar .nav-link[data-tab="workorders"]');
+ if (woLink) woLink.click();
+ // Esperar a que carguen las órdenes y abrir el modal
+ setTimeout(() => {
+ showModal('workorder', editWOParam);
+ }, 1500);
  }
  loadInteractions();
   // Iniciar verificación periódica del bot

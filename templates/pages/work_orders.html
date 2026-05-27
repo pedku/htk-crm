@@ -8,8 +8,8 @@
  </div>
  <div id="woContent" style="display:none;" class="table-container">
  <div class="d-flex justify-content-between mb-3">
- <input class="search-box" id="woSearch" placeholder="Buscar orden..." onkeyup="renderWorkOrders()" style="width:300px;">
- <select class="form-select" id="woStatusFilter" onchange="renderWorkOrders()" style="width:200px;">
+ <input class="search-box" id="woSearch" placeholder="Buscar orden..."  style="width:300px;">
+ <select class="form-select" id="woStatusFilter"  style="width:200px;">
  <option value="">Todos los estados</option>
  <option value="recibido">Recibido</option>
  <option value="diagnosticando">Diagnosticando</option>
@@ -23,7 +23,7 @@
  </select>
  </div>
  <div style="overflow-x:auto;">
- <table class="table table-hover">
+ <table id="tableWOs" class="table table-hover">
  <thead><tr><th>ID</th><th>Tipo</th><th>Cliente</th><th>Teléfono</th><th>Equipo</th><th>Falla</th><th>Presupuesto</th><th>Estado</th><th>Recibido</th><th>Acciones</th></tr></thead>
  <tbody id="woBody"></tbody>
  </table>

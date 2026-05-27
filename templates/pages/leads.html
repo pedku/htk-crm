@@ -8,8 +8,8 @@
  </div>
  <div id="leadsContent" style="display:none;" class="table-container">
  <div class="d-flex justify-content-between mb-3">
- <input class="search-box" id="leadSearch" placeholder="Buscar prospecto..." onkeyup="renderLeads()" style="width:250px;">
- <select class="form-select" id="leadEstadoFilter" onchange="renderLeads()" style="width:160px;">
+ <input class="search-box" id="leadSearch" placeholder="Buscar prospecto..."  style="width:250px;">
+ <select class="form-select" id="leadEstadoFilter"  style="width:160px;">
  <option value="">Todos los estados</option>
  <option value="nuevo">Nuevo</option>
  <option value="contactado">Contactado</option>
@@ -19,7 +19,7 @@
  <option value="perdido">Perdido</option>
  <option value="cliente">Cliente</option>
  </select>
- <select class="form-select" id="leadServicioFilter" onchange="renderLeads()" style="width:180px;">
+ <select class="form-select" id="leadServicioFilter"  style="width:180px;">
  <option value="">Todos los servicios</option>
  <option value="automatizacion">Automatización</option>
  <option value="iot">IoT</option>
@@ -27,10 +27,10 @@
  <option value="cargadores">Cargadores</option>
  <option value="varios">Varios</option>
  </select>
- <select class="form-select" id="leadSegmentFilter" onchange="renderLeads()" style="width:180px;" data-segments="true" data-placeholder="Todos los segmentos"></select>
+ <select class="form-select" id="leadSegmentFilter"  style="width:180px;" data-segments="true" data-placeholder="Todos los segmentos"></select>
  </div>
  <div style="overflow-x:auto;">
- <table class="table table-hover">
+ <table id="tableLeads" class="table table-hover">
  <thead><tr><th>ID</th><th>Nombre</th><th>Contacto</th><th>Segmento</th><th>Línea</th><th>Estado</th><th>Valor Est.</th><th>Creado</th><th>Acciones</th></tr></thead>
  <tbody id="leadsBody"></tbody>
  </table>

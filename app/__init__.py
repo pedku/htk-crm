@@ -18,8 +18,12 @@ def _ensure_columns(conn, table, expected_columns):
             try:
                 if col in ('activo',):
                     col_type = 'BOOLEAN DEFAULT 1'
+                elif col in ('tipo_persona',):
+                    col_type = "TEXT DEFAULT 'natural'"
                 elif col in ('valor_total', 'presupuesto', 'valor_estimado'):
                     col_type = 'TEXT DEFAULT NULL'
+                elif col in ('iva_incluido',):
+                    col_type = 'INTEGER DEFAULT 0'
                 else:
                     col_type = "TEXT DEFAULT ''"
                 conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}")
@@ -40,7 +44,8 @@ def init_db():
         ])
         _ensure_columns(migrate_conn, 'clients', [
             'contacto_nombre', 'direccion', 'ciudad', 'tipo_documento',
-            'documento', 'empresa', 'cargo', 'cumpleanos', 'redes_contacto', 'email'
+            'documento', 'empresa', 'cargo', 'cumpleanos', 'redes_contacto', 'email',
+            'tipo_persona', 'nombre_comercial'
         ])
         _ensure_columns(migrate_conn, 'work_orders', [
             'tipo', 'campos_extra', 'valor_total', 'client_id'
@@ -105,6 +110,53 @@ def init_db():
     finally:
         conn.close()
 
+    # ── Tablas de Facturación ───────────────────────
+    conn_fac = sqlite3.connect(DB_PATH)
+    try:
+        conn_fac.execute("PRAGMA journal_mode=WAL")
+        conn_fac.execute("PRAGMA foreign_keys=ON")
+        # Ensure invoice_items has iva_incluido column
+        _ensure_columns(conn_fac, 'invoice_items', ['iva_incluido'])
+        conn_fac.execute('''
+            CREATE TABLE IF NOT EXISTS invoices (
+                id TEXT PRIMARY KEY,
+                client_id TEXT NOT NULL,
+                wo_id TEXT,
+                numero TEXT NOT NULL UNIQUE,
+                estado TEXT DEFAULT 'borrador',
+                fecha_emision TEXT NOT NULL,
+                fecha_vencimiento TEXT NOT NULL,
+                sub_total REAL DEFAULT 0,
+                descuento REAL DEFAULT 0,
+                iva_total REAL DEFAULT 0,
+                total_general REAL DEFAULT 0,
+                notas TEXT DEFAULT '',
+                terminos TEXT DEFAULT '',
+                metodo_pago TEXT DEFAULT '',
+                pagada_fecha TEXT,
+                activo BOOLEAN DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        ''')
+        conn_fac.execute('''
+            CREATE TABLE IF NOT EXISTS invoice_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                invoice_id TEXT NOT NULL,
+                item_num INTEGER NOT NULL,
+                descripcion TEXT NOT NULL,
+                cantidad REAL NOT NULL DEFAULT 1,
+                precio_unitario REAL NOT NULL DEFAULT 0,
+                iva_porcentaje REAL DEFAULT 19,
+                iva_incluido INTEGER DEFAULT 0,
+                total_linea REAL NOT NULL DEFAULT 0,
+                FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+            )
+        ''')
+        conn_fac.commit()
+    finally:
+        conn_fac.close()
+
     # ── Tablas Auxiliares (payments, ventas, precios, tareas, segmentos, etapas, tags) ──
     conn_aux = sqlite3.connect(DB_PATH)
     try:
@@ -113,6 +165,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS payments (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 wo_id TEXT NOT NULL REFERENCES work_orders(id) ON DELETE CASCADE,
+                invoice_id TEXT DEFAULT NULL REFERENCES invoices(id) ON DELETE SET NULL,
                 monto REAL NOT NULL,
                 tipo TEXT DEFAULT 'abono',
                 metodo TEXT DEFAULT '',
@@ -122,6 +175,12 @@ def init_db():
                 registrado_por TEXT DEFAULT ''
             )
         ''')
+        try:
+            conn_aux.execute('''
+                ALTER TABLE payments ADD COLUMN invoice_id TEXT DEFAULT NULL REFERENCES invoices(id) ON DELETE SET NULL
+            ''')
+        except:
+            pass
         conn_aux.execute('''
             CREATE TABLE IF NOT EXISTS ventas (
                 id TEXT PRIMARY KEY,
@@ -271,6 +330,16 @@ def init_db():
                 ('mensaje_despedida', '¡Gracias por contactar a HTK INGENIERIA! ⚡\n\nSi necesitas algo más, aquí estoy. ¡Que tengas un excelente día!', 'str', 'Mensaje despedida', 'mensajes'),
                 ('crm_api_url', 'http://localhost:18800', 'str', 'URL del CRM', 'conexion'),
                 ('bot_global_off', '0', 'bool', 'Bot apagado globalmente', 'conexion'),
+                # ── Control de chat activo (Pedro atiende desde la bandeja) ──
+                ('active_chat_cooldown_min', '10', 'int', 'Cooldown chat activo (min). Default: 10min', 'comportamiento'),
+                ('active_chat_ttl_min', '60', 'int', 'TTL total chat activo (min). Default: 60min', 'comportamiento'),
+                ('inactividad_aviso_min', '5', 'int', 'Min sin respuesta antes de avisar inactividad', 'comportamiento'),
+                ('inactividad_cierre_min', '10', 'int', 'Min sin respuesta antes de cerrar por inactividad', 'comportamiento'),
+                # ── Mensajes de inactividad y cierre ──
+                ('msg_aviso_inactividad', '¿Sigues ahí? Te recordamos que estamos pendientes de tu mensaje. En 5 minutos cerraremos esta conversación si no hay respuesta.', 'str', 'Aviso de inactividad (chat activo)', 'mensajes'),
+                ('msg_cierre_inactividad', 'Conversación cerrada por inactividad. Si necesitas algo más, escribe *HOLA* para continuar.', 'str', 'Cierre por inactividad', 'mensajes'),
+                ('msg_reapertura', 'La conversación anterior ha finalizado. ¿En qué puedo ayudarte?\n\n— *MENU* para ver servicios\n— O cuéntame directamente', 'str', 'Reapertura tras chat activo', 'mensajes'),
+                ('iva_default', '19', 'float', 'IVA por defecto (%)', 'facturacion'),
             ]
             conn2.executemany(
                 "INSERT INTO bot_config (key, value, tipo, descripcion, categoria) VALUES (?, ?, ?, ?, ?)",
@@ -369,6 +438,7 @@ def create_app():
     from app.routes.api_bot import api_bot_bp
     from app.routes.api_inventory import api_inventory_bp
     from app.routes.api_misc import api_misc_bp
+    from app.routes.api_invoices import api_invoices_bp
 
     app.register_blueprint(views_bp)
     app.register_blueprint(api_leads_bp)
@@ -377,5 +447,17 @@ def create_app():
     app.register_blueprint(api_bot_bp)
     app.register_blueprint(api_inventory_bp)
     app.register_blueprint(api_misc_bp)
+    app.register_blueprint(api_invoices_bp)
+
+    # Cache-busting: evitar que el navegador cachee HTML
+    @app.after_request
+    def add_no_cache_header(response):
+        # Prevent Cloudflare and browser from caching any assets
+        ct = response.content_type or ''
+        if 'text/html' in ct or 'javascript' in ct or 'css' in ct or 'json' in ct or 'image/' in ct:
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+        return response
 
     return app

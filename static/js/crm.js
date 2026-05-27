@@ -3,6 +3,89 @@ const API = window.location.origin;
 let clients = [], workOrders = [], leads = [], interactions = [];
 let modalInstance = null;
 let currentKanbanView = 'kanban'; // 'kanban' or 'table'
+
+// ─── Modal History (back button) ────────────────────
+let modalHistory = [];
+let lastWOId = null;
+
+function setLastWO(id) { lastWOId = id; }
+
+function backToWODetail() {
+  if (lastWOId) {
+    // Reload WO data first, then show modal
+    loadWorkOrders().then(function() {
+      showWODetail(lastWOId);
+    });
+  }
+}
+
+// ─── DataTables instances ────────────────────────────
+let dtClients = null, dtWOs = null, dtLeads = null, dtInteractions = null, dtInv = null;
+
+// ─── DataTables helper — safe init with fallback ─────
+function dtAvailable() {
+  return typeof window.$ !== 'undefined' && window.$.fn && window.$.fn.dataTable;
+}
+
+function initDT(tableId, data, columns, opts) {
+  const $t = document.getElementById(tableId);
+  if (!$t) return null;
+  
+  // Fallback: build HTML directly if DataTables not available
+  if (!dtAvailable()) {
+    const tbody = $t.querySelector('tbody');
+    if (!tbody) return null;
+    if (!data || !data.length) {
+      tbody.innerHTML = '<tr><td colspan="99" class="text-center py-4" style="color:rgba(255,255,255,0.3);">Sin datos</td></tr>';
+      return null;
+    }
+    let html = '';
+    for (var i = 0; i < data.length; i++) {
+      var row = data[i];
+      html += '<tr>';
+      for (var j = 0; j < columns.length; j++) {
+        var col = columns[j];
+        var val = row[col.data];
+        var rendered = col.render ? col.render((col.data ? row[col.data] : null), 'display', row) : (val != null ? escHtml(String(val)) : '');
+        html += '<td>' + rendered + '</td>';
+      }
+      html += '</tr>';
+    }
+    tbody.innerHTML = html;
+    return null;
+  }
+  
+  const $j = $('#' + tableId);
+  if ($.fn.dataTable.isDataTable('#' + tableId)) {
+    $j.DataTable().destroy();
+    $j.find('tbody').empty();
+  }
+  const dt = $j.DataTable(Object.assign({
+    data: data,
+    columns: columns,
+    paging: true,
+    pageLength: 25,
+    lengthMenu: [[10,25,50,100,-1],[10,25,50,100,'Todos']],
+    ordering: true,
+    info: true,
+    searching: true,
+    language: {
+      url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
+      emptyTable: 'Sin datos',
+      zeroRecords: 'Sin resultados'
+    },
+    dom: '<"dt-toolbar d-flex justify-content-between align-items-center mb-2"<"dt-length"l><"dt-search"f>>rt<"dt-bottom d-flex justify-content-between align-items-center mt-2"<"dt-info"i><"dt-paginate"p>>',
+    columnDefs: [{ orderable: false, targets: -1 }],
+    initComplete: function() {
+      var $f = $('#' + tableId + '_filter');
+      if ($f.length) {
+        $f.find('label').contents().filter(function(){ return this.nodeType===3; }).remove();
+        $f.find('input').addClass('form-control form-control-sm').attr('placeholder','Buscar…').css({width:'220px',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',color:'inherit',borderRadius:'8px',padding:'6px 12px'});
+      }
+    }
+  }, opts || {}));
+  return dt;
+}
 let currentKanbanSub = 'wo'; // 'wo' or 'leads'
 
 let TIPOS_OT = {};
@@ -152,42 +235,31 @@ function emptyState(contentId, emptyId, dataLength) {
 document.querySelectorAll('.sidebar .nav-link[data-tab]').forEach(link => {
   link.addEventListener('click', function(e) {
     e.preventDefault();
-    document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
-    this.classList.add('active');
     const tab = this.dataset.tab;
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    if (tab === 'dashboard') loadDashboard();
-    if (tab === 'kanban') loadKanban();
-    if (tab === 'clients') loadClients();
-    if (tab === 'workorders') loadWorkOrders();
-    if (tab === 'leads') loadLeads();
-    if (tab === 'interactions') loadInteractions();
-    if (tab === 'inventario') loadInventario();
-    if (tab === 'config') { switchConfigTab('general'); }
+    window.location.hash = tab;
+    navigateToTab(tab);
   });
 });
 document.querySelectorAll('.mobile-nav-link[data-tab]').forEach(link => {
  link.addEventListener('click', function(e) {
  e.preventDefault();
- document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
- document.querySelectorAll('.mobile-nav-link').forEach(l => l.classList.remove('active'));
- this.classList.add('active');
+ const tab = this.dataset.tab;
  const sidebarCounterpart = document.querySelector(`.sidebar .nav-link[data-tab="${this.dataset.tab}"]`);
  if (sidebarCounterpart) sidebarCounterpart.classList.add('active');
- const tab = this.dataset.tab;
- document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
- document.getElementById('tab-' + tab).classList.add('active');
- if (tab === 'dashboard') loadDashboard();
- if (tab === 'kanban') loadKanban();
- if (tab === 'clients') loadClients();
- if (tab === 'workorders') loadWorkOrders();
- if (tab === 'leads') loadLeads();
- if (tab === 'interactions') loadInteractions();
- if (tab === 'inventario') loadInventario();
- if (tab === 'config') { switchConfigTab('general'); }
+ window.location.hash = tab;
+ navigateToTab(tab);
  });
 });
+
+// Hash-based routing: restore tab on reload
+function checkHash() {
+  var hash = window.location.hash.replace('#', '');
+  if (hash && document.getElementById('tab-' + hash)) {
+    navigateToTab(hash);
+  }
+}
+window.addEventListener('hashchange', checkHash);
+if (window.location.hash) { checkHash(); }
 
 // Global Search Keyboard Shortcut 
 document.addEventListener('keydown', function(e) {
@@ -268,18 +340,25 @@ function navigateToResult(type, id) {
 }
 
 function navigateToTab(tabName) {
- document.querySelectorAll('.sidebar .nav-link.active').forEach(l => l.classList.remove('active'));
- document.querySelectorAll('.mobile-nav-link.active').forEach(l => l.classList.remove('active'));
+ document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+ document.querySelectorAll('.mobile-nav-link').forEach(l => l.classList.remove('active'));
  const target = document.querySelector(`.sidebar .nav-link[data-tab="${tabName}"]`);
  const mobileTarget = document.querySelector(`.mobile-nav-link[data-tab="${tabName}"]`);
  if (target) {
  target.classList.add('active');
  if (mobileTarget) mobileTarget.classList.add('active');
- document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
- document.getElementById('tab-' + tabName).classList.add('active');
- if (tabName === 'leads') loadLeads();
+ document.querySelectorAll('.tab-content').forEach(t => { t.style.display = 'none'; t.classList.remove('active'); });
+ var tabEl = document.getElementById('tab-' + tabName);
+ if (tabEl) { tabEl.style.display = 'block'; tabEl.classList.add('active'); }
+ if (tabName === 'dashboard') loadDashboard();
+ if (tabName === 'kanban') loadKanban();
  if (tabName === 'clients') loadClients();
  if (tabName === 'workorders') loadWorkOrders();
+ if (tabName === 'leads') loadLeads();
+ if (tabName === 'interactions') loadInteractions();
+ if (tabName === 'inventario') loadInventario();
+ if (tabName === 'facturacion') loadFacturas();
+ if (tabName === 'config') { switchConfigTab('general'); }
  }
 }
 
@@ -541,7 +620,10 @@ async function loadDashboard() {
  
  // OT Financial Stats
  loadOTFinancialStats(orders);
- 
+
+ // Invoice Stats
+ loadFacturasStats();
+
  hideLoading('dashboardLoading','dashboardContent');
  } catch(e) { showToast('Error al cargar dashboard', 'danger'); hideLoading('dashboardLoading','dashboardContent'); }
 };
@@ -587,41 +669,49 @@ function formatDateTime(iso) {
 }
 
 // CLIENTES 
+// ─── CLIENTS ──────────────────────────────────────────
 async function loadClients() {
  showLoading('clientsLoading','clientsContent');
  try {
  const data = await fetchJSON('/api/clients');
  if (Array.isArray(data)) clients = data;
  } catch(e) {}
- renderClients();
+ renderClientsDT();
  updateNotifications();
 }
 
-function renderClients() {
- const q = (document.getElementById('clientSearch')?.value || '').toLowerCase();
- const filtered = clients.filter(c =>
- (c.nombre || '').toLowerCase().includes(q) || (c.telefono || '').includes(q) || (c.id || '').toLowerCase().includes(q)
- );
- document.getElementById('clientsBody').innerHTML = filtered.map(c => {
- const es = ESTADOS_CLIENTE[c.estado] || {label:c.estado||'nuevo', class:'bg-secondary'};
- return `<tr>
- <td><strong>${c.id}</strong>${c.lead_id?` <small style="color:var(--htk-primary);font-size:0.7em;">← ${c.lead_id}</small>`:''}</td>
- <td><strong>${escHtml(c.nombre || '-')}</strong></td>
- <td>${escHtml(c.telefono || '-')}</td>
- <td><span class="badge ${es.class}">${es.label}</span></td>
- <td>${escHtml(c.segmento || '-')}</td>
- <td>${escHtml(c.linea_interes || '-')}</td>
- <td><span class="badge bg-info">${(c.ordenes||[]).length}</span></td>
- <td><small>${formatDate(c.ultimo_contacto)}</small></td>
- <td>
- <button class="action-btn primary" onclick="showModal('client','${c.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
- <button class="action-btn primary" onclick="showClientDetail('${c.id}')" title="Ver detalle"><i class="bi bi-eye"></i></button>
- <button class="action-btn danger" onclick="deleteItem('clients','${c.id}','${escHtml(c.nombre||'')}')" title="Eliminar"><i class="bi bi-trash"></i></button>
- </td>
- </tr>`;
- }).join('');
- emptyState(null, 'clientsEmpty', filtered.length);
- hideLoading('clientsLoading','clientsContent');
+function renderClientsDT() {
+  _ensureDTFilters();
+  const cols = [
+    { data:'id', render: function(d,t,r) {
+      let h = `<a href="#" onclick="showClientDetail('${d}');return false;" style="color:var(--htk-primary);font-weight:600;">${d}</a>`;
+      if(r.lead_id) h += ` <small style="color:var(--htk-primary);font-size:0.7em;">← ${r.lead_id}</small>`;
+      return h;
+    }},
+    { data:'nombre', render: function(d) { return `<strong>${escHtml(d||'-')}</strong>`; }},
+    { data:'telefono', render: function(d) { return escHtml(d||'-'); }},
+    { data:'estado', render: function(d) {
+      const es = ESTADOS_CLIENTE[d] || {label:d||'nuevo', class:'bg-secondary'};
+      return `<span class="badge ${es.class}">${es.label}</span>`;
+    }},
+    { data:'segmento', render: function(d) { return escHtml(d||'-'); }},
+    { data:'linea_interes', render: function(d) { return escHtml(d||'-'); }},
+    { data:'ordenes', render: function(d) { return `<span class="badge bg-info">${(d||[]).length}</span>`; }},
+    { data:'ultimo_contacto', render: function(d) { return `<small>${formatDate(d)}</small>`; }},
+    { data:null, render: function(d,t,r) {
+      return `<div class="d-flex gap-1">
+ <button class="action-btn primary" onclick="showModal('client','${r.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
+ <button class="action-btn primary" onclick="showClientDetail('${r.id}')" title="Ver detalle"><i class="bi bi-eye"></i></button>
+ <button class="action-btn danger" onclick="deleteItem('clients','${r.id}','${escHtml(r.nombre||'')}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+ </div>`;
+    }}
+  ];
+  dtClients = initDT('tableClients', clients, cols, {
+    drawCallback: function() {
+      hideLoading('clientsLoading','clientsContent');
+      emptyState(null, 'clientsEmpty', this.api().rows({filter:'applied'}).count());
+    }
+  });
 }
 
 async function showClientDetail(id) {
@@ -669,6 +759,8 @@ async function showClientDetail(id) {
  </p>
  <p><strong>Email:</strong> <span id="cliEmail_${id}">${escHtml(c.email||'-')}</span></p>
  <p><strong>Documento:</strong> ${c.tipo_documento||''} ${escHtml(c.documento||'-')}</p>
+ <p><strong>Tipo Persona:</strong> ${c.tipo_persona === 'juridica' ? 'Jurídica' : 'Natural'}</p>
+ ${c.tipo_persona === 'juridica' && c.nombre_comercial ? `<p><strong>Nombre Comercial:</strong> ${escHtml(c.nombre_comercial)}</p>` : ''}
  <p><strong>Empresa:</strong> ${escHtml(c.empresa||'-')}</p>
  <p><strong>Cargo:</strong> ${escHtml(c.cargo||'-')}</p>
  </div>
@@ -832,52 +924,100 @@ async function saveClientField(clientId, field, value) {
 }
 
 // ÓRDENES DE TRABAJO 
+// ─── WORK ORDERS ─────────────────────────────────────
 async function loadWorkOrders() {
  showLoading('woLoading','woContent');
  try {
  const data = await fetchJSON('/api/work_orders');
  if (Array.isArray(data)) workOrders = data;
  } catch(e) {}
- renderWorkOrders();
+ renderWOsDT();
  updateNotifications();
 }
 
-function renderWorkOrders() {
- const q = (document.getElementById('woSearch')?.value || '').toLowerCase();
- const st = document.getElementById('woStatusFilter')?.value || '';
- const filtered = workOrders.filter(o => {
- if (st && o.estado !== st) return false;
- return (o.cliente?.nombre || '').toLowerCase().includes(q) ||
- (o.id || '').toLowerCase().includes(q) ||
- (o.equipo?.marca || '').toLowerCase().includes(q) ||
- (o.falla_reportada || '').toLowerCase().includes(q);
- });
- document.getElementById('woBody').innerHTML = filtered.map(o => {
- const es = ESTADOS_WO[o.estado] || {label:o.estado, class:'bg-secondary'};
- const tipoInfo = TIPOS_OT[o.tipo] || {};
- return `<tr>
- <td><strong><a href="/ordenes/${o.id}" style="color:var(--htk-primary);text-decoration:none;">${o.id}</a></strong></td>
- <td><span class="badge" style="background:${tipoInfo.color||'#f97316'};color:#fff;font-size:0.75em;">${tipoInfo.icono||'🔧'} ${tipoInfo.label||'Reparación'}</span></td>
- <td><a href="/ordenes/${o.id}" style="color:#fff;text-decoration:none;"><span title="${tipoInfo.label||o.tipo||'Reparación'}">${tipoInfo.icono||'🔧'}</span> ${escHtml(o.cliente?.nombre || '-')}</a></td>
- <td>${escHtml(o.cliente?.telefono || '-')}</td>
- <td>${escHtml(o.equipo?.marca || '')} ${escHtml(o.equipo?.modelo || '')} <small class="text-secondary">(${escHtml(o.equipo?.tipo||'')})</small></td>
- <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(o.falla_reportada||'')}">${escHtml(o.falla_reportada||'-')}</td>
- <td>${formatCurrency(o.presupuesto)}</td>
- <td><span class="badge ${es.class}">${es.label}</span></td>
- <td><small>${formatDate(o.fechas?.recibido)}</small></td>
- <td>
- <button class="action-btn primary" onclick="showModal('workorder','${o.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
- <button class="action-btn primary" onclick="showWODetail('${o.id}')" title="Ver detalle + historial"><i class="bi bi-eye"></i></button>
- <button class="action-btn primary" onclick="showStatusModal('${o.id}')" title="Cambiar estado"><i class="bi bi-arrow-right-circle"></i></button>
- <button class="action-btn danger" onclick="deleteItem('work_orders','${o.id}','${o.id}')" title="Eliminar"><i class="bi bi-trash"></i></button>
- </td>
- </tr>`;
- }).join('');
- emptyState(null, 'woEmpty', filtered.length);
- hideLoading('woLoading','woContent');
+function filterWOsDT() {
+  _ensureDTFilters();
+  if (dtWOs) dtWOs.draw();
+}
+
+function renderWOsDT() {
+  _ensureDTFilters();
+  const cols = [
+    { data:'id', render: function(d) { return `<a href="#" onclick="showWODetail('${d}');return false;" style="color:var(--htk-primary);text-decoration:none;font-weight:600;">${d}</a>`; }},
+    { data:'tipo', render: function(d,t,r) {
+      const ti = TIPOS_OT[d] || {};
+      return `<span class="badge" style="background:${ti.color||'#f97316'};color:#fff;font-size:0.75em;">${ti.icono||'🔧'} ${ti.label||'Reparación'}</span>`;
+    }},
+    { data:null, render: function(d,t,r) {
+      const ti = TIPOS_OT[r.tipo] || {};
+      return `<a href="#" onclick="showWODetail('${r.id}');return false;" style="color:#fff;text-decoration:none;"><span title="${ti.label||r.tipo||'Reparación'}">${ti.icono||'🔧'}</span> ${escHtml(r.cliente?.nombre || '-')}</a>`;
+    }},
+    { data:'cliente', render: function(d) { return escHtml(d?.telefono || '-'); }},
+    { data:null, render: function(d,t,r) {
+      const eq = r.equipo || {};
+      return `${escHtml(eq.marca||'')} ${escHtml(eq.modelo||'')} <small class="text-secondary">(${escHtml(eq.tipo||'')})</small>`;
+    }},
+    { data:'falla_reportada', render: function(d) {
+      return `<span title="${escHtml(d||'')}" style="max-width:200px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(d||'-')}</span>`;
+    }},
+    { data:'presupuesto', render: function(d) { return formatCurrency(d); }},
+    { data:'estado', render: function(d) {
+      const es = ESTADOS_WO[d] || {label:d, class:'bg-secondary'};
+      return `<span class="badge ${es.class}">${es.label}</span>`;
+    }},
+    { data:'fechas', render: function(d) { return `<small>${formatDate(d?.recibido)}</small>`; }},
+    { data:null, render: function(d,t,r) {
+      return `<div class="d-flex gap-1">
+ <button class="action-btn primary" onclick="showModal('workorder','${r.id}')" title="Editar"><i class="bi bi-pencil"></i></button>
+ <button class="action-btn primary" onclick="showWODetail('${r.id}')" title="Ver detalle"><i class="bi bi-eye"></i></button>
+ <button class="action-btn primary" onclick="showStatusModal('${r.id}')" title="Cambiar estado"><i class="bi bi-arrow-right-circle"></i></button>
+ <button class="action-btn danger" onclick="deleteItem('work_orders','${r.id}','${r.id}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+ </div>`;
+    }}
+  ];
+  dtWOs = initDT('tableWOs', workOrders, cols, {
+    drawCallback: function() {
+      hideLoading('woLoading','woContent');
+      emptyState(null, 'woEmpty', this.api().rows({filter:'applied'}).count());
+    }
+  });
+  // Connect status filter
+  $('#woStatusFilter').off('change.dt').on('change.dt', filterWOsDT);
+}
+
+// ─── Custom DataTables filters (registered once) ─────
+var _dtFiltersAdded = false;
+function _ensureDTFilters() {
+  if (_dtFiltersAdded || !dtAvailable()) return;
+  _dtFiltersAdded = true;
+  
+  // WO: filter by estado
+  $.fn.dataTable.ext.search.push(function(settings, data, dataIdx) {
+    if (settings.nTable.id !== 'tableWOs') return true;
+    var st = document.getElementById('woStatusFilter');
+    var val = st ? st.value : '';
+    if (!val) return true;
+    var row = dtWOs ? dtWOs.row(dataIdx).data() : null;
+    return row && row.estado === val;
+  });
+  
+  // Leads: filter by segmento, estado, servicio
+  $.fn.dataTable.ext.search.push(function(settings, data, dataIdx) {
+    if (settings.nTable.id !== 'tableLeads') return true;
+    var l = dtLeads ? dtLeads.row(dataIdx).data() : null;
+    if (!l) return true;
+    var seg = (document.getElementById('leadSegmentFilter')||{}).value || '';
+    var est = (document.getElementById('leadEstadoFilter')||{}).value || '';
+    var svc = (document.getElementById('leadServicioFilter')||{}).value || '';
+    if (seg && l.segmento !== seg) return false;
+    if (est && (l.estado || 'nuevo') !== est) return false;
+    if (svc && (l.linea_interes || '') !== svc) return false;
+    return true;
+  });
 }
 
 async function showWODetail(id) {
+ setLastWO(id);
  // Reload fresh data from API to get client_vinculado + payments
  let o;
  try {
@@ -996,7 +1136,15 @@ async function showWODetail(id) {
  detailHTML += `</div>`;
  }
 
- detailHTML += `<button class="btn btn-sm btn-htk mt-2" onclick="showPaymentModal('${o.id}')"><i class="bi bi-plus-lg"></i> Registrar abono</button>
+ detailHTML += `<div class="mt-3">
+ <div class="d-flex justify-content-between align-items-center mb-2">
+  <strong style="font-size:0.85rem;">💰 Abonos</strong>
+  <div class="d-flex gap-1">
+   <button class="btn btn-sm btn-htk" onclick="showPaymentModal('${o.id}')"><i class="bi bi-plus-lg"></i> Registrar</button>
+   <button class="btn btn-sm btn-outline-success" onclick="emitirFacturaDesdeOT('${o.id}')" title="Emitir factura por esta OT"><i class="bi bi-receipt"></i> Facturar</button>
+  </div>
+ </div>
+ <div id="paymentsList_${o.id}"><span class="spinner-border spinner-border-sm"></span> Cargando...</div>
  </div>`;
 
  // ── Historial ──
@@ -1030,6 +1178,7 @@ async function showWODetail(id) {
  </div>`
  );
  modalInstance.show();
+ loadPaymentsList(o.id);
 }
 
 function showStatusModal(id) {
@@ -1065,7 +1214,10 @@ function showStatusModal(id) {
  </div>`;
 
  setModal(' Cambiar Estado — ' + o.id, detailHTML,
- `<button class="btn btn-htk" onclick="updateStatus('${id}')"><i class="bi bi-check-lg"></i> Actualizar Estado</button>`
+ `<div class="d-flex gap-2">
+  <button class="btn btn-sm btn-outline-light" onclick="backToWODetail()"><i class="bi bi-arrow-left"></i> Volver a detalles</button>
+  <button class="btn btn-htk" onclick="updateStatus('${id}')"><i class="bi bi-check-lg"></i> Actualizar Estado</button>
+ </div>`
  );
  modalInstance.show();
 }
@@ -1093,6 +1245,7 @@ async function updateStatus(id) {
  if (presupuesto !== undefined) body.presupuesto = presupuesto;
  if (diagnostico) body.diagnostico = diagnostico;
 
+ body.force = true;
  await fetch(`/api/work_orders/${id}/status`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
  modalInstance.hide();
  flashSave();
@@ -1109,13 +1262,17 @@ async function updateStatus(id) {
 function showPaymentModal(woId) {
   const o = workOrders.find(x => x.id === woId);
   if (!o) return;
-  
+
+  const total = parseFloat(o.valor_total || o.presupuesto || 0);
+  const abonado = parseFloat(o.total_abonado || 0);
+  const pendiente = Math.max(0, total - abonado);
+
   const html = `
   <p><strong>Orden:</strong> ${o.id} — ${escHtml(o.cliente?.nombre||'')}</p>
-  <p><strong>Presupuesto:</strong> ${formatCurrency(o.presupuesto)} · <strong>Pendiente:</strong> ${formatCurrency(o.saldo_pendiente !== null ? o.saldo_pendiente : (o.presupuesto||0)-(o.total_abonado||0))}</p>
+  <p><strong>Total OT:</strong> ${formatCurrency(total)} · <strong>Abonado:</strong> ${formatCurrency(abonado)} · <strong style="color:var(--htk-primary);">Pendiente: ${formatCurrency(pendiente)}</strong></p>
   <div class="mb-3">
-    <label class="form-label">Monto <span class="text-danger">*</span></label>
-    <input class="form-control" id="payMonto" type="number" placeholder="Ej: 150000" min="1" step="1">
+    <label class="form-label">Monto <span class="text-danger">*</span> <small class="text-muted">(máx: ${formatCurrency(pendiente)})</small></label>
+    <input class="form-control" id="payMonto" type="number" placeholder="Ej: 150000" min="1" max="${pendiente}" step="1">
   </div>
   <div class="mb-3">
     <label class="form-label">Método de pago</label>
@@ -1141,7 +1298,10 @@ function showPaymentModal(woId) {
   </div>`;
 
   setModal('💰 Registrar Abono — ' + woId, html,
-    `<button class="btn btn-htk" onclick="savePayment('${woId}')"><i class="bi bi-check-lg"></i> Registrar</button>`
+    `<div class="d-flex gap-2">
+     <button class="btn btn-sm btn-outline-light" onclick="backToWODetail()"><i class="bi bi-arrow-left"></i> Volver a detalles</button>
+     <button class="btn btn-htk" onclick="savePayment('${woId}')"><i class="bi bi-check-lg"></i> Registrar</button>
+    </div>`
   );
   modalInstance.show();
 }
@@ -1175,64 +1335,157 @@ async function savePayment(woId) {
     await loadWorkOrders();
   } catch(e) { showToast('Error al registrar abono: ' + e.message, 'danger'); }
 }
-// LEADS 
+
+async function loadPaymentsList(woId) {
+  var el = document.getElementById('paymentsList_' + woId);
+  if (!el) return;
+  try {
+    var resp = await fetch('/api/work_orders/' + woId + '/payments');
+    var payments = await resp.json();
+    if (!payments || !payments.length) {
+      el.innerHTML = '<small style="color:rgba(255,255,255,0.3);">Sin abonos registrados</small>';
+      return;
+    }
+    var html = '<div style="max-height:250px;overflow-y:auto;">';
+    for (var i = 0; i < payments.length; i++) {
+      var p = payments[i];
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.85rem;">';
+      html += '<div>';
+      html += '<strong style="color:#fff;">$' + (p.monto||0).toLocaleString('es-CO') + '</strong>';
+      html += ' <small style="color:rgba(255,255,255,0.4);">' + escHtml(p.metodo||'') + '</small>';
+      if (p.referencia) html += ' <small style="color:rgba(255,255,255,0.3);">#' + escHtml(p.referencia) + '</small>';
+      html += '<br><small style="color:rgba(255,255,255,0.3);">' + (p.fecha||'').slice(0,10) + '</small>';
+      if (p.notas) html += ' <small style="color:rgba(255,255,255,0.3);">— ' + escHtml(p.notas) + '</small>';
+      html += '</div>';
+      html += '<div class="d-flex gap-1">';
+      html += '<button class="action-btn primary" onclick="editPayment(' + p.id + ',\'' + woId + '\',' + p.monto + ')" title="Editar"><i class="bi bi-pencil"></i></button>';
+      html += '<button class="action-btn danger" onclick="deletePayment(' + p.id + ',\'' + woId + '\')" title="Eliminar"><i class="bi bi-trash"></i></button>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<small style="color:rgba(255,255,255,0.3);">Error al cargar abonos</small>';
+    console.error('loadPaymentsList:', e);
+  }
+}
+
+function editPayment(paymentId, woId, currentMonto) {
+  var nuevo = prompt('Editar monto:', currentMonto);
+  if (!nuevo || isNaN(parseFloat(nuevo)) || parseFloat(nuevo) <= 0) return;
+  fetch('/api/work_orders/' + woId + '/payments/' + paymentId, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({monto: parseFloat(nuevo)})
+  }).then(function() {
+    loadPaymentsList(woId);
+    loadWorkOrders();
+    flashSave();
+    showToast('Abono actualizado ✅', 'success');
+  }).catch(function(e) { showToast('Error: ' + e.message, 'danger'); });
+}
+
+function deletePayment(paymentId, woId) {
+  if (!confirm('¿Eliminar este abono?')) return;
+  fetch('/api/work_orders/' + woId + '/payments/' + paymentId, {method: 'DELETE'})
+    .then(function() {
+      loadPaymentsList(woId);
+      loadWorkOrders();
+      flashSave();
+      showToast('Abono eliminado', 'warning');
+    }).catch(function(e) { showToast('Error: ' + e.message, 'danger'); });
+}
+
+async function emitirFacturaDesdeOT(woId) {
+  var o = workOrders.find(function(x) { return x.id === woId; });
+  if (!o) return;
+  var total = parseFloat(o.valor_total || o.presupuesto || 0);
+  if (!total || total <= 0) { alert('La OT no tiene valor total definido. Edítala primero.'); return; }
+  if (!o.client_id) { alert('La OT no tiene cliente vinculado. Edítala primero.'); return; }
+  if (!confirm('¿Crear factura por ' + formatCurrency(total) + ' para la OT ' + woId + '?')) return;
+  try {
+    var resp = await fetch('/api/facturas', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        client_id: o.client_id,
+        wo_id: woId,
+        fecha_emision: new Date().toISOString().slice(0,10),
+        fecha_vencimiento: new Date(Date.now() + 30*86400000).toISOString().slice(0,10),
+        items: [{
+          descripcion: 'OT ' + woId + ' — ' + (o.equipo?.tipo||'') + ' ' + (o.equipo?.marca||'') + ' ' + (o.equipo?.modelo||''),
+          cantidad: 1,
+          precio_unitario: total,
+          iva_porcentaje: 0
+        }]
+      })
+    });
+    if (!resp.ok) { var txt = await resp.text(); throw new Error(txt.startsWith('<!') ? 'Sesión expirada' : txt); }
+    var data = await resp.json();
+    showToast('Factura ' + data.numero + ' creada ✅', 'success');
+    if (modalInstance) modalInstance.hide();
+    navigateToTab('facturacion');
+  } catch(e) { alert('Error al facturar: ' + e.message); }
+}
+
+// ─── LEADS ────────────────────────────────────────────
 async function loadLeads() {
  showLoading('leadsLoading','leadsContent');
  try {
  const data = await fetchJSON('/api/leads');
  if (Array.isArray(data)) leads = data;
  } catch(e) {}
- renderLeads();
+ renderLeadsDT();
  updateNotifications();
 }
 
-function renderLeads() {
- const q = (document.getElementById('leadSearch')?.value || '').toLowerCase();
- const seg = document.getElementById('leadSegmentFilter')?.value || '';
- const est = document.getElementById('leadEstadoFilter')?.value || '';
- const svc = document.getElementById('leadServicioFilter')?.value || '';
- const filtered = leads.filter(l => {
- if (seg && l.segmento !== seg) return false;
- if (est && (l.estado || 'nuevo') !== est) return false;
- if (svc && (l.linea_interes || '') !== svc) return false;
- return (l.nombre || '').toLowerCase().includes(q) || (l.contacto || '').toLowerCase().includes(q) || (l.id || '').toLowerCase().includes(q);
- });
- document.getElementById('leadsBody').innerHTML = filtered.map(l => {
- const es = ESTADOS_LEAD[l.estado] || {label:l.estado||'nuevo', class:'bg-secondary'};
- const canConvert = l.estado !== 'cliente' && l.estado !== 'perdido';
- const stages = ['nuevo','contactado','cotizado','negociacion','ganado','perdido','cliente'];
- const stageIdx = stages.indexOf(l.estado || 'nuevo');
- let stageBtns = '';
- if (stageIdx > 0 && l.estado !== 'cliente' && l.estado !== 'perdido') {
- stageBtns += '<button class="action-btn" onclick="changeLeadStage(\''+l.id+'\',\'prev\')" title="Etapa anterior"><i class="bi bi-chevron-left"></i></button>';
- }
- if (stageIdx < stages.length - 1 && l.estado !== 'cliente' && l.estado !== 'perdido') {
- stageBtns += '<button class="action-btn" onclick="changeLeadStage(\''+l.id+'\',\'next\')" title="Siguiente etapa"><i class="bi bi-chevron-right"></i></button>';
- }
- return `<tr>
- <td><strong>${l.id}${l.estado==='cliente'?' <span class="badge bg-success" style="font-size:0.6em;">✓ Cliente</span>':''}</strong></td>
- <td><strong><a href="/leads/${l.id}" style="color:var(--htk-primary);text-decoration:none;">${escHtml(l.nombre || '-')}</a></strong></td>
- <td>${escHtml(l.contacto || '-')}</td>
- <td>${escHtml(l.segmento || '-')}</td>
- <td>${escHtml(l.linea_interes || '-')}</td>
- <td><span class="badge ${es.class}">${es.label}</span></td>
- <td>${formatCurrency(l.valor_estimado)}</td>
- <td><small>${formatDate(l.fecha_creacion)}</small></td>
- <td>
- <div class="d-flex gap-1 flex-wrap" style="max-width:200px;">
- <button class="action-btn primary" onclick="showLeadDetail('${l.id}')" title="Ver perfil"><i class="bi bi-eye"></i></button>
- ${(()=>{let p=(l.telefono||l.contacto||'').replace(/[^\d+]/g,'');if(p&&!p.startsWith('+'))p='+57'+p.replace(/^57/,'');return p&&p!=='+57'?`<button class="action-btn" style="color:#25D366;" onclick="window.open('https://wa.me/${p.replace(/\+/g,'')}','_blank')" title="WhatsApp rápido"><i class="bi bi-whatsapp"></i></button>`:'';})()}
- ${l.email&&l.email.includes('@')?`<button class="action-btn" style="color:#0dcaf0;" onclick="window.open('mailto:${l.email}','_blank')" title="Enviar email"><i class="bi bi-envelope"></i></button>`:''}
- <button class="action-btn" style="color:var(--htk-primary);" onclick="showModal('lead','${l.id}')" title="Editar lead"><i class="bi bi-pencil"></i></button>
- ${canConvert ? `<button class="action-btn" style="color:#ffc107;" onclick="convertLead('${l.id}')" title="Convertir a Cliente"><i class="bi bi-person-plus"></i></button>` : ''}
- <button class="action-btn danger" onclick="deleteItem('leads','${l.id}','${escHtml(l.nombre||'')}')" title="Eliminar"><i class="bi bi-trash"></i></button>
- ${stageBtns}
- </div>
- </td>
- </tr>`;
- }).join('');
- emptyState(null, 'leadsEmpty', filtered.length);
- hideLoading('leadsLoading','leadsContent');
+function getLeadActions(l) {
+  const canConvert = l.estado !== 'cliente' && l.estado !== 'perdido';
+  const stages = ['nuevo','contactado','cotizado','negociacion','ganado','perdido','cliente'];
+  const stageIdx = stages.indexOf(l.estado || 'nuevo');
+  let btns = '';
+  btns += `<button class="action-btn primary" onclick="showLeadDetail('${l.id}')" title="Ver perfil"><i class="bi bi-eye"></i></button>`;
+  let p = (l.telefono||l.contacto||'').replace(/[^\d+]/g,'');
+  if(p&&!p.startsWith('+'))p='+57'+p.replace(/^57/,'');
+  if(p&&p!=='+57') btns += `<button class="action-btn" style="color:#25D366;" onclick="window.open('https://wa.me/${p.replace(/\+/g,'')}','_blank')" title="WhatsApp"><i class="bi bi-whatsapp"></i></button>`;
+  if(l.email&&l.email.includes('@')) btns += `<button class="action-btn" style="color:#0dcaf0;" onclick="window.open('mailto:${l.email}','_blank')" title="Email"><i class="bi bi-envelope"></i></button>`;
+  btns += `<button class="action-btn" style="color:var(--htk-primary);" onclick="showModal('lead','${l.id}')" title="Editar"><i class="bi bi-pencil"></i></button>`;
+  if(canConvert) btns += `<button class="action-btn" style="color:#ffc107;" onclick="convertLead('${l.id}')" title="Convertir"><i class="bi bi-person-plus"></i></button>`;
+  btns += `<button class="action-btn danger" onclick="deleteItem('leads','${l.id}','${escHtml(l.nombre||'')}')" title="Eliminar"><i class="bi bi-trash"></i></button>`;
+  if(stageIdx > 0 && l.estado !== 'cliente' && l.estado !== 'perdido') btns += `<button class="action-btn" onclick="changeLeadStage('${l.id}','prev')" title="Anterior"><i class="bi bi-chevron-left"></i></button>`;
+  if(stageIdx < stages.length - 1 && l.estado !== 'cliente' && l.estado !== 'perdido') btns += `<button class="action-btn" onclick="changeLeadStage('${l.id}','next')" title="Siguiente"><i class="bi bi-chevron-right"></i></button>`;
+  return `<div class="d-flex gap-1 flex-wrap" style="max-width:200px;">${btns}</div>`;
+}
+
+function filterLeadsDT() {
+  _ensureDTFilters();
+  if (dtLeads) dtLeads.draw();
+}
+
+function renderLeadsDT() {
+  _ensureDTFilters();
+  const cols = [
+    { data:'id', render: function(d,t,r) { return `<strong>${d}${r.estado==='cliente'?' <span class="badge bg-success" style="font-size:0.6em;">✓ Cliente</span>':''}</strong>`; }},
+    { data:'nombre', render: function(d,t,r) { return `<strong><a href="/leads/${r.id}" style="color:var(--htk-primary);text-decoration:none;">${escHtml(d||'-')}</a></strong>`; }},
+    { data:'contacto', render: function(d) { return escHtml(d||'-'); }},
+    { data:'segmento', render: function(d) { return escHtml(d||'-'); }},
+    { data:'linea_interes', render: function(d) { return escHtml(d||'-'); }},
+    { data:'estado', render: function(d) {
+      const es = ESTADOS_LEAD[d] || {label:d||'nuevo', class:'bg-secondary'};
+      return `<span class="badge ${es.class}">${es.label}</span>`;
+    }},
+    { data:'valor_estimado', render: function(d) { return formatCurrency(d); }},
+    { data:'fecha_creacion', render: function(d) { return `<small>${formatDate(d)}</small>`; }},
+    { data:null, render: function(d,t,r) { return getLeadActions(r); }}
+  ];
+  dtLeads = initDT('tableLeads', leads, cols, {
+    drawCallback: function() {
+      hideLoading('leadsLoading','leadsContent');
+      emptyState(null, 'leadsEmpty', this.api().rows({filter:'applied'}).count());
+    }
+  });
+  // Connect filter dropdowns to DataTables search
+  $('#leadEstadoFilter, #leadServicioFilter, #leadSegmentFilter').off('change.dt').on('change.dt', filterLeadsDT);
 }
 
 async function showLeadDetail(id) {
@@ -1501,7 +1754,7 @@ async function changeLeadStage(id, direction) {
  if (newIdx === idx) return;
  // Actualizar local y re-renderizar tabla
  l.estado = stages[newIdx];
- renderLeads();
+ renderLeadsDT();
  
  // Refrescar modal si está abierto
  try {
@@ -1517,34 +1770,44 @@ async function changeLeadStage(id, direction) {
  } catch(e) { 
  // Revertir en caso de error
  l.estado = stages[idx];
- renderLeads();
+ renderLeadsDT();
  showToast('Error al cambiar etapa, revertido', 'danger'); 
  }
 }
 
 // INTERACCIONES 
+// ─── INTERACTIONS ─────────────────────────────────────
 async function loadInteractions() {
  showLoading('interactionsLoading','interactionsContent');
- interactions = await fetchJSON('/api/interactions');
- renderInteractions();
+ interactions = (await fetchJSON('/api/interactions')) || [];
+ renderInteractionsDT();
 }
 
-function renderInteractions() {
- document.getElementById('interactionsBody').innerHTML = interactions.slice().reverse().map(int => `
- <tr>
- <td><strong>${int.id}</strong></td>
- <td>${escHtml(int.lead_nombre || int.cliente?.nombre || '-')}</td>
- <td><span class="badge ${int.direccion==='recibido'?'bg-info':'bg-success'}">${escHtml(int.direccion||'-')}</span></td>
- <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(int.resumen||'')}">${escHtml(int.resumen||'-')}</td>
- <td><span class="badge bg-secondary">${escHtml(int.estado||'-')}</span></td>
- <td><small>${formatDateTime(int.fecha)}</small></td>
- <td>
- <button class="action-btn primary" onclick='showInteractionDetail(${JSON.stringify(int).replace(/'/g,"&#39;")})' title="Ver"><i class="bi bi-eye"></i></button>
- </td>
- </tr>
- `).join('');
- emptyState(null, 'interactionsEmpty', interactions.length);
- hideLoading('interactionsLoading','interactionsContent');
+function renderInteractionsDT() {
+  _ensureDTFilters();
+  // Reverse so newest first
+  const rev = [...interactions].reverse();
+  const cols = [
+    { data:'id', render: function(d) { return `<strong>${d}</strong>`; }},
+    { data:null, render: function(d,t,r) { return escHtml(r.lead_nombre || r.cliente?.nombre || '-'); }},
+    { data:'direccion', render: function(d) {
+      return `<span class="badge ${d==='recibido'?'bg-info':'bg-success'}">${escHtml(d||'-')}</span>`;
+    }},
+    { data:'resumen', render: function(d) {
+      return `<span title="${escHtml(d||'')}" style="max-width:300px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(d||'-')}</span>`;
+    }},
+    { data:'estado', render: function(d) { return `<span class="badge bg-secondary">${escHtml(d||'-')}</span>`; }},
+    { data:'fecha', render: function(d) { return `<small>${formatDateTime(d)}</small>`; }},
+    { data:null, render: function(d,t,r) {
+      return `<button class="action-btn primary" onclick='showInteractionDetail(${JSON.stringify(r).replace(/'/g,"&#39;")})' title="Ver"><i class="bi bi-eye"></i></button>`;
+    }}
+  ];
+  dtInteractions = initDT('tableInteractions', rev, cols, {
+    drawCallback: function() {
+      hideLoading('interactionsLoading','interactionsContent');
+      emptyState(null, 'interactionsEmpty', this.api().rows({filter:'applied'}).count());
+    }
+  });
 }
 
 function showInteractionDetail(int) {
@@ -1580,7 +1843,14 @@ async function showModal(type, id) {
  if (id) item = clients.find(c => c.id === id);
  fields = [
  {label:'Nombre', key:'nombre', type:'text', required:true},
+ {label:'Tipo de Persona', key:'tipo_persona', type:'select', options:['natural','juridica']},
+ {label:'Tipo Documento', key:'tipo_documento', type:'select', options:['CC','NIT','CE','Pasaporte']},
+ {label:'N° Documento', key:'documento', type:'text'},
+ {label:'Nombre Comercial', key:'nombre_comercial', type:'text', help:'Solo si es persona jurídica'},
  {label:'Teléfono', key:'telefono', type:'text', placeholder:'+573001234567'},
+ {label:'Email', key:'email', type:'text', placeholder:'correo@ejemplo.com'},
+ {label:'Dirección', key:'direccion', type:'text'},
+ {label:'Ciudad', key:'ciudad', type:'text'},
  {label:'Fuente', key:'fuente', type:'select', options:['whatsapp','prospeccion','referido','web','otro']},
  {label:'Estado', key:'estado', type:'select', options:['lead','contacto','cliente','inactivo']},
  {label:'Segmento', key:'segmento', type:'segment'},
@@ -1590,12 +1860,14 @@ async function showModal(type, id) {
  } else if (type === 'workorder') {
  title = id ? 'Editar Orden de Trabajo' : 'Nueva Orden de Trabajo';
  if (id) item = workOrders.find(o => o.id === id);
- const clientOpts = clients.map(c => `<option value="${escHtml(c.nombre)}|${escHtml(c.telefono||'')}">${escHtml(c.nombre)} (${escHtml(c.telefono||'sin tel')})</option>`).join('');
- const clientSelect = id ? '' : `<div class="mb-3"><label class="form-label">Cliente existente (opcional)</label>
- <select class="form-select" id="f_existingClient" onchange="fillClientData()">
- <option value="">— Seleccionar existente —</option>
- ${clientOpts}
- </select></div>`;
+ const clientSearch = `<div class="mb-3"><label class="form-label">Cliente (buscar)</label>
+ <div class="client-search-wrapper">
+  <input type="text" class="form-control" id="f_clientSearch" placeholder="🔍 Buscar por nombre, documento o teléfono..." autocomplete="off" oninput="searchWOClient()">
+  <div class="client-search-dropdown" id="f_clientDropdown" style="display:none;"></div>
+ </div>
+ <input type="hidden" id="f_clientId" value="${item?.client_id||''}">
+ <small style="color:rgba(255,255,255,0.4);">Si no encuentras el cliente, déjalo en blanco y llénalo manualmente.</small>
+</div>`;
  
  // Tipo selector
  const tiposOT = TIPOS_OT || {};
@@ -1604,7 +1876,7 @@ async function showModal(type, id) {
  `<option value="${k}" ${k===currentTipo?'selected':''}>${v.icono||''} ${v.label}</option>`
  ).join('');
  
- let formHTML = clientSelect;
+ let formHTML = clientSearch;
  formHTML += `<div class="mb-3"><label class="form-label">Tipo de Orden <span class="text-danger">*</span></label>
  <select class="form-select" id="f_tipo" onchange="onTipoChange()">${tipoOptions}</select></div>`;
  
@@ -1751,11 +2023,46 @@ function formField(f, val) {
 }
 
 function fillClientData() {
- const sel = document.getElementById('f_existingClient');
- if (!sel.value) return;
- const parts = sel.value.split('|');
- document.getElementById('f_cliente_nombre').value = parts[0];
- document.getElementById('f_cliente_telefono').value = parts[1] || '';
+ // This is now handled by searchWOClient — kept for backward compat
+}
+
+var woClientSearchTimer = null;
+function searchWOClient() {
+  clearTimeout(woClientSearchTimer);
+  var q = document.getElementById('f_clientSearch').value.trim();
+  var dropdown = document.getElementById('f_clientDropdown');
+  if (!q || q.length < 2) { dropdown.style.display = 'none'; return; }
+  woClientSearchTimer = setTimeout(async function() {
+    try {
+      var resp = await fetch('/api/clients?search=' + encodeURIComponent(q));
+      var results = await resp.json();
+      if (!results || !results.length) {
+        dropdown.innerHTML = '<div style="padding:8px 12px;color:rgba(255,255,255,0.4);font-size:0.85rem;">Sin resultados — llena los datos manualmente</div>';
+        dropdown.style.display = '';
+        return;
+      }
+      var html = '';
+      for (var i = 0; i < Math.min(results.length, 8); i++) {
+        var c = results[i];
+        var doc = c.documento ? (c.tipo_documento||'CC') + ': ' + c.documento : '';
+        var safeName = (c.nombre||'').replace(/'/g, "\\'");
+        html += '<div class="client-search-item" onclick="selectWOClient(\'' + c.id + '\', \'' + safeName + '\', \'' + (c.telefono||'').replace(/'/g,"\\'") + '\')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);">';
+        html += '<div style="font-weight:600;">' + escHtml(c.nombre||c.id) + '</div>';
+        html += '<div style="font-size:0.8rem;color:rgba(255,255,255,0.5);">' + escHtml(c.telefono||'') + (doc ? ' · ' + escHtml(doc) : '') + '</div>';
+        html += '</div>';
+      }
+      dropdown.innerHTML = html;
+      dropdown.style.display = '';
+    } catch(e) {}
+  }, 200);
+}
+
+function selectWOClient(id, name, phone) {
+  document.getElementById('f_clientId').value = id;
+  document.getElementById('f_clientSearch').value = name;
+  document.getElementById('f_clientDropdown').style.display = 'none';
+  document.getElementById('f_cliente_nombre').value = name;
+  document.getElementById('f_cliente_telefono').value = phone;
 }
 
 function onTipoChange() {
@@ -1772,7 +2079,14 @@ async function saveModal(type, id) {
  if (type === 'client') {
  data = {
  nombre: document.getElementById('f_nombre')?.value,
+ tipo_persona: document.getElementById('f_tipo_persona')?.value,
+ tipo_documento: document.getElementById('f_tipo_documento')?.value,
+ documento: document.getElementById('f_documento')?.value,
+ nombre_comercial: document.getElementById('f_nombre_comercial')?.value,
  telefono: document.getElementById('f_telefono')?.value,
+ email: document.getElementById('f_email')?.value,
+ direccion: document.getElementById('f_direccion')?.value,
+ ciudad: document.getElementById('f_ciudad')?.value,
  fuente: document.getElementById('f_fuente')?.value,
  estado: document.getElementById('f_estado')?.value,
  segmento: document.getElementById('f_segmento')?.value,
@@ -1816,6 +2130,7 @@ async function saveModal(type, id) {
  data = {
  tipo: tipo,
  campos_extra: camposExtra,
+ client_id: document.getElementById('f_clientId')?.value || null,
  cliente: {
  nombre: clienteNombre,
  telefono: document.getElementById('f_cliente_telefono')?.value || ''
@@ -1903,13 +2218,13 @@ async function deleteItem(endpoint, id, name) {
  if (endpoint === 'leads') {
  const idx = leads.findIndex(x => x.id === id);
  if (idx > -1) leads.splice(idx, 1);
- renderLeads();
+ renderLeadsDT();
  } else if (endpoint === 'clients') {
  const idx = clients.findIndex(x => x.id === id);
- if (idx > -1) { clients.splice(idx, 1); renderClients(); }
+ if (idx > -1) { clients.splice(idx, 1); renderClientsDT(); }
  } else if (endpoint === 'work_orders') {
  const idx = workOrders.findIndex(x => x.id === id);
- if (idx > -1) { workOrders.splice(idx, 1); renderWorkOrders(); }
+ if (idx > -1) { workOrders.splice(idx, 1); renderWOsDT(); }
  }
  
  flashSave();
@@ -3103,7 +3418,7 @@ const PLACEHOLDERS = {
 };
 
 function switchConfigTab(tab) {
-  const validTabs = ['general','bot','templates','prices','segments','usuarios'];
+  const validTabs = ['general','bot','templates','prices','segments','company','usuarios'];
   if (!validTabs.includes(tab)) tab = 'general';
 
   document.querySelectorAll('#configSubtabs .client-profile-tab').forEach(b => b.classList.remove('active'));
@@ -3125,21 +3440,14 @@ function switchConfigTab(tab) {
   else if (tab === 'templates') loadTemplates();
   else if (tab === 'prices') loadPricesTab();
   else if (tab === 'segments') loadSegmentsTab();
+  else if (tab === 'company') loadCompanyConfig();
   else if (tab === 'usuarios') { /* placeholder */ }
 }
 
 window.switchConfigTab = switchConfigTab;
 
 function initConfigSubtabs() {
-  const container = document.getElementById('configSubtabs');
-  if (!container) return;
-  container.addEventListener('click', function(event) {
-    const button = event.target.closest('.client-profile-tab');
-    if (!button || !container.contains(button)) return;
-    event.preventDefault();
-    const tab = button.dataset.configTab;
-    if (tab) switchConfigTab(tab);
-  });
+  // Config subtabs use inline onclick — no extra handler needed
 }
 
 // ══════════════════════════════════════════════════
@@ -3151,18 +3459,22 @@ const BOT_CONFIG_KEYS = [
   'reset_timeout_ms','max_auto_mensajes','silenciar_lead_minutos','silenciar_pitch_dias',
   'auto_respuesta_activa','derivar_sin_respuesta','consulta_ot_activa',
   'mensaje_presentacion','mensaje_bienvenida','mensaje_fuera_horario','mensaje_derivar','mensaje_despedida',
-  'crm_api_url'
+  'crm_api_url',
+  'iva_default'
 ];
 
 const BOT_TOGGLE_KEYS = ['auto_respuesta_activa','derivar_sin_respuesta','consulta_ot_activa'];
 
 async function loadBotConfig() {
-  document.getElementById('botCfgLoading').style.display = 'block';
-  document.getElementById('botCfgForm').style.display = 'none';
+  const loadingEl = document.getElementById('botCfgLoading');
+  const formEl = document.getElementById('botCfgForm');
+  if (!loadingEl || !formEl) return;
+  loadingEl.style.display = 'block';
+  formEl.style.display = 'none';
   try {
     const config = await fetchJSON('/api/bot/config?verbose=1');
     if (config.error) {
-      document.getElementById('botCfgLoading').innerHTML = '<div class="alert alert-warning">⚠️ ' + config.error + '. Por favor, inicia sesión.</div>';
+      loadingEl.innerHTML = '<div class="alert alert-warning">⚠️ ' + config.error + '. Por favor, inicia sesión.</div>';
       return;
     }
     // Fill form fields
@@ -3181,10 +3493,11 @@ async function loadBotConfig() {
     document.querySelectorAll('.cfg-msg').forEach(ta => updateMsgPreview(ta));
     // Check bot status
     checkBotStatus();
-    document.getElementById('botCfgLoading').style.display = 'none';
-    document.getElementById('botCfgForm').style.display = 'block';
+    loadBotLog();
+    loadingEl.style.display = 'none';
+    formEl.style.display = 'block';
   } catch (e) {
-    document.getElementById('botCfgLoading').innerHTML =
+    loadingEl.innerHTML =
       '<div class="alert alert-warning">⚠️ No se pudo cargar la configuración: ' + e.message + '</div>';
   }
 }
@@ -3209,10 +3522,6 @@ function updateWaPreview() {
     html += `<div style="margin-bottom:8px;"><small style="color:rgba(255,255,255,0.3);">${label}</small><div style="background:rgba(0,212,170,0.12);padding:8px 12px;border-radius:0 10px 10px 10px;white-space:pre-wrap;word-break:break-word;">${escapeHtml(ta.value.substring(0,200))}</div></div>`;
   });
   wa.innerHTML = html || '<small class="text-muted">Escribe en los mensajes para ver el preview aquí...</small>';
-}
-
-function escapeHtml(text) {
-  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 }
 
 async function guardarConfigBot() {
@@ -3279,65 +3588,202 @@ async function checkBotStatus() {
   const badge = document.getElementById('cfgBotStatus');
   const headerBadge = document.getElementById('botStatusIndicator');
   const restartBtn = document.getElementById('cfgRestartBotBtn');
+  const startBtn = document.getElementById('cfgStartBotBtn');
+  const stopBtn = document.getElementById('cfgStopBotBtn');
+  const qrBtn = document.getElementById('cfgQrBtn');
+  const numberSpan = document.getElementById('cfgBotNumber');
   try {
     const resp = await fetch('/api/bot/status');
     const data = await resp.json();
     if (data.error || resp.status === 401) {
-      if (badge) { badge.className = 'badge bg-secondary'; badge.textContent = '🔒 Inicia sesión'; }
-      if (headerBadge) { headerBadge.className = 'badge bg-secondary'; headerBadge.innerHTML = '🔒 Inicia sesión'; }
+      setBotStatus('secondary', '🔒 Inicia sesión', '🔒 Inicia sesión');
+      hideAll(restartBtn, startBtn, stopBtn, qrBtn);
       return;
     }
+    
+    // Show/hide buttons based on state
     if (data.ok && data.connected) {
-      if (badge) { badge.className = 'badge bg-success'; badge.textContent = '🟢 Conectado'; }
-      if (headerBadge) { headerBadge.className = 'badge bg-success'; headerBadge.innerHTML = '🟢 Bot conectado'; }
-      if (restartBtn) restartBtn.style.display = 'none';
+      setBotStatus('success', '🟢 Conectado', '🟢 Bot conectado');
+      hideAll(startBtn, qrBtn);
+      showAll(restartBtn, stopBtn);
+      if (numberSpan) numberSpan.textContent = data.botNumber || '—';
     } else if (data.ok && data.status === 'on') {
-      if (badge) { badge.className = 'badge bg-warning text-dark'; badge.textContent = '🟡 Sin WhatsApp'; }
-      if (headerBadge) { headerBadge.className = 'badge bg-warning text-dark'; headerBadge.innerHTML = '🟡 Bot sin WhatsApp'; }
-      if (restartBtn) restartBtn.style.display = 'inline-block';
+      setBotStatus('warning', '🟡 Sin WhatsApp', '🟡 Bot sin WhatsApp');
+      hideAll(startBtn);
+      showAll(restartBtn, stopBtn, qrBtn);
+      if (numberSpan) numberSpan.textContent = '—';
     } else if (data.status === 'off') {
-      if (badge) { badge.className = 'badge bg-warning text-dark'; badge.textContent = '🟡 Apagado'; }
-      if (headerBadge) { headerBadge.className = 'badge bg-warning text-dark'; headerBadge.innerHTML = '🟡 Bot apagado'; }
-      if (restartBtn) restartBtn.style.display = 'inline-block';
+      setBotStatus('warning', '🟡 Apagado', '🟡 Bot apagado');
+      hideAll(restartBtn, stopBtn, qrBtn);
+      showAll(startBtn);
+      if (numberSpan) numberSpan.textContent = '—';
     } else {
-      if (badge) { badge.className = 'badge bg-danger'; badge.textContent = '🔴 Offline'; }
-      if (headerBadge) { headerBadge.className = 'badge bg-danger'; headerBadge.innerHTML = '🔴 Bot offline'; }
-      if (restartBtn) restartBtn.style.display = 'inline-block';
+      setBotStatus('danger', '🔴 Offline', '🔴 Bot offline');
+      hideAll(restartBtn, stopBtn, qrBtn);
+      showAll(startBtn);
+      if (numberSpan) numberSpan.textContent = '—';
     }
   } catch (e) {
-    if (badge) { badge.className = 'badge bg-danger'; badge.textContent = '🔴 Error'; }
-    if (headerBadge) { headerBadge.className = 'badge bg-danger'; headerBadge.innerHTML = '🔴 Error'; }
-    if (restartBtn) restartBtn.style.display = 'inline-block';
+    setBotStatus('danger', '🔴 Error', '🔴 Error');
+    hideAll(restartBtn, stopBtn, qrBtn);
+    showAll(startBtn);
+    if (numberSpan) numberSpan.textContent = '—';
   }
 }
+
+function setBotStatus(cls, text, headerText) {
+  const badge = document.getElementById('cfgBotStatus');
+  const headerBadge = document.getElementById('botStatusIndicator');
+  if (badge) { badge.className = 'badge bg-' + cls; badge.textContent = text; }
+  if (headerBadge) { headerBadge.className = 'badge bg-' + cls; headerBadge.innerHTML = headerText; }
+}
+
+function hideAll(...els) { els.forEach(el => { if(el) el.style.display = 'none'; }); }
+function showAll(...els) { els.forEach(el => { if(el) el.style.display = 'inline-block'; }); }
 
 async function restartBot() {
   const btn = document.getElementById('cfgRestartBotBtn');
   const resultDiv = document.getElementById('cfgSaveResult');
+  return _botAction(btn, resultDiv, '/api/bot/restart', 'Reiniciar Bot', 'Bot reiniciado ✅');
+}
+
+async function startBot() {
+  const btn = document.getElementById('cfgStartBotBtn');
+  const resultDiv = document.getElementById('cfgSaveResult');
+  return _botAction(btn, resultDiv, '/api/bot/start', 'Iniciar Bot', 'Bot iniciado ✅');
+}
+
+async function stopBot() {
+  const btn = document.getElementById('cfgStopBotBtn');
+  const resultDiv = document.getElementById('cfgSaveResult');
+  return _botAction(btn, resultDiv, '/api/bot/stop', 'Detener Bot', 'Bot detenido');
+}
+
+async function _botAction(btn, resultDiv, url, btnLabel, successMsg) {
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Reiniciando...';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
   }
   try {
-    const resp = await fetch('/api/bot/restart', { method: 'POST' });
+    const resp = await fetch(url, { method: 'POST' });
     const data = await resp.json();
     if (data.ok) {
       if (resultDiv) resultDiv.innerHTML = '<div class="alert alert-success py-2">✅ ' + data.message + '</div>';
-      showToast('Bot reiniciado ✅', 'success');
+      showToast(successMsg, 'success');
       setTimeout(checkBotStatus, 3000);
       setTimeout(checkBotStatus, 8000);
     } else {
       if (resultDiv) resultDiv.innerHTML = '<div class="alert alert-danger py-2">❌ ' + (data.error||'Error') + '</div>';
-      showToast('Error al reiniciar', 'danger');
+      showToast('Error: ' + (data.error||'Error'), 'danger');
     }
   } catch (e) {
     showToast('Error: ' + e.message, 'danger');
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Reiniciar Bot';
+      btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> ' + btnLabel;
     }
   }
+}
+
+async function showBotQR() {
+  const display = document.getElementById('cfgQrDisplay');
+  const qrBtn = document.getElementById('cfgQrBtn');
+  const resultDiv = document.getElementById('cfgSaveResult');
+  
+  if (qrBtn) { qrBtn.disabled = true; qrBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Iniciando...'; }
+  if (display) { display.style.display = 'block'; display.innerHTML = '<div class="text-center py-4"><span class="spinner-border"></span><p class="mt-2">Reiniciando bot y generando QR...</p></div>'; }
+  
+  try {
+    // Load QR image (endpoint stops bot, restarts it, waits for QR)
+    const resp = await fetch('/api/bot/qr');
+    
+    if (resp.status === 202) {
+      if (display) display.innerHTML = '<div class="alert alert-info py-3">⏳ QR generándose... <a href="#" onclick="showBotQR();return false">Reintentar</a></div>';
+      if (qrBtn) { qrBtn.disabled = false; qrBtn.innerHTML = '<i class="bi bi-qr-code"></i> Escanear QR'; }
+      return;
+    }
+    
+    if (resp.headers.get('content-type')?.includes('image/png')) {
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      if (display) {
+        display.innerHTML = `
+          <div class="card d-inline-block p-3" style="background:white;">
+            <img src="${url}" alt="QR Code" style="width:280px;height:280px;">
+          </div>
+          <div class="mt-2">
+            <small class="text-muted">Escanea con WhatsApp → Dispositivos vinculados</small>
+            <br><small class="text-muted" id="qrStatusMsg">⏳ Esperando escaneo...</small>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary mt-2" onclick="document.getElementById('cfgQrDisplay').style.display='none';stopQRPoll()">
+            <i class="bi bi-x"></i> Cerrar QR
+          </button>
+        `;
+      }
+      if (resultDiv) resultDiv.innerHTML = '<div class="alert alert-info py-2">📱 Escanea el QR con tu WhatsApp</div>';
+      // Start polling bot status (bot is already running, will auto-connect when scanned)
+      startQRPoll_connect();
+    } else {
+      const data = await resp.json();
+      if (display) display.innerHTML = '<div class="alert alert-warning">⚠️ ' + (data.error||'Error generando QR') + '</div>';
+    }
+  } catch(e) {
+    if (display) display.innerHTML = '<div class="alert alert-danger">Error: ' + e.message + '</div>';
+  } finally {
+    if (qrBtn) { qrBtn.disabled = false; qrBtn.innerHTML = '<i class="bi bi-qr-code"></i> Escanear QR'; }
+  }
+}
+
+// Poll bot status until connected (when user scans QR)
+let _qrPollId = null;
+function startQRPoll_connect() {
+  if (_qrPollId) clearInterval(_qrPollId);
+  _qrPollId = setInterval(async () => {
+    try {
+      const resp = await fetch('/api/bot/status');
+      const data = await resp.json();
+      if (data.connected && data.botNumber) {
+        clearInterval(_qrPollId);
+        _qrPollId = null;
+        const msgEl = document.getElementById('qrStatusMsg');
+        if (msgEl) msgEl.innerHTML = '✅ ¡Conectado! ' + data.botNumber;
+        const resultDiv = document.getElementById('cfgSaveResult');
+        if (resultDiv) resultDiv.innerHTML = '<div class="alert alert-success py-2">✅ Bot conectado: ' + data.botNumber + '</div>';
+        setTimeout(checkBotStatus, 2000);
+        setTimeout(() => {
+          const display = document.getElementById('cfgQrDisplay');
+          if (display) display.style.display = 'none';
+        }, 4000);
+      }
+    } catch(e) { /* ignore */ }
+  }, 3000);
+}
+
+// Called by Close QR button
+window.stopQRPoll = function() {
+  if (_qrPollId) { clearInterval(_qrPollId); _qrPollId = null; }
+};
+
+async function loadBotLog() {
+  const pre = document.getElementById('cfgBotLog');
+  if (!pre) return;
+  pre.textContent = '⏳ Cargando logs...';
+  try {
+    const resp = await fetch('/api/bot/log');
+    const data = await resp.json();
+    if (data.ok) {
+      const lines = data.log.split('\n');
+      // Keep last 100 lines for UI
+      const last = lines.slice(-100).join('\n');
+      pre.textContent = last || '(sin logs)';
+    } else {
+      pre.textContent = 'Error: ' + (data.error || 'No se pudo cargar');
+    }
+  } catch (e) {
+    pre.textContent = 'Error: ' + e.message;
+  }
+  pre.scrollTop = pre.scrollHeight;
 }
 
 async function loadTemplates() {
@@ -3594,24 +4040,190 @@ async function sendNotification(woId) {
 // ═══════════════════════════════════════════════════════════════
 
 async function loadSegmentsTab() {
-  const container = document.getElementById('config-tab-segments');
-  if (!container) return;
-  container.innerHTML = '<div class="text-center py-5"><span class="spinner-border spinner-border-sm"></span> Cargando segmentos...</div>';
+  // Esta función es reemplazada por loadSegmentsList + loadPitchesList
+  // que se renderizan dentro del HTML ya definido en config.html
+  await Promise.all([loadSegmentsList(), loadPitchesList()]);
+}
+
+async function loadSegmentsList() {
   try {
-    const segs = await loadSegments();
-    if (!segs.length) {
-      container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-diagram-3" style="font-size:3em;"></i><p class="mt-3">No hay segmentos configurados.</p><button class="btn btn-htk btn-sm" onclick="showModal(\'lead\',null)"><i class="bi bi-plus-lg"></i> Crear un lead con segmento</button></div>';
-      return;
-    }
-    let html = '<div class="table-container mt-3"><table class="table table-hover mb-0"><thead><tr><th>Key</th><th>Label</th><th>Prioridad</th><th>Color</th><th>Leads</th></tr></thead><tbody>';
-    segs.forEach(s => {
-      html += `<tr><td><code>${escHtml(s.key||'')}</code></td><td><strong>${escHtml(s.label||'')}</strong></td><td><span class="badge bg-${s.prioridad==='alta'?'danger':s.prioridad==='media'?'warning text-dark':'secondary'}">${s.prioridad||'-'}</span></td><td><span class="badge" style="background:${s.color||'#888'};color:#fff;">${escHtml(s.color||'')}</span></td><td>${s.leads_count||0}</td></tr>`;
-    });
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
+    const data = await fetchJSON('/api/segments');
+    window._segmentList = data || [];
+    renderSegmentsTable();
   } catch(e) {
-    container.innerHTML = '<div class="alert alert-warning">Error al cargar segmentos: ' + e.message + '</div>';
+    const tb = document.getElementById('segmentTableBody');
+    if (tb) tb.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error: ${e.message}</td></tr>`;
   }
+}
+
+function renderSegmentsTable() {
+  const tbody = document.getElementById('segmentTableBody');
+  if (!tbody) return;
+  const segs = window._segmentList || [];
+  if (!segs.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-inbox"></i> No hay segmentos creados</td></tr>';
+    return;
+  }
+  tbody.innerHTML = segs.map(s => `
+    <tr>
+      <td><span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:${s.color||'#6f42c1'};border:2px solid rgba(255,255,255,0.2)"></span></td>
+      <td>${escHtml(s.label||s.key)}</td>
+      <td><code>${escHtml(s.key)}</code></td>
+      <td>${s.orden||'-'}</td>
+      <td>${s.activo ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-htk me-1" onclick="showSegmentModal('${s.key}')" title="Editar"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteSegment('${s.key}')" title="Eliminar"><i class="bi bi-trash"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function loadPitchesList() {
+  try {
+    const data = await fetchJSON('/api/pitches');
+    window._pitchList = (data && data.plantillas_cuerpo) ? data.plantillas_cuerpo : [];
+    renderPitchesTable();
+  } catch(e) {
+    const tb = document.getElementById('pitchTableBody');
+    if (tb) tb.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function renderPitchesTable() {
+  const tbody = document.getElementById('pitchTableBody');
+  if (!tbody) return;
+  const pitchList = window._pitchList || [];
+  if (!pitchList.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox"></i> No hay plantillas. Crea la primera.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = pitchList.map(p => `
+    <tr>
+      <td><strong>${escHtml(p.titulo||'Sin título')}</strong></td>
+      <td>${(p.segmentos||[]).map(s => `<span class="badge bg-secondary me-1">${escHtml(s)}</span>`).join('') || '<span class="text-muted">—</span>'}</td>
+      <td>${p.whatsapp ? '<span class="text-success"><i class="bi bi-check-lg"></i> Sí</span>' : '<span class="text-muted">—</span>'}</td>
+      <td>${p.email ? '<span class="text-success"><i class="bi bi-check-lg"></i> Sí</span>' : '<span class="text-muted">—</span>'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-htk" onclick="showPitchModal('${escHtml(p.id)}')" title="Editar"><i class="bi bi-pencil"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function showSegmentModal(key) {
+  const segs = window._segmentList || [];
+  const modal = new bootstrap.Modal(document.getElementById('segmentModal'));
+  if (key) {
+    const seg = segs.find(s => s.key === key);
+    if (!seg) return;
+    document.getElementById('segmentModalTitle').textContent = 'Editar Segmento';
+    document.getElementById('seg_key').value = seg.key;
+    document.getElementById('seg_key').disabled = true;
+    document.getElementById('seg_label').value = seg.label || '';
+    document.getElementById('seg_color').value = seg.color || '#6f42c1';
+  } else {
+    document.getElementById('segmentModalTitle').textContent = 'Nuevo Segmento';
+    document.getElementById('seg_key').value = '';
+    document.getElementById('seg_key').disabled = false;
+    document.getElementById('seg_label').value = '';
+    document.getElementById('seg_color').value = '#6f42c1';
+  }
+  modal.show();
+}
+
+async function saveSegment() {
+  const key = document.getElementById('seg_key').value.trim().toLowerCase().replace(/\s+/g, '_');
+  const label = document.getElementById('seg_label').value.trim();
+  const color = document.getElementById('seg_color').value;
+  if (!key) { showToast('La clave es requerida', 'danger'); return; }
+  const segs = window._segmentList || [];
+  const existing = segs.find(s => s.key === key);
+  try {
+    if (existing) {
+      await fetch('/api/segments/' + key, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({label, color}) });
+    } else {
+      await fetch('/api/segments', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({key, label, color}) });
+    }
+    bootstrap.Modal.getInstance(document.getElementById('segmentModal')).hide();
+    showToast(existing ? 'Segmento actualizado' : 'Segmento creado');
+    await loadSegmentsList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+async function deleteSegment(key) {
+  if (!confirm('¿Eliminar segmento "' + key + '"?')) return;
+  try {
+    await fetch('/api/segments/' + key, { method:'DELETE' });
+    showToast('Segmento eliminado');
+    await loadSegmentsList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+async function showPitchModal(id) {
+  const container = document.getElementById('pitch_segmentos_container');
+  if (!container) return;
+  const segs = window._segmentList || [];
+  const pitchList = window._pitchList || [];
+  const pitch = id ? pitchList.find(p => p.id === id) : null;
+  
+  document.getElementById('pitchModalTitle').textContent = id ? 'Editar Plantilla' : 'Nueva Plantilla';
+  document.getElementById('pitchDeleteBtn').style.display = id ? 'block' : 'none';
+  
+  const selectedSegs = (pitch && pitch.segmentos) || [];
+  container.innerHTML = (segs||[]).map(s => {
+    const checked = selectedSegs.includes(s.key) ? 'checked' : '';
+    return `<label class="btn btn-sm ${checked?'btn-htk':'btn-outline-secondary'}" style="cursor:pointer" onclick="this.classList.toggle('btn-htk');this.classList.toggle('btn-outline-secondary');">
+      <input type="checkbox" value="${escHtml(s.key)}" ${checked} style="display:none"> ${escHtml(s.label||s.key)}
+    </label>`;
+  }).join('') || '<p class="text-muted">Crea segmentos primero</p>';
+  
+  document.getElementById('pitch_titulo').value = (pitch && pitch.titulo) || '';
+  document.getElementById('pitch_whatsapp').value = (pitch && pitch.whatsapp) || '';
+  document.getElementById('pitch_email').value = (pitch && pitch.email) || '';
+  document.getElementById('pitch_asunto_email').value = (pitch && pitch.asunto_email) || '';
+  container.dataset.pitchId = id || '';
+  
+  new bootstrap.Modal(document.getElementById('pitchModal')).show();
+}
+
+async function savePitch() {
+  const container = document.getElementById('pitch_segmentos_container');
+  const checkboxes = container.querySelectorAll('input[type=checkbox]:checked');
+  const segmentos = Array.from(checkboxes).map(cb => cb.value);
+  const data = {
+    titulo: document.getElementById('pitch_titulo').value.trim(),
+    segmentos,
+    whatsapp: document.getElementById('pitch_whatsapp').value,
+    email: document.getElementById('pitch_email').value,
+    asunto_email: document.getElementById('pitch_asunto_email').value
+  };
+  const existingId = container.dataset.pitchId;
+  try {
+    if (existingId) {
+      data.id = existingId;
+      await fetch('/api/pitches', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      showToast('Plantilla actualizada');
+    } else {
+      data.id = 'pitch_' + Date.now();
+      await fetch('/api/pitches', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      showToast('Plantilla creada');
+    }
+    bootstrap.Modal.getInstance(document.getElementById('pitchModal')).hide();
+    await loadPitchesList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+async function deletePitch() {
+  const container = document.getElementById('pitch_segmentos_container');
+  const id = container.dataset.pitchId;
+  if (!id || !confirm('¿Eliminar esta plantilla?')) return;
+  try {
+    await fetch('/api/pitches', { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id}) });
+    bootstrap.Modal.getInstance(document.getElementById('pitchModal')).hide();
+    showToast('Plantilla eliminada');
+    await loadPitchesList();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
 }
 
 async function loadGeneralConfig() {
@@ -3798,7 +4410,7 @@ function handleLogout() {
  window.location.href = '/logout';
 }
 
-// ── INVENTARIO ──────────────────────────────────────────────────────
+// ─── INVENTARIO ───────────────────────────────────────
 let inventarioData = [];
 
 async function loadInventario() {
@@ -3830,40 +4442,58 @@ async function loadInventario() {
       badge.style.display = 'none';
     }
     
-    // Renderizar tabla
-    const tbody = document.getElementById('invTableBody');
-    if (inventarioData.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4" style="color:rgba(255,255,255,0.3);"><i class="bi bi-inbox"></i><p class="mt-1">No hay items en inventario</p></td></tr>';
-      return;
-    }
-    
-    tbody.innerHTML = inventarioData.map(item => {
-      const stockClass = item.cantidad < item.stock_minimo ? 'text-danger fw-bold' : 
-                        (item.cantidad > item.stock_minimo * 2 ? 'text-success' : '');
-      const stockIcon = item.cantidad < item.stock_minimo ? ' \u{1f534}' : 
-                       (item.cantidad > item.stock_minimo * 2 ? ' \u{1f7e2}' : '');
-      return `
-      <tr>
-        <td><code>${escHtml(item.codigo)}</code></td>
-        <td>${escHtml(item.nombre)}</td>
-        <td><span class="badge bg-secondary">${escHtml(item.categoria || '-')}</span></td>
-        <td class="${stockClass}">${item.cantidad} ${escHtml(item.unidad)}${stockIcon}</td>
-        <td>${item.stock_minimo} ${escHtml(item.unidad)}</td>
-        <td>${escHtml(item.proveedor || '-')}</td>
-        <td>${formatCurrency(item.costo_unitario)}</td>
-        <td>${escHtml(item.ubicacion || '-')}</td>
-        <td>
-          <button class="action-btn primary" title="Entrada stock" onclick="showAjusteStockModal(${item.id}, 'entrada')"><i class="bi bi-plus-circle"></i></button>
-          <button class="action-btn danger" title="Salida stock" onclick="showAjusteStockModal(${item.id}, 'salida')"><i class="bi bi-dash-circle"></i></button>
-          <button class="action-btn primary" title="Editar" onclick="showInventarioModal(${item.id})"><i class="bi bi-pencil"></i></button>
-          <button class="action-btn danger" title="Eliminar" onclick="deleteInventarioItem(${item.id})"><i class="bi bi-trash"></i></button>
-        </td>
-      </tr>`;
-    }).join('');
+    renderInvDT();
   } catch (e) {
     console.error('loadInventario:', e);
     document.getElementById('invTableBody').innerHTML = '<tr><td colspan="9" class="text-center text-danger py-3">Error al cargar inventario</td></tr>';
   }
+}
+
+function renderInvDT() {
+  _ensureDTFilters();
+  // Hide the manual empty-row element if DataTables will manage it
+  const cols = [
+    { data:'codigo', render: function(d) { return `<code>${escHtml(d)}</code>`; }},
+    { data:'nombre', render: function(d) { return escHtml(d); }},
+    { data:'categoria', render: function(d) { return `<span class="badge bg-secondary">${escHtml(d||'-')}</span>`; }},
+    { data:null, render: function(d,t,r) {
+      const cls = r.cantidad < r.stock_minimo ? 'text-danger fw-bold' : (r.cantidad > r.stock_minimo * 2 ? 'text-success' : '');
+      const icon = r.cantidad < r.stock_minimo ? ' \u{1f534}' : (r.cantidad > r.stock_minimo * 2 ? ' \u{1f7e2}' : '');
+      return `<span class="${cls}">${r.cantidad} ${escHtml(r.unidad)}${icon}</span>`;
+    }},
+    { data:null, render: function(d,t,r) { return `${r.stock_minimo} ${escHtml(r.unidad)}`; }},
+    { data:'proveedor', render: function(d) { return escHtml(d||'-'); }},
+    { data:'costo_unitario', render: function(d) { return formatCurrency(d); }},
+    { data:'ubicacion', render: function(d) { return escHtml(d||'-'); }},
+    { data:null, render: function(d,t,r) {
+      return `<div class="d-flex gap-1">
+ <button class="action-btn primary" title="Entrada" onclick="showAjusteStockModal(${r.id}, 'entrada')"><i class="bi bi-plus-circle"></i></button>
+ <button class="action-btn danger" title="Salida" onclick="showAjusteStockModal(${r.id}, 'salida')"><i class="bi bi-dash-circle"></i></button>
+ <button class="action-btn primary" title="Editar" onclick="showInventarioModal(${r.id})"><i class="bi bi-pencil"></i></button>
+ <button class="action-btn danger" title="Eliminar" onclick="deleteInventarioItem(${r.id})"><i class="bi bi-trash"></i></button>
+ </div>`;
+    }}
+  ];
+  dtInv = initDT('tableInv', inventarioData, cols, {
+    drawCallback: function() {
+      // Update bajo stock badge after draw
+      const visible = this.api().rows({filter:'applied'}).data().toArray();
+      const bs = visible.filter(i => i.cantidad < i.stock_minimo);
+      const badge = document.getElementById('invBajoStockBadge');
+      if (badge) {
+        if (bs.length > 0) {
+          badge.style.display = 'inline-block';
+          badge.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${bs.length} item(s) bajo stock`;
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+      const tbody = document.getElementById('invTableBody');
+      if (tbody && !tbody.children.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4" style="color:rgba(255,255,255,0.3);"><i class="bi bi-inbox"></i><p class="mt-1">No hay items en inventario</p></td></tr>';
+      }
+    }
+  });
 }
 
 function showInventarioModal(itemId) {
@@ -4038,3 +4668,536 @@ async function ajustarStock(event, itemId) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// FACTURACIÓN
+// ═══════════════════════════════════════════════════════════════
+
+let facturas = [];
+let dtFacturas = null;
+let currentFactViewId = null;
+
+
+async function loadFacturas() {
+  const statusEl = document.getElementById('factStatusMsg');
+  if (statusEl) statusEl.textContent = 'Cargando...';
+  try {
+    const resp = await fetch('/api/facturas');
+    const data = await resp.json();
+    if (Array.isArray(data)) {
+      facturas = data;
+      if (statusEl) statusEl.textContent = data.length + ' facturas cargadas';
+    } else if (data && data.error) {
+      if (statusEl) statusEl.textContent = 'Error API: ' + data.error;
+      console.error('Facturas API error:', data);
+    }
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Error red: ' + e.message;
+    console.error('loadFacturas:', e);
+  }
+  renderFacturasTable();
+}
+
+function filterFacturasDT() {
+  renderFacturasTable();
+}
+
+function renderFacturasTable() {
+  var tbody = document.getElementById('factBody');
+  var empty = document.getElementById('factEmpty');
+  var filter = document.getElementById('factEstadoFilter');
+  var estadoVal = filter ? filter.value : '';
+  
+  if (!tbody) return;
+  
+  var data = facturas || [];
+  if (estadoVal) {
+    data = data.filter(function(f) { return f.estado === estadoVal; });
+  }
+  
+  if (!data.length) {
+    tbody.innerHTML = '';
+    if (empty) empty.style.display = '';
+    return;
+  }
+  
+  if (empty) empty.style.display = 'none';
+  
+  var badges = {
+    'borrador': '<span class="badge bg-secondary">BORRADOR</span>',
+    'emitida': '<span class="badge bg-warning text-dark">EMITIDA</span>',
+    'pagada': '<span class="badge bg-success">PAGADA</span>',
+    'vencida': '<span class="badge bg-danger">VENCIDA</span>',
+    'anulada': '<span class="badge bg-dark">ANULADA</span>'
+  };
+  
+  var rows = '';
+  for (var i = 0; i < data.length; i++) {
+    var f = data[i];
+    var btns = '<button class="action-btn primary" onclick="showFacturaDetail(\'' + f.id + '\')" title="Ver"><i class="bi bi-eye"></i></button>';
+    if (f.estado === 'borrador') {
+      btns += '<button class="action-btn primary" onclick="showFacturaModal(\'' + f.id + '\')" title="Editar"><i class="bi bi-pencil"></i></button>';
+      btns += '<button class="action-btn danger" onclick="anularFactura(\'' + f.id + '\')" title="Anular"><i class="bi bi-x-circle"></i></button>';
+    }
+    if (f.estado === 'emitida' || f.estado === 'vencida') {
+      btns += '<button class="action-btn primary" style="color:#198754;" onclick="pagarFactura(\'' + f.id + '\')" title="Pagar"><i class="bi bi-check-circle"></i></button>';
+    }
+    rows += '<tr>';
+    rows += '<td><a href="#" onclick="showFacturaDetail(\'' + f.id + '\');return false;" style="color:var(--htk-primary);font-weight:600;">' + escHtml(f.numero) + '</a></td>';
+    rows += '<td>' + escHtml(f.cliente_nombre || '—') + '</td>';
+    rows += '<td><small>' + (f.fecha_emision || '').slice(0,10) + '</small></td>';
+    rows += '<td><small>' + (f.fecha_vencimiento || '').slice(0,10) + '</small></td>';
+    rows += '<td><strong>$' + ((f.total_general || 0)).toLocaleString('es-CO') + '</strong></td>';
+    rows += '<td>' + (badges[f.estado] || '<span class="badge bg-secondary">' + f.estado.toUpperCase() + '</span>') + '</td>';
+    rows += '<td><div class="d-flex gap-1">' + btns + '</div></td>';
+    rows += '</tr>';
+  }
+  tbody.innerHTML = rows;
+}
+
+async function showFacturaModal(id) {
+  document.getElementById('factEditId').value = id || '';
+  document.getElementById('facturaModalTitle').textContent = id ? 'Editar Factura' : 'Nueva Factura';
+
+  // Reset search
+  document.getElementById('factClientId').value = '';
+  document.getElementById('factClientSearch').value = '';
+  document.getElementById('factClientDropdown').style.display = 'none';
+
+  // Load WO options
+  try {
+    const wos = await fetchJSON('/api/work_orders');
+    const woSel = document.getElementById('factWoId');
+    woSel.innerHTML = '<option value="">Ninguna</option>';
+    if (Array.isArray(wos)) {
+      wos.forEach(w => {
+        woSel.innerHTML += `<option value="${w.id}">${w.id} — ${escHtml(w.cliente_nombre||'')}</option>`;
+      });
+    }
+  } catch(e) {}
+
+  const today = new Date().toISOString().slice(0,10);
+  const venc = new Date(Date.now() + 30*86400000).toISOString().slice(0,10);
+  document.getElementById('factFechaEmision').value = today;
+  document.getElementById('factFechaVenc').value = venc;
+
+  document.getElementById('factItemsContainer').innerHTML = '';
+  document.getElementById('factDescuento').value = 0;
+  document.getElementById('factNotas').value = '';
+  document.getElementById('factMetodoPago').value = '';
+
+  if (id) {
+    try {
+      const inv = await fetchJSON(`/api/facturas/${id}`);
+      if (inv) {
+        document.getElementById('factClientId').value = inv.client_id || '';
+        document.getElementById('factClientSearch').value = (inv.cliente && inv.cliente.nombre) ? inv.cliente.nombre : '';
+        document.getElementById('factWoId').value = inv.wo_id || '';
+        document.getElementById('factFechaEmision').value = (inv.fecha_emision||'').slice(0,10);
+        document.getElementById('factFechaVenc').value = (inv.fecha_vencimiento||'').slice(0,10);
+        document.getElementById('factDescuento').value = inv.descuento || 0;
+        document.getElementById('factNotas').value = inv.notas || '';
+        document.getElementById('factMetodoPago').value = inv.metodo_pago || '';
+
+        const container = document.getElementById('factItemsContainer');
+        container.innerHTML = '';
+        (inv.items || []).forEach(item => {
+          addFacturaItem(item.descripcion, item.cantidad, item.precio_unitario, item.iva_porcentaje);
+          // Set iva_incluido checkbox if applicable
+          if (item.iva_incluido) {
+            const rows = document.querySelectorAll('.fact-item-row');
+            const lastRow = rows[rows.length - 1];
+            if (lastRow) {
+              const cb = lastRow.querySelector('.fact-item-iva-incl');
+              if (cb) cb.checked = true;
+            }
+          }
+        });
+        updateFacturaPreview();
+      }
+    } catch(e) { console.error(e); }
+  } else {
+    addFacturaItem();
+  }
+
+  updateFacturaPreview();
+  const modal = new bootstrap.Modal(document.getElementById('facturaModal'));
+  modal.show();
+}
+
+function addFacturaItem(desc, cant, precio, iva) {
+  const container = document.getElementById('factItemsContainer');
+  const idx = container.children.length;
+  const div = document.createElement('div');
+  div.className = 'fact-item-row d-flex gap-2 align-items-end mb-2 p-2';
+  div.style.cssText = 'background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.05);';
+  div.innerHTML = `
+    <div style="flex:1;min-width:160px;">
+      <input type="text" class="form-control form-control-sm fact-item-desc" value="${escHtml(desc||'')}" placeholder="Descripción" oninput="updateFacturaPreview()">
+    </div>
+    <div style="width:70px;">
+      <input type="number" class="form-control form-control-sm fact-item-cant" value="${cant||1}" min="0.1" step="0.1" oninput="updateFacturaPreview()">
+    </div>
+    <div style="width:100px;">
+      <input type="number" class="form-control form-control-sm fact-item-precio" value="${precio||0}" min="0" step="1000" oninput="updateFacturaPreview()">
+    </div>
+    <div style="width:70px;">
+      <input type="number" class="form-control form-control-sm fact-item-iva" value="${iva||19}" min="0" max="100" step="0.5" oninput="updateFacturaPreview()">
+    </div>
+    <div style="width:60px;text-align:center;">
+      <div class="form-check">
+        <input type="checkbox" class="form-check-input fact-item-iva-incl" onchange="updateFacturaPreview()">
+        <label class="form-check-label" style="font-size:0.65rem;color:rgba(255,255,255,0.5);">Incl.</label>
+      </div>
+    </div>
+    <div style="width:100px;">
+      <span class="fact-item-total" style="font-weight:600;color:#fff;">$0</span>
+    </div>
+    <button class="btn btn-sm btn-outline-danger" onclick="this.closest('.fact-item-row').remove();updateFacturaPreview();" title="Quitar"><i class="bi bi-trash"></i></button>
+  `;
+  container.appendChild(div);
+  updateFacturaPreview();
+}
+
+function updateFacturaPreview() {
+  let sub = 0, iva_total = 0;
+  document.querySelectorAll('.fact-item-row').forEach(row => {
+    const cant = parseFloat(row.querySelector('.fact-item-cant')?.value) || 0;
+    const precio = parseFloat(row.querySelector('.fact-item-precio')?.value) || 0;
+    const iva = parseFloat(row.querySelector('.fact-item-iva')?.value) || 0;
+    const ivaIncl = row.querySelector('.fact-item-iva-incl')?.checked || false;
+    let total;
+    let ivaLinea;
+    if (ivaIncl) {
+      // IVA incluido en el precio
+      total = cant * precio;
+      ivaLinea = cant * precio * iva / (100 + iva);
+    } else {
+      // IVA discriminado (default)
+      total = cant * precio * (1 + iva / 100);
+      ivaLinea = cant * precio * iva / 100;
+    }
+    const totalEl = row.querySelector('.fact-item-total');
+    if (totalEl) totalEl.textContent = '$' + Math.round(total).toLocaleString('es-CO');
+    sub += cant * precio;
+    iva_total += ivaLinea;
+  });
+  const desc = parseFloat(document.getElementById('factDescuento')?.value) || 0;
+  const total = sub + iva_total - desc;
+  document.getElementById('factPreviewSub').textContent = '$' + Math.round(sub).toLocaleString('es-CO');
+  document.getElementById('factPreviewIva').textContent = '$' + Math.round(iva_total).toLocaleString('es-CO');
+  document.getElementById('factPreviewTotal').textContent = '$' + Math.round(total).toLocaleString('es-CO');
+}
+
+function collectFacturaItems() {
+  const items = [];
+  document.querySelectorAll('.fact-item-row').forEach(row => {
+    const desc = row.querySelector('.fact-item-desc')?.value?.trim();
+    if (!desc) return;
+    items.push({
+      descripcion: desc,
+      cantidad: parseFloat(row.querySelector('.fact-item-cant')?.value) || 1,
+      precio_unitario: parseFloat(row.querySelector('.fact-item-precio')?.value) || 0,
+      iva_porcentaje: parseFloat(row.querySelector('.fact-item-iva')?.value) || 19,
+      iva_incluido: row.querySelector('.fact-item-iva-incl')?.checked ? 1 : 0
+    });
+  });
+  return items;
+}
+
+async function saveFactura() {
+  const id = document.getElementById('factEditId').value;
+  const clientId = document.getElementById('factClientId').value;
+  if (!clientId) { alert('Selecciona un cliente'); return; }
+
+  const items = collectFacturaItems();
+  if (!items.length) { alert('Agrega al menos un item'); return; }
+
+  const body = {
+    client_id: clientId,
+    wo_id: document.getElementById('factWoId').value || null,
+    fecha_emision: document.getElementById('factFechaEmision').value,
+    fecha_vencimiento: document.getElementById('factFechaVenc').value,
+    descuento: parseFloat(document.getElementById('factDescuento').value) || 0,
+    notas: document.getElementById('factNotas').value,
+    metodo_pago: document.getElementById('factMetodoPago').value,
+    items: items
+  };
+
+  try {
+    const url = id ? `/api/facturas/${id}` : '/api/facturas';
+    const method = id ? 'PUT' : 'POST';
+    const resp = await fetch(API + url, {
+      method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      const err = text.startsWith('<!') ? {error:'Sesión expirada'} : JSON.parse(text);
+      throw new Error(err.error || 'Error al guardar');
+    }
+    const data = await resp.json();
+    bootstrap.Modal.getInstance(document.getElementById('facturaModal')).hide();
+    showToast(id ? 'Factura actualizada ✅' : `Factura ${data.numero} creada ✅`, 'success');
+    loadFacturas();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function showFacturaDetail(id) {
+  currentFactViewId = id;
+  const modal = new bootstrap.Modal(document.getElementById('facturaViewModal'));
+  modal.show();
+
+  try {
+    const resp = await fetch(API + `/api/facturas/${id}/pdf`);
+    const html = await resp.text();
+    const iframe = document.getElementById('facturaPreviewIframe');
+    iframe.srcdoc = html;
+
+    const inv = await fetchJSON(`/api/facturas/${id}`);
+    const estado = inv?.estado || '';
+    document.getElementById('btnEmitirFact').style.display = (estado === 'borrador') ? '' : 'none';
+    document.getElementById('btnPagarFact').style.display = (estado === 'emitida' || estado === 'vencida') ? '' : 'none';
+    
+    // Load linked payments
+    await loadFacturaPayments(id, inv);
+  } catch(e) { console.error(e); }
+}
+
+async function loadFacturaPayments(id, inv) {
+  const bar = document.getElementById('factPaymentBar');
+  if (!bar) return;
+  
+  try {
+    const payments = await fetchJSON(`/api/facturas/${id}/payments`);
+    const total = Number(inv?.total_general || 0);
+    var abonado = 0;
+    if (Array.isArray(payments)) {
+      payments.forEach(p => { abonado += Number(p.monto || 0); });
+    }
+    abonado = Math.round(abonado * 100) / 100;
+    const saldo = Math.round((total - abonado) * 100) / 100;
+    const pct = total > 0 ? Math.min(100, Math.round((abonado / total) * 100)) : 0;
+    
+    bar.style.display = '';
+    
+    // Progress bar
+    document.getElementById('factPaymentBarFill').style.width = pct + '%';
+    document.getElementById('factPaymentBarFill').style.background = (abonado >= total) ? '#10b981' : 'var(--htk-primary)';
+    document.getElementById('factPaymentText').textContent = '$' + abonado.toLocaleString('es-CO') + ' / $' + total.toLocaleString('es-CO');
+    
+    // Status badge
+    const badge = document.getElementById('factPaymentStatusBadge');
+    if (abonado >= total && total > 0) {
+      badge.textContent = '✅ PAGADA';
+      badge.style.background = 'rgba(16,185,129,0.2)';
+      badge.style.color = '#10b981';
+      document.getElementById('factPaymentDetail').textContent = 'Saldo: $0';
+    } else if (abonado > 0) {
+      badge.textContent = '⏳ PARCIAL';
+      badge.style.background = 'rgba(245,158,11,0.2)';
+      badge.style.color = '#f59e0b';
+      document.getElementById('factPaymentDetail').textContent = 'Saldo: $' + saldo.toLocaleString('es-CO');
+    } else {
+      badge.textContent = '⚪ PENDIENTE';
+      badge.style.background = 'rgba(255,255,255,0.1)';
+      badge.style.color = 'rgba(255,255,255,0.5)';
+      document.getElementById('factPaymentDetail').textContent = '';
+    }
+    
+    // Payment list
+    const list = document.getElementById('factPaymentList');
+    const tbody = document.getElementById('factPaymentListBody');
+    if (Array.isArray(payments) && payments.length > 0) {
+      list.style.display = '';
+      tbody.innerHTML = payments.map(p => {
+        const met = p.metodo || '-';
+        const ref = p.referencia || '';
+        return '<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">' +
+          '<td style="padding:4px 0;">' + (p.fecha || '').slice(0,10) + '</td>' +
+          '<td style="padding:4px 0;color:var(--htk-primary);font-weight:600;">$' + Number(p.monto).toLocaleString('es-CO') + '</td>' +
+          '<td style="padding:4px 0;">' + met + '</td>' +
+          '<td style="padding:4px 0;color:rgba(255,255,255,0.4);">' + (ref || '') + '</td>' +
+          '</tr>';
+      }).join('');
+    } else {
+      list.style.display = 'none';
+    }
+  } catch(e) {
+    console.error('loadFacturaPayments:', e);
+    bar.style.display = 'none';
+  }
+}
+
+async function emitirFactura(id) {
+  if (!confirm('¿Emitir esta factura? Ya no se podrá editar.')) return;
+  try {
+    const resp = await fetch(API + `/api/facturas/${id}/emitir`, { method:'POST' });
+    if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
+    showToast('Factura emitida ✅', 'success');
+    bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
+    loadFacturas();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function pagarFactura(id) {
+  if (!confirm('¿Registrar pago de esta factura?')) return;
+  try {
+    const resp = await fetch(API + `/api/facturas/${id}/pagar`, { method:'POST' });
+    if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
+    showToast('Factura pagada ✅', 'success');
+    bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
+    loadFacturas();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function anularFactura(id) {
+  if (!confirm('¿Anular esta factura?')) return;
+  try {
+    const resp = await fetch(API + `/api/facturas/${id}`, { method:'DELETE' });
+    if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
+    showToast('Factura anulada', 'warning');
+    bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
+    loadFacturas();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function imprimirFactura(id) {
+  try {
+    const resp = await fetch(API + `/api/facturas/${id}/pdf`);
+    const html = await resp.text();
+    const w = window.open('', '_blank', 'width=900,height=700');
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => w.print(), 400);
+  } catch(e) {
+    alert('Error al cargar la factura: ' + e.message);
+  }
+}
+
+async function enviarFacturaWhatsApp(id) {
+  if (!confirm('¿Enviar esta factura por WhatsApp al cliente?')) return;
+  try {
+    const resp = await fetch(API + `/api/facturas/${id}/enviar-whatsapp`, { method:'POST' });
+    const data = await resp.json();
+    if (data.ok) showToast('Factura enviada por WhatsApp ✅', 'success');
+    else showToast(data.error || 'Error al enviar', 'error');
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function loadFacturasStats() {
+  try {
+    const stats = await fetchJSON('/api/facturas/stats');
+    if (stats) {
+      const elP = document.getElementById('statFactPendientes');
+      const elV = document.getElementById('statFactVencidas');
+      const elM = document.getElementById('statFactTotalMes');
+      if (elP) elP.textContent = stats.pendientes || 0;
+      if (elV) elV.textContent = stats.vencidas || 0;
+      if (elM) elM.textContent = '$' + ((stats.total_mes||0)).toLocaleString('es-CO');
+    }
+  } catch(e) {}
+}
+
+// ─── CLIENT SEARCH ──────────────────────────────────────────────────
+
+var clientSearchTimer = null;
+
+function searchClientsDebounce() {
+  clearTimeout(clientSearchTimer);
+  var q = document.getElementById('factClientSearch').value.trim();
+  var dropdown = document.getElementById('factClientDropdown');
+  if (q.length < 2) { dropdown.style.display = 'none'; return; }
+  clientSearchTimer = setTimeout(function() { searchClients(q); }, 200);
+}
+
+async function searchClients(q) {
+  var dropdown = document.getElementById('factClientDropdown');
+  try {
+    var resp = await fetch('/api/clients?search=' + encodeURIComponent(q));
+    var results = await resp.json();
+    if (!Array.isArray(results) || !results.length) {
+      dropdown.innerHTML = '<div style="padding:8px 12px;color:rgba(255,255,255,0.4);font-size:0.85rem;border-bottom:1px solid rgba(255,255,255,0.05);">Sin resultados</div>';
+      dropdown.innerHTML += '<div class="client-search-item" onclick="crearClienteDesdeFactura()" style="padding:8px 12px;cursor:pointer;color:var(--htk-primary);font-weight:600;"><i class="bi bi-plus-circle"></i> Crear nuevo cliente</div>';
+      dropdown.style.display = '';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < Math.min(results.length, 10); i++) {
+      var c = results[i];
+      var doc = c.documento ? (c.tipo_documento || 'CC') + ': ' + c.documento : '';
+      html += '<div class="client-search-item" onclick="selectFactClient(\'' + c.id + '\', \'' + escHtml(c.nombre || '').replace(/'/g, "\\'") + '\')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);">';
+      html += '<div style="font-weight:600;">' + escHtml(c.nombre || c.id) + '</div>';
+      html += '<div style="font-size:0.8rem;color:rgba(255,255,255,0.5);">' + escHtml(c.telefono || '') + (doc ? ' · ' + escHtml(doc) : '') + '</div>';
+      html += '</div>';
+    }
+    dropdown.innerHTML = html;
+    dropdown.style.display = '';
+  } catch(e) {
+    dropdown.innerHTML = '<div style="padding:8px 12px;color:rgba(255,255,255,0.4);">Error al buscar</div>';
+    dropdown.style.display = '';
+  }
+}
+
+function selectFactClient(id, name) {
+  document.getElementById('factClientId').value = id;
+  document.getElementById('factClientSearch').value = name;
+  document.getElementById('factClientDropdown').style.display = 'none';
+}
+
+// Close dropdown on click outside
+document.addEventListener('click', function(e) {
+  var dropdown = document.getElementById('factClientDropdown');
+  var search = document.getElementById('factClientSearch');
+  if (dropdown && search && !search.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.style.display = 'none';
+  }
+});
+
+// ─── COMPANY CONFIG ─────────────────────────────────────────────────
+
+async function loadCompanyConfig() {
+  document.getElementById('companyLoading').style.display = '';
+  document.getElementById('companyForm').style.display = 'none';
+  try {
+    const data = await fetchJSON('/api/company');
+    const fields = ['nombre','comercial','nit','direccion','telefono','email'];
+    fields.forEach(f => {
+      const el = document.getElementById('cfgCompany' + f.charAt(0).toUpperCase() + f.slice(1));
+      if (el && data && data[f]) el.value = data[f];
+    });
+    document.getElementById('companyLoading').style.display = 'none';
+    document.getElementById('companyForm').style.display = '';
+  } catch(e) {
+    document.getElementById('companyLoading').innerHTML = '<p class="text-danger">Error al cargar</p>';
+  }
+}
+
+async function saveCompanyConfig() {
+  const fields = ['nombre','comercial','nit','direccion','telefono','email'];
+  const data = {};
+  fields.forEach(f => {
+    const el = document.getElementById('cfgCompany' + f.charAt(0).toUpperCase() + f.slice(1));
+    if (el) data[f] = el.value.trim();
+  });
+  try {
+    const resp = await fetch('/api/company', {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    if (!resp.ok) throw new Error('Error al guardar');
+    document.getElementById('cfgCompanyMsg').innerHTML = '<span style="color:#059669;">✅ Datos guardados</span>';
+    setTimeout(() => { document.getElementById('cfgCompanyMsg').innerHTML = ''; }, 3000);
+  } catch(e) {
+    document.getElementById('cfgCompanyMsg').innerHTML = '<span style="color:#dc3545;">❌ ' + e.message + '</span>';
+  }
+}
+
+
+function crearClienteDesdeFactura() {
+  document.getElementById('factClientDropdown').style.display = 'none';
+  document.getElementById('factClientSearch').value = '';
+  // Close factura modal and open client creation modal
+  if (modalInstance) modalInstance.hide();
+  showModal('client');
+  // Re-open factura after client is saved — handled by saveModal
+}

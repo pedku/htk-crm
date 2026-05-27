@@ -92,6 +92,35 @@ def get_bot_config_verbose():
         conn.close()
 
 
+def get_bot_config_categorias():
+    """Return config grouped by category for the UI."""
+    conn = get_db()
+    try:
+        rows = conn.execute("SELECT * FROM bot_config ORDER BY categoria, grupo, key").fetchall()
+        grouped = {}
+        for r in rows:
+            cat = r['categoria']
+            if cat not in grouped:
+                grouped[cat] = []
+            raw = r['value']
+            tipo = r['tipo']
+            if tipo in ('bool', 'boolean'):
+                raw_lower = raw.lower() if isinstance(raw, str) else str(raw).lower()
+                raw = 'true' if raw_lower in ('1', 'true', 'yes', 'on') else 'false'
+            grouped[cat].append({
+                'key': r['key'],
+                'value': raw,
+                'tipo': tipo,
+                'descripcion': r['descripcion'] or '',
+                'categoria': cat,
+                'grupo': r['grupo'] or '',
+                'opciones': r['opciones'] or ''
+            })
+        return grouped
+    finally:
+        conn.close()
+
+
 def reload_bot_config():
     """Notify the bot to reload its configuration."""
     try:
@@ -147,5 +176,48 @@ def bot_action(action, payload_data=None):
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
             return json.loads(resp.read())
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}
+def send_email(to, subject, body, html=False):
+    """Send email via SMTP using configured credentials."""
+    import smtplib
+    import os
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    
+    conn = get_db()
+    try:
+        config_rows = conn.execute(
+            "SELECT key, value FROM bot_config WHERE categoria='correo'"
+        ).fetchall()
+        config = {r['key']: r['value'] for r in config_rows}
+    finally:
+        conn.close()
+    
+    host = config.get('smtp_host', 'smtp.gmail.com')
+    port = int(config.get('smtp_port', '587'))
+    user = config.get('smtp_user', 'info@htk-ingenieria.com')
+    password = os.environ.get('SMTP_PASS', config.get('smtp_pass', ''))
+    from_name = config.get('email_from_name', 'HTK INGENIERÍA')
+    enabled = config.get('smtp_enabled', '1') in ('1', 'true')
+    
+    if not enabled or not password:
+        return {'ok': False, 'error': 'SMTP no configurado o deshabilitado'}
+    
+    try:
+        msg = MIMEMultipart()
+        msg['Subject'] = subject
+        msg['From'] = f'{from_name} <{user}>'
+        msg['To'] = to
+        
+        subtype = 'html' if html else 'plain'
+        msg.attach(MIMEText(body, subtype, 'utf-8'))
+        
+        server = smtplib.SMTP(host, port, timeout=15)
+        server.starttls()
+        server.login(user, password)
+        server.send_message(msg)
+        server.quit()
+        return {'ok': True, 'to': to, 'subject': subject}
     except Exception as e:
         return {'ok': False, 'error': str(e)}

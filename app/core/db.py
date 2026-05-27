@@ -29,3 +29,15 @@ def next_id(prefix, table, id_column='id'):
         return f"{prefix}-{max_num + 1:03d}"
     finally:
         conn.close()
+
+def next_invoice_num():
+    """Generate next invoice number like FAC-0001."""
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT MAX(CAST(SUBSTR(numero, INSTR(numero, '-') + 1) AS INTEGER)) FROM invoices"
+        ).fetchone()
+        max_num = row[0] if row[0] is not None else 0
+        return f"FAC-{max_num + 1:04d}"
+    finally:
+        conn.close()

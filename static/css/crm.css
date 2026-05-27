@@ -720,3 +720,164 @@
  [data-bs-theme="light"].view-toggle { background: rgba(0,0,0,0.04); }
  [data-bs-theme="light"].view-toggle.btn { color: rgba(0,0,0,0.4); }
  [data-bs-theme="light"].view-toggle.btn:hover:not(.active) { color: #000; background: rgba(0,0,0,0.04); }
+
+/* ─── DataTables Dark Theme ─────────────────────────── */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+  color: rgba(255,255,255,0.7) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  color: rgba(255,255,255,0.7) !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 6px !important;
+  margin: 2px !important;
+  padding: 4px 12px !important;
+  cursor: pointer !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: var(--htk-primary) !important;
+  color: #fff !important;
+  border-color: var(--htk-primary) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background: var(--htk-primary) !important;
+  color: #fff !important;
+  border-color: var(--htk-primary) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+  opacity: 0.3 !important;
+  cursor: default !important;
+}
+.dataTables_wrapper .dataTables_length select {
+  background: rgba(255,255,255,0.06) !important;
+  color: rgba(255,255,255,0.8) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+}
+.dataTables_wrapper .dataTables_length select:focus {
+  border-color: var(--htk-primary) !important;
+  outline: none !important;
+}
+table.dataTable thead tr {
+  background: rgba(255,255,255,0.03) !important;
+}
+table.dataTable thead th {
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+  color: rgba(255,255,255,0.8) !important;
+  font-weight: 600 !important;
+  padding: 10px 8px !important;
+}
+table.dataTable tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+}
+table.dataTable tbody tr:hover {
+  background: rgba(255,152,0,0.06) !important;
+}
+table.dataTable.no-footer {
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+.dataTables_wrapper .dataTables_processing {
+  background: rgba(0,0,0,0.7) !important;
+  color: #fff !important;
+}
+.dt-toolbar {
+  margin-bottom: 8px !important;
+  gap: 12px !important;
+}
+.dt-search input {
+  background: rgba(255,255,255,0.06) !important;
+  color: inherit !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 8px !important;
+  padding: 6px 12px !important;
+  width: 220px !important;
+}
+.dt-search input:focus {
+  border-color: var(--htk-primary) !important;
+  outline: none !important;
+}
+.dataTables_wrapper .dt-bottom {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Light mode overrides */
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_length,
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_info,
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_paginate {
+  color: rgba(0,0,0,0.7) !important;
+}
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_paginate .paginate_button {
+  color: rgba(0,0,0,0.7) !important;
+  background: rgba(0,0,0,0.03) !important;
+  border-color: rgba(0,0,0,0.1) !important;
+}
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: var(--htk-primary) !important;
+  color: #fff !important;
+}
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background: var(--htk-primary) !important;
+  border-color: var(--htk-primary) !important;
+}
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_length select {
+  background: rgba(0,0,0,0.03) !important;
+  color: rgba(0,0,0,0.8) !important;
+  border-color: rgba(0,0,0,0.1) !important;
+}
+[data-bs-theme="light"] table.dataTable thead tr {
+  background: rgba(0,0,0,0.02) !important;
+}
+[data-bs-theme="light"] table.dataTable thead th {
+  border-bottom-color: rgba(0,0,0,0.1) !important;
+  color: rgba(0,0,0,0.8) !important;
+}
+[data-bs-theme="light"] table.dataTable tbody tr {
+  border-bottom-color: rgba(0,0,0,0.04) !important;
+}
+[data-bs-theme="light"] table.dataTable tbody tr:hover {
+  background: rgba(249,115,22,0.06) !important;
+}
+[data-bs-theme="light"] table.dataTable.no-footer {
+  border-bottom-color: rgba(0,0,0,0.08) !important;
+}
+[data-bs-theme="light"] .dt-search input {
+  background: rgba(0,0,0,0.03) !important;
+  border-color: rgba(0,0,0,0.1) !important;
+  color: rgba(0,0,0,0.8) !important;
+}
+
+/* ─── Facturación ───────────────────────────────── */
+#factItemsContainer { max-height: 300px; overflow-y: auto; }
+.fact-item-row { flex-wrap: wrap; }
+#facturaPreviewIframe { background: #fff !important; }
+
+/* Client search dropdown */
+.client-search-wrapper { position: relative; }
+.client-search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1060;
+  background: #1c1c1e;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0 0 10px 10px;
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.client-search-item:hover {
+  background: rgba(5,155,218,0.15) !important;
+}
+.client-search-item:last-child {
+  border-bottom: none !important;
+}
+
+/* Invoice badge colors in dark mode */
+[data-bs-theme="dark"] .badge.bg-warning { background: #d97706 !important; }
+[data-bs-theme="dark"] .badge.bg-success { background: #059669 !important; }
+[data-bs-theme="dark"] .badge.bg-danger { background: #dc2626 !important; }

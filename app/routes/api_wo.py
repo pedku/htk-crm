@@ -95,6 +95,67 @@ def api_work_orders():
 
         conn.commit()
         link_wo_to_client(new_id, cliente.get('nombre', ''), cliente.get('telefono', ''))
+        
+        # ── Auto-notificar al cliente por WhatsApp ──
+        try:
+            telefono = cliente.get('telefono', '') or ''
+            cliente_nombre = cliente.get('nombre', '') or ''
+            if telefono:
+                # Buscar plantilla para este tipo/estado
+                tmpl = conn.execute(
+                    "SELECT * FROM wo_templates WHERE tipo_ot = ? AND estado_origen = ? AND activo = 1",
+                    (tipo, estado_inicial)
+                ).fetchone()
+                if not tmpl:
+                    tmpl = conn.execute(
+                        "SELECT * FROM wo_templates WHERE tipo_ot = '*' AND estado_origen = ? AND activo = 1",
+                        (estado_inicial,)
+                    ).fetchone()
+                
+                if tmpl:
+                    try:
+                        campos_extra_dict = json.loads(campos_extra_str) if isinstance(campos_extra_str, str) else {}
+                    except:
+                        campos_extra_dict = {}
+                    
+                    equipo_str = ' '.join(filter(None, [
+                        equipo.get('tipo', ''),
+                        equipo.get('marca', ''),
+                        equipo.get('modelo', '')
+                    ])).strip()
+                    
+                    tmpl_text = tmpl['mensaje']
+                    presupuesto_val = data.get('presupuesto')
+                    presupuesto_str = f"{presupuesto_val:,.0f}".replace(',', '.') if presupuesto_val else '0'
+                    
+                    replacements = {
+                        '{id}': new_id,
+                        '{cliente}': cliente_nombre,
+                        '{equipo}': equipo_str,
+                        '{estado}': estado_inicial,
+                        '{presupuesto}': presupuesto_str,
+                        '{fecha}': now.split('T')[0],
+                        '{diagnostico}': '',
+                        '{tipo_producto}': campos_extra_dict.get('tipo_producto', ''),
+                        '{capacidad}': campos_extra_dict.get('capacidad', ''),
+                        '{fecha_estimada}': campos_extra_dict.get('fecha_estimada', ''),
+                        '{tipo_cargador}': campos_extra_dict.get('tipo_cargador', ''),
+                        '{potencia}': campos_extra_dict.get('potencia', ''),
+                        '{fecha_agendada}': campos_extra_dict.get('fecha_agendada', ''),
+                        '{tecnico_asignado}': campos_extra_dict.get('tecnico_asignado', ''),
+                    }
+                    for placeholder, value in replacements.items():
+                        tmpl_text = tmpl_text.replace(placeholder, str(value))
+                    
+                    from app.services.bot_service import send_whatsapp
+                    result = send_whatsapp(telefono, tmpl_text)
+                    if result.get('ok'):
+                        print(f"  📨 Notificación auto-enviada a {telefono} para OT {new_id}")
+                    else:
+                        print(f"  ⚠️ No se pudo notificar OT {new_id} a {telefono}: {result.get('error')}")
+        except Exception as notify_err:
+            print(f"  ⚠️ Error en auto-notificación OT {new_id}: {notify_err}")
+        
         return jsonify(wo_to_dict(conn, new_id)), 201
     except Exception as e:
         conn.rollback()
@@ -135,10 +196,11 @@ def api_work_order(wo_id):
                 return jsonify({'error': f'Tipo de OT inválido: {data["tipo"]}'}), 400
             updates.append("tipo = ?")
             params.append(data['tipo'])
-            # Reset estado to initial estado of new tipo
-            nuevo_estado = get_estado_inicial(data['tipo'])
-            updates.append("estado = ?")
-            params.append(nuevo_estado)
+            # Solo resetear estado si el tipo CAMBIÓ (no al editar otros campos)
+            if data['tipo'] != row['tipo']:
+                nuevo_estado = get_estado_inicial(data['tipo'])
+                updates.append("estado = ?")
+                params.append(nuevo_estado)
 
         if 'client_id' in data:
             updates.append("client_id = ?")
@@ -336,15 +398,32 @@ def api_wo_status(wo_id):
         old_status = row['estado']
         wo_tipo = row['tipo'] or 'reparacion'
 
-        success, error = update_wo_status(conn, wo_id, new_status, old_status, wo_tipo, {
-            'descripcion': data.get('descripcion',
-                                    f'Estado cambiado de {old_status} a {new_status}'),
-            'presupuesto': data.get('presupuesto'),
-            'diagnostico': data.get('diagnostico'),
-            'notificado': data.get('notificado'),
-        })
-        if not success:
-            return jsonify({'error': error}), 400
+        force = data.get('force', False)
+        if force:
+            # Salta validación de transición — cambio directo desde el modal
+            from app.core.wo_types import get_estado_inicial
+            conn.execute("UPDATE work_orders SET estado = ? WHERE id = ?", (new_status, wo_id))
+            if 'presupuesto' in data and data['presupuesto'] is not None:
+                conn.execute("UPDATE work_orders SET presupuesto = ? WHERE id = ?",
+                             (data['presupuesto'], wo_id))
+            if 'diagnostico' in data and data['diagnostico']:
+                conn.execute("UPDATE work_orders SET diagnostico = ? WHERE id = ?",
+                             (data['diagnostico'], wo_id))
+            conn.execute("""
+                INSERT INTO work_order_history (wo_id, fecha, estado, descripcion, notificado)
+                VALUES (?, ?, ?, ?, ?)
+            """, (wo_id, now_iso(), new_status, data.get('descripcion',
+                    f'Estado cambiado de {old_status} a {new_status} (manual)'), 0))
+        else:
+            success, error = update_wo_status(conn, wo_id, new_status, old_status, wo_tipo, {
+                'descripcion': data.get('descripcion',
+                                        f'Estado cambiado de {old_status} a {new_status}'),
+                'presupuesto': data.get('presupuesto'),
+                'diagnostico': data.get('diagnostico'),
+                'notificado': data.get('notificado'),
+            })
+            if not success:
+                return jsonify({'error': error}), 400
 
         conn.commit()
         return jsonify(wo_to_dict(conn, wo_id))
@@ -378,11 +457,28 @@ def api_wo_payments(wo_id):
         if not monto or float(monto) <= 0:
             return jsonify({'error': 'Monto requerido y debe ser > 0'}), 400
 
+        monto_float = float(monto)
+
+        # Validar que no exceda el presupuesto
+        wo_row = conn.execute(
+            "SELECT presupuesto FROM work_orders WHERE id = ?", (wo_id,)
+        ).fetchone()
+        presupuesto = float(wo_row['presupuesto']) if wo_row and wo_row['presupuesto'] else None
+        if presupuesto is not None:
+            existing_total = conn.execute(
+                "SELECT COALESCE(SUM(monto), 0) FROM payments WHERE wo_id = ?", (wo_id,)
+            ).fetchone()[0]
+            if existing_total + monto_float > presupuesto:
+                faltante = presupuesto - existing_total
+                return jsonify({
+                    'error': f'El abono excede el presupuesto. Presupuesto: ${presupuesto:,.0f}, Abonado: ${existing_total:,.0f}, Disponible: ${faltante:,.0f}'
+                }), 400
+
         conn.execute("""
             INSERT INTO payments (wo_id, monto, tipo, metodo, referencia, fecha, notas, registrado_por)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            wo_id, float(monto),
+            wo_id, monto_float,
             data.get('tipo', 'abono'), data.get('metodo', ''),
             data.get('referencia', ''), data.get('fecha', now_iso()),
             data.get('notas', ''), data.get('registrado_por', 'Pedro')
@@ -401,7 +497,7 @@ def api_wo_payments(wo_id):
 
 
 @api_wo_bp.route(
-    '/api/work_orders/<wo_id>/payments/<int:payment_id>', methods=['DELETE']
+    '/api/work_orders/<wo_id>/payments/<int:payment_id>', methods=['DELETE', 'PUT']
 )
 @login_required
 def api_wo_payment(wo_id, payment_id):
@@ -412,9 +508,50 @@ def api_wo_payment(wo_id, payment_id):
         ).fetchone()
         if not row:
             return jsonify({'error': 'Pago no encontrado'}), 404
-        conn.execute("DELETE FROM payments WHERE id = ?", (payment_id,))
+
+        if request.method == 'DELETE':
+            conn.execute("DELETE FROM payments WHERE id = ?", (payment_id,))
+            conn.commit()
+            return jsonify({'success': True, 'message': f'Pago {payment_id} eliminado'})
+
+        # PUT - Editar pago
+        data = request.get_json()
+        monto = data.get('monto')
+        if not monto or float(monto) <= 0:
+            return jsonify({'error': 'Monto requerido y debe ser > 0'}), 400
+
+        monto_float = float(monto)
+
+        # Validar que no exceda el presupuesto (considerando otros pagos)
+        wo_row = conn.execute(
+            "SELECT presupuesto FROM work_orders WHERE id = ?", (wo_id,)
+        ).fetchone()
+        presupuesto = float(wo_row['presupuesto']) if wo_row and wo_row['presupuesto'] else None
+        if presupuesto is not None:
+            existing_total = conn.execute(
+                "SELECT COALESCE(SUM(monto), 0) FROM payments WHERE wo_id = ? AND id != ?",
+                (wo_id, payment_id)
+            ).fetchone()[0]
+            if existing_total + monto_float > presupuesto:
+                faltante = presupuesto - existing_total
+                return jsonify({
+                    'error': f'El monto excede el presupuesto. Presupuesto: ${presupuesto:,.0f}, Abonado (sin este pago): ${existing_total:,.0f}, Disponible: ${faltante:,.0f}'
+                }), 400
+
+        conn.execute(
+            "UPDATE payments SET monto = ?, metodo = ?, referencia = ?, fecha = ? WHERE id = ?",
+            (monto_float,
+             data.get('metodo', row['metodo'] or ''),
+             data.get('referencia', row['referencia'] or ''),
+             data.get('fecha', row['fecha'] or now_iso()),
+             payment_id)
+        )
         conn.commit()
-        return jsonify({'success': True, 'message': f'Pago {payment_id} eliminado'})
+
+        updated = conn.execute(
+            "SELECT * FROM payments WHERE id = ?", (payment_id,)
+        ).fetchone()
+        return jsonify(dict(updated))
     except Exception as e:
         conn.rollback()
         return jsonify({'error': str(e)}), 500

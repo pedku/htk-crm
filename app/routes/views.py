@@ -91,3 +91,26 @@ def page_bot_whatsapp():
     if (not is_local or via_cf) and 'user' not in session:
         return redirect(url_for('views.login_page', next=request.path))
     return render_template('bot_whatsapp.html')
+
+
+@views_bp.route('/clients/<path:cid>')
+def page_client(cid):
+    if 'user' not in session:
+        is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1')
+        via_cf = request.headers.get('CF-Connecting-IP') is not None
+        if not is_local or via_cf:
+            return redirect(url_for('views.login_page', next=request.path))
+    db = get_db()
+    row = db.execute("SELECT * FROM clients WHERE id = ?", (cid,)).fetchone()
+    if not row:
+        db.close()
+        return 'Cliente no encontrado', 404
+    client = dict(row)
+    # Get related work orders
+    orders = db.execute(
+        "SELECT wo_id FROM work_order_client_links WHERE client_id = ?", (cid,)
+    ).fetchall()
+    wo_ids = [o['wo_id'] for o in orders]
+    db.close()
+    return render_template('client_detail.html', client=client, wo_ids=wo_ids)
+

@@ -24,16 +24,75 @@ def actividad_crear(lead_id, tipo, resumen, detalle=''):
         conn.close()
 
 
-# ── GET /api/segments ────────────────────────────────────────────────
+# ── SEGMENTS CRUD ─────────────────────────────────────────────────
 
-@api_leads_bp.route('/api/segments')
-def api_segments():
+@api_leads_bp.route('/api/segments', methods=['GET'])
+@login_required
+def api_segments_get():
     conn = get_db()
     try:
         rows = conn.execute(
-            "SELECT key, label, color, orden FROM segmentos WHERE activo=1 ORDER BY orden"
+            "SELECT key, label, color, orden, activo FROM segmentos ORDER BY orden"
         ).fetchall()
         return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
+
+@api_leads_bp.route('/api/segments', methods=['POST'])
+@login_required
+def api_segments_create():
+    data = request.get_json()
+    key = data.get('key', '').strip().lower().replace(' ', '_')
+    if not key:
+        return jsonify({'error': 'Se requiere una clave para el segmento'}), 400
+    conn = get_db()
+    try:
+        existing = conn.execute("SELECT key FROM segmentos WHERE key=?", (key,)).fetchone()
+        if existing:
+            return jsonify({'error': f'El segmento "{key}" ya existe'}), 409
+        max_orden = conn.execute("SELECT MAX(orden) FROM segmentos").fetchone()[0] or 0
+        conn.execute(
+            "INSERT INTO segmentos (key, label, color, orden, activo) VALUES (?, ?, ?, ?, 1)",
+            (key, data.get('label', key), data.get('color', '#6f42c1'), max_orden + 1)
+        )
+        conn.commit()
+        row = conn.execute("SELECT * FROM segmentos WHERE key=?", (key,)).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@api_leads_bp.route('/api/segments/<key>', methods=['PUT', 'DELETE'])
+@login_required
+def api_segments_item(key):
+    conn = get_db()
+    try:
+        if request.method == 'DELETE':
+            conn.execute("DELETE FROM segmentos WHERE key=?", (key,))
+            conn.commit()
+            return jsonify({'success': True})
+        
+        # PUT
+        data = request.get_json()
+        updates = []
+        params = []
+        for col in ['label', 'color', 'orden', 'activo']:
+            if col in data:
+                updates.append(f"{col} = ?")
+                params.append(data[col])
+        if updates:
+            params.append(key)
+            conn.execute(f"UPDATE segmentos SET {', '.join(updates)} WHERE key = ?", params)
+            conn.commit()
+        row = conn.execute("SELECT * FROM segmentos WHERE key=?", (key,)).fetchone()
+        return jsonify(dict(row) if row else {})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
 
@@ -71,8 +130,8 @@ def api_leads():
         conn.execute("""
             INSERT INTO leads (id, nombre, contacto, segmento, linea_interes, estado, fuente,
                 valor_estimado, fecha_creacion, proximo_seguimiento, notas,
-                telefono, email, url, contacto_nombre)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                telefono, email, url, contacto_nombre, lid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             new_id,
             data.get('nombre', ''),
@@ -88,7 +147,122 @@ def api_leads():
             data.get('telefono', ''),
             data.get('email', ''),
             data.get('url', ''),
-            data.get('contacto_nombre', '')
+            data.get('contacto_nombre', ''),
+            data.get('lid', '')
+        ))
+        conn.commit()
+        row = conn.execute("SELECT * FROM leads WHERE id = ?", (new_id,)).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@api_leads_bp.route('/api/leads/from-bot', methods=['POST'])
+def api_leads_from_bot():
+    """Endpoint sin auth para que el bot cree leads (solo localhost)."""
+    # Verificar que la petición viene de localhost
+    remote = request.remote_addr
+    if remote not in ('127.0.0.1', 'localhost', '::1'):
+        if request.headers.get('CF-Connecting-IP'):
+            return jsonify({'error': 'Forbidden'}), 403
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data'}), 400
+
+    conn = get_db()
+    try:
+        new_id = next_id('PRO', 'leads')
+        
+        # No guardar @lid como número de teléfono
+        numero_raw = data.get('numero', '')
+        telefono_val = ''
+        contacto_val = ''
+        if numero_raw and '@lid' not in numero_raw and '@c.us' in numero_raw:
+            telefono_val = numero_raw.split('@')[0]
+            contacto_val = telefono_val
+        elif numero_raw and '@lid' not in numero_raw:
+            telefono_val = numero_raw
+            contacto_val = numero_raw
+        # Si viene telefono explicito, usarlo
+        if data.get('telefono'):
+            tel_clean = data['telefono'].split('@')[0]
+            if '@lid' not in tel_clean:
+                telefono_val = tel_clean
+                contacto_val = tel_clean
+        
+        conn.execute("""
+            INSERT INTO leads (id, nombre, contacto, segmento, linea_interes, estado, fuente,
+                valor_estimado, fecha_creacion, proximo_seguimiento, notas,
+                telefono, email, url, contacto_nombre, lid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            new_id,
+            data.get('nombre', ''),
+            contacto_val,
+            data.get('segmento', 'consumidor'),
+            data.get('linea_interes', 'varios'),
+            data.get('estado', 'nuevo'),
+            data.get('fuente', 'WhatsApp'),
+            data.get('valor_estimado'),
+            data.get('fecha_creacion', now_iso()),
+            data.get('proximo_seguimiento'),
+            data.get('notas', data.get('detalle', '')),
+            telefono_val,
+            data.get('email', ''),
+            data.get('url', ''),
+            data.get('contacto_nombre', data.get('nombre', '')),
+            data.get('lid', '')
+        ))
+        conn.commit()
+        row = conn.execute("SELECT * FROM leads WHERE id = ?", (new_id,)).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+# ── (duplicado eliminado — el POST original ahora está arriba) ──
+    if request.method == 'GET':
+        conn = get_db()
+        try:
+            rows = conn.execute("SELECT * FROM leads ORDER BY id").fetchall()
+            return jsonify([dict(r) for r in rows])
+        finally:
+            conn.close()
+
+    # POST
+    data = request.get_json()
+    conn = get_db()
+    try:
+        new_id = next_id('PRO', 'leads')
+        conn.execute("""
+            INSERT INTO leads (id, nombre, contacto, segmento, linea_interes, estado, fuente,
+                valor_estimado, fecha_creacion, proximo_seguimiento, notas,
+                telefono, email, url, contacto_nombre, lid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            new_id,
+            data.get('nombre', ''),
+            data.get('contacto', ''),
+            data.get('segmento', 'consumidor'),
+            data.get('linea_interes', 'varios'),
+            data.get('estado', 'nuevo'),
+            data.get('fuente', ''),
+            data.get('valor_estimado'),
+            data.get('fecha_creacion', now_iso()),
+            data.get('proximo_seguimiento'),
+            data.get('notas', ''),
+            data.get('telefono', ''),
+            data.get('email', ''),
+            data.get('url', ''),
+            data.get('contacto_nombre', ''),
+            data.get('lid', '')
         ))
         conn.commit()
         row = conn.execute("SELECT * FROM leads WHERE id = ?", (new_id,)).fetchone()
@@ -144,7 +318,7 @@ def api_lead(lead_id):
         params = []
         for key in ['nombre', 'contacto', 'contacto_nombre', 'segmento', 'linea_interes',
                      'estado', 'fuente', 'notas', 'valor_estimado', 'proximo_seguimiento',
-                     'telefono', 'email', 'url']:
+                     'telefono', 'email', 'url', 'lid']:
             if key in data:
                 updates.append(f"{key} = ?")
                 params.append(data[key])
@@ -229,10 +403,21 @@ def api_interactions():
     if request.method == 'GET':
         conn = get_db()
         try:
-            rows = conn.execute(
-                "SELECT * FROM interactions ORDER BY fecha DESC"
-            ).fetchall()
-            return jsonify([dict(r) for r in rows])
+            rows = conn.execute("""
+                SELECT i.*, l.telefono AS lead_telefono, l.nombre AS lead_nombre_2,
+                       l.segmento AS lead_segmento, l.contacto AS lead_contacto,
+                       l.contacto_nombre AS lead_contacto_nombre
+                FROM interactions i
+                LEFT JOIN leads l ON i.lead_id = l.id
+                ORDER BY i.fecha DESC
+            """).fetchall()
+            result = []
+            for r in rows:
+                d = dict(r)
+                if not d.get('lead_nombre'):
+                    d['lead_nombre'] = d.get('lead_nombre_2', '')
+                result.append(d)
+            return jsonify(result)
         finally:
             conn.close()
 

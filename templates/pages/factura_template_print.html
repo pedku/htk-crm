@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>{{ empresa.comercial }} — Factura {{ invoice.numero }}</title>
+<style>
+  @page { size: A4; margin: 12mm 14mm; }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 12px;
+    color: #18181b;
+    line-height: 1.5;
+    padding: 0;
+  }
+
+  /* ─── Estilos calcados de la plantilla elegante ─── */
+  .htk-blue   { color: #059BDA; }
+  .text-dim   { color: #71717a; }
+  .text-faint { color: #a1a1aa; }
+  .bg-subtle  { background: #fafaf9; }
+  .border-sub { border: 1px solid #e4e4e7; }
+  .card-pad   { padding: 18px; }
+
+  /* ─── HEADER ─── */
+  .header { width: 100%; margin-bottom: 28px; }
+  .header td { vertical-align: top; padding: 0; }
+  .logo-cell { width: 50%; }
+  .logo-cell img { width: 110px; height: auto; }
+  .num-cell { width: 50%; text-align: right; }
+
+  .factura-label {
+    font-size: 8px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #a1a1aa; margin-bottom: 2px;
+  }
+  .factura-num {
+    font-size: 26px; font-weight: 800; color: #059BDA; line-height: 1;
+  }
+
+  /* ─── EMPRESA ─── */
+  .empresa { margin-bottom: 14px; font-size: 11px; color: #71717a; line-height: 1.6; }
+  .empresa .nombre { font-size: 13px; font-weight: 700; color: #18181b; margin-bottom: 2px; }
+
+  /* ─── DIVIDER ─── */
+  hr.divider {
+    border: none; height: 2px;
+    background: linear-gradient(to right, #059BDA 0%, #059BDA 30%, rgba(5,155,218,0.1) 70%, transparent 100%);
+    margin: 14px 0 22px;
+  }
+
+  /* ─── CARDS ─── */
+  .cards { width: 100%; margin-bottom: 22px; }
+  .cards td { width: 50%; vertical-align: top; padding: 0; }
+  .cards td:first-child { padding-right: 16px; }
+
+  .card {
+    background: #fafaf9; border: 1px solid #e4e4e7; padding: 18px;
+  }
+  .card-label {
+    font-size: 8px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #a1a1aa; margin-bottom: 10px;
+  }
+  .card-body { font-size: 11px; line-height: 1.6; }
+  .card-body .cname { font-size: 13px; font-weight: 700; color: #18181b; }
+  .card-body .cinfo { font-size: 11px; color: #71717a; }
+
+  .info-row { margin-bottom: 2px; }
+  .info-row .lbl { display: inline-block; width: 75px; font-weight: 500; color: #71717a; font-size: 10px; }
+  .info-row .val { font-weight: 600; color: #18181b; font-size: 10px; }
+
+  /* ─── BADGE ─── */
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    font-size: 9px; font-weight: 600; margin-top: 8px; border: 1px solid;
+  }
+  .badge.pagada  { color: #059669; border-color: #059669; background: rgba(5,150,105,0.08); }
+  .badge.emitida { color: #059BDA; border-color: #059BDA; background: rgba(5,155,218,0.08); }
+  .badge.borrador { color: #a1a1aa; border-color: #d4d4d8; }
+  .badge.vencida { color: #dc2626; border-color: #dc2626; background: rgba(220,38,38,0.06); }
+  .badge.anulada { color: #a1a1aa; border-color: #d4d4d8; text-decoration: line-through; }
+
+  /* ─── ITEMS ─── */
+  .section-label {
+    font-size: 8px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #a1a1aa; margin-bottom: 10px;
+  }
+  .items { width: 100%; border-collapse: collapse; margin-bottom: 22px; }
+  .items thead th {
+    background: #fafaf9; border-bottom: 2px solid #e4e4e7;
+    padding: 10px 10px; font-size: 9px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    color: #a1a1aa; text-align: right;
+  }
+  .items thead th.left { text-align: left; }
+  .items thead th.center { text-align: center; }
+  .items tbody td {
+    padding: 10px 10px; border-bottom: 1px solid #e4e4e7;
+    font-size: 11px; font-weight: 500; color: #18181b; text-align: right;
+  }
+  .items tbody td.left { text-align: left; font-weight: 600; }
+  .items tbody td.center { text-align: center; font-weight: 600; color: #a1a1aa; }
+  .items tbody tr:nth-child(even) td { background: #fafaf9; }
+
+  /* ─── TOTALS ─── */
+  .bottom { width: 100%; margin-bottom: 20px; }
+  .bottom td { vertical-align: top; padding: 0; }
+  .notes-cell { width: 55%; padding-right: 18px; }
+  .notes-box { background: #fafaf9; border: 1px solid #e4e4e7; padding: 18px; }
+  .notes-box .nl {
+    font-size: 8px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #a1a1aa; margin-bottom: 8px;
+  }
+  .notes-box .nt { font-size: 10px; color: #71717a; line-height: 1.7; white-space: pre-line; }
+  .summary-cell { width: 45%; }
+
+  .sum { width: 100%; }
+  .sum td { padding: 3px 0; font-size: 11px; }
+  .sum td.lbl { color: #71717a; font-weight: 500; }
+  .sum td.val { text-align: right; font-weight: 600; color: #18181b; }
+  .sum hr { border: none; border-top: 1px solid #e4e4e7; margin: 8px 0; }
+  .sum .total td { font-size: 22px; font-weight: 800; color: #059BDA; padding-top: 8px; }
+
+  /* ─── PAYMENT ─── */
+  .payment { padding: 10px 0; margin-bottom: 18px; border-top: 1px solid #e4e4e7; border-bottom: 1px solid #e4e4e7; }
+  .payment .pl {
+    font-size: 8px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #a1a1aa; margin-bottom: 4px;
+  }
+  .payment .pi { font-size: 11px; font-weight: 500; color: #71717a; }
+
+  /* ─── FOOTER ─── */
+  .footer { text-align: center; margin-top: 22px; }
+  .footer .brand { font-size: 12px; font-weight: 700; color: #059BDA; }
+  .footer .tagline { font-size: 9px; color: #a1a1aa; margin: 4px 0; }
+  .footer .legal { font-size: 8px; font-weight: 300; color: #a1a1aa; }
+
+  /* ─── PRINT ENHANCEMENT ─── */
+  @media print {
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .items tbody tr:nth-child(even) td { background: #fafaf9 !important; }
+    .card, .notes-box { background: #fafaf9 !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<table class="header">
+  <tr>
+    <td class="logo-cell">
+      {% if empresa.logo_url %}
+      <img src="{{ empresa.logo_url }}" alt="{{ empresa.comercial }}">
+      {% endif %}
+    </td>
+    <td class="num-cell">
+      <div class="factura-label">Factura N°</div>
+      <div class="factura-num">{{ invoice.numero }}</div>
+    </td>
+  </tr>
+</table>
+
+<!-- EMPRESA -->
+<div class="empresa">
+  <div class="nombre">{{ empresa.nombre }}</div>
+  NIT: {{ empresa.nit }}<br>
+  {{ empresa.direccion }}<br>
+  {{ empresa.email }} &nbsp;·&nbsp; {{ empresa.telefono }}
+</div>
+
+<hr class="divider">
+
+<!-- META CARDS -->
+<table class="cards">
+  <tr>
+    <td>
+      <div class="card">
+        <div class="card-label">Facturar a</div>
+        <div class="card-body">
+          <div class="cname">
+            {% if client and client.tipo_persona == 'juridica' %}
+              {{ client.empresa or client.nombre }}
+            {% else %}
+              {{ client.nombre if client else '—' }}
+            {% endif %}
+          </div>
+          {% if client and client.tipo_persona == 'juridica' and client.nombre_comercial %}
+          <div class="cinfo" style="color:#059BDA;">{{ client.nombre_comercial }}</div>
+          {% endif %}
+          {% if client and client.documento %}<div class="cinfo">{{ client.tipo_documento or 'NIT/CC' }}: {{ client.documento }}</div>{% endif %}
+          {% if client and client.direccion %}<div class="cinfo">{{ client.direccion }}{% if client.ciudad %}, {{ client.ciudad }}{% endif %}</div>{% endif %}
+          {% if client and client.telefono %}<div class="cinfo">{{ client.telefono }}</div>{% endif %}
+          {% if client and client.email %}<div class="cinfo">{{ client.email }}</div>{% endif %}
+        </div>
+      </div>
+    </td>
+    <td>
+      <div class="card">
+        <div class="card-label">Datos de la Factura</div>
+        <div class="info-row"><span class="lbl">Emisión</span><span class="val">{{ invoice.fecha_emision[:10] }}</span></div>
+        <div class="info-row"><span class="lbl">Vence</span><span class="val">{{ invoice.fecha_vencimiento[:10] }}</span></div>
+        {% if invoice.wo_id %}<div class="info-row"><span class="lbl">O.T.</span><span class="val">{{ invoice.wo_id }}</span></div>{% endif %}
+        <div class="badge {{ invoice.estado }}">{{ invoice.estado.upper() }}</div>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<!-- ITEMS -->
+<div class="section-label">Detalle de Servicios</div>
+<table class="items">
+  <thead>
+    <tr>
+      <th class="center" width="35">#</th>
+      <th class="left">Descripción</th>
+      <th width="45">Cant</th>
+      <th width="85">Vr. Unitario</th>
+      <th width="85">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td class="center">{{ '%02d' % item.item_num }}</td>
+      <td class="left">{{ item.descripcion }}{% if item.iva_incluido %} <small style="color:#a1a1aa;font-size:0.85em;">(IVA incl.)</small>{% endif %}</td>
+      <td>{{ item.cantidad }}</td>
+      <td>${{ '{:,.0f}'.format(item.precio_unitario) }}</td>
+      <td>${{ '{:,.0f}'.format(item.total_linea) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- NOTES + TOTALS -->
+<table class="bottom">
+  <tr>
+    <td class="notes-cell">
+      <div class="notes-box">
+        <div class="nl">Notas</div>
+        <div class="nt">{{ invoice.notas or 'Sin notas adicionales.' }}</div>
+      </div>
+    </td>
+    <td class="summary-cell">
+      <table class="sum">
+        <tr><td class="lbl">Subtotal</td><td class="val">${{ '{:,.0f}'.format(invoice.sub_total) }}</td></tr>
+        {% if invoice.descuento and invoice.descuento > 0 %}
+        <tr><td class="lbl">Descuento</td><td class="val">−${{ '{:,.0f}'.format(invoice.descuento) }}</td></tr>
+        {% endif %}
+        <tr><td class="lbl">IVA 19%</td><td class="val">${{ '{:,.0f}'.format(invoice.iva_total) }}</td></tr>
+        <tr><td colspan="2"><hr></td></tr>
+        <tr class="total"><td class="lbl" style="font-size:10px;font-weight:600;letter-spacing:1px;">TOTAL</td><td class="val">${{ '{:,.0f}'.format(invoice.total_general) }}</td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- PAYMENT -->
+<div class="payment">
+  <div class="pl">💳 Forma de Pago</div>
+  <div class="pi">{{ invoice.metodo_pago or 'Transferencia Bancaria · Efectivo · Datafono' }}</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="brand">⚡ {{ empresa.comercial }}</div>
+  <div class="tagline">Gracias por confiar en nosotros</div>
+  <div class="legal">{{ empresa.nombre }} · {{ empresa.direccion }}</div>
+</div>
+
+</body>
+</html>
