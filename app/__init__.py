@@ -164,7 +164,7 @@ def init_db():
         conn_aux.execute('''
             CREATE TABLE IF NOT EXISTS payments (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                wo_id TEXT NOT NULL REFERENCES work_orders(id) ON DELETE CASCADE,
+                wo_id TEXT DEFAULT NULL REFERENCES work_orders(id) ON DELETE SET NULL,
                 invoice_id TEXT DEFAULT NULL REFERENCES invoices(id) ON DELETE SET NULL,
                 monto REAL NOT NULL,
                 tipo TEXT DEFAULT 'abono',

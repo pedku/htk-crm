@@ -186,16 +186,25 @@ def get_invoice(inv_id):
         client = conn.execute("SELECT * FROM clients WHERE id = ?",
                               (inv['client_id'],)).fetchone()
 
-        # Fetch linked payments by invoice_id or by wo_id if invoice references a WO
-        payments = conn.execute(
+        # Fetch linked payments (by invoice_id or by wo_id if invoice references a WO)
+        linked = conn.execute(
             "SELECT * FROM payments WHERE invoice_id = ? ORDER BY fecha DESC",
             (inv_id,)
         ).fetchall()
+        all_pay = [dict(p) for p in linked]
+        # Also fetch legacy payments from the WO (unlinked)
+        if inv['wo_id']:
+            wo_rows = conn.execute(
+                "SELECT * FROM payments WHERE wo_id = ? AND (invoice_id IS NULL OR invoice_id = '') ORDER BY fecha DESC",
+                (inv['wo_id'],)
+            ).fetchall()
+            all_pay.extend(dict(p) for p in wo_rows)
+        
         result = dict(inv)
         result['items'] = [dict(i) for i in items]
         result['cliente'] = dict(client) if client else None
-        result['payments'] = [dict(p) for p in payments]
-        total_abonado = sum(float(p['monto']) for p in payments)
+        result['payments'] = all_pay
+        total_abonado = sum(float(p['monto']) for p in all_pay)
         result['total_abonado_factura'] = round(total_abonado, 2)
         result['saldo_pendiente_factura'] = round(float(inv['total_general']) - total_abonado, 2)
         return jsonify(result)
@@ -424,15 +433,20 @@ def pagar_factura(inv_id):
             ), 2
         )
         if saldo_pendiente > 0:
-            conn.execute('''
-                INSERT INTO payments (wo_id, invoice_id, monto, tipo, metodo, referencia, fecha, registrado_por)
-                VALUES (?, ?, ?, 'pago', ?, ?, ?, 'Sistema')
-            ''', (
-                inv['wo_id'] or '', inv_id, saldo_pendiente,
-                data.get('metodo_pago', ''),
-                data.get('referencia', ''), now_iso()[:10]
-            ))
-            conn.commit()
+            try:
+                wo_id = inv['wo_id'] or ''
+                conn.execute('''
+                    INSERT INTO payments (wo_id, invoice_id, monto, tipo, metodo, referencia, fecha, registrado_por)
+                    VALUES (?, ?, ?, 'pago', ?, ?, ?, 'Sistema')
+                ''', (
+                    wo_id, inv_id, saldo_pendiente,
+                    data.get('metodo_pago', ''),
+                    data.get('referencia', ''), now_iso()[:10]
+                ))
+                conn.commit()
+            except Exception as pay_e:
+                # Si falla (ej: wo_id NOT NULL sin OT), solo registrar sin pago
+                conn.rollback()
         
         result, err = _change_status(inv_id, 'pagada', {'metodo_pago': data.get('metodo_pago', '')})
         if err:
