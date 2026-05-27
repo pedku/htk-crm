@@ -681,7 +681,7 @@ def send_invoice_whatsapp(inv_id):
         )
 
         # Generate PDF URL and send document via bot
-        pdf_url = f"http://localhost:5000/api/facturas/{inv_id}/pdf"
+        pdf_url = f"http://localhost:5000/factura/{inv_id}"
         
         try:
             import urllib.request, json as py_json
