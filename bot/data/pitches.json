@@ -1,13 +1,23 @@
 {
   "canales": {
-    "whatsapp": {"label": "WhatsApp", "icono": "bi-whatsapp", "activo": true},
-    "email": {"label": "Email", "icono": "bi-envelope", "activo": true}
+    "whatsapp": {
+      "label": "WhatsApp",
+      "icono": "bi-whatsapp",
+      "activo": true
+    },
+    "email": {
+      "label": "Email",
+      "icono": "bi-envelope",
+      "activo": true
+    }
   },
   "plantillas_cuerpo": [
     {
       "id": "pitch_taller_aa",
       "titulo": "Taller A/A — Tarjetas electrónicas",
-      "segmentos": ["B2B taller"],
+      "segmentos": [
+        "B2B taller"
+      ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe comento por qué le escribo: usted recibe aires todo el tiempo y estoy seguro de que en más de una ocasión le ha llegado uno con la tarjeta electrónica dañada — un inversor, un mini-split, un VRF — y conseguir esa tarjeta o repararla no es fácil.\n\nJusto ahí podemos ayudarle. Nosotros nos encargamos de esas tarjetas, las revisamos sin costo y si tienen reparación, le damos respuesta en el menor tiempo posible. Tenemos experiencia trabajando con este tipo de equipos a nivel electrónico.\n\nCuente con nosotros para eso, ¿qué le parece?",
       "email": "Buenos días,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque sé que usted recibe aires acondicionados todo el tiempo y estoy seguro de que en más de una ocasión le ha llegado uno con la tarjeta electrónica dañada — un inversor, un mini-split, un VRF — y conseguir esa tarjeta o repararla no es fácil.\n\nJusto ahí podemos ayudarle. Nosotros nos encargamos de esas tarjetas, las revisamos sin costo y si tienen reparación, le damos respuesta en el menor tiempo posible. Tenemos experiencia trabajando con este tipo de equipos a nivel electrónico.\n\nCuente con nosotros para eso. ¿Qué le parece? Conversemos.\n\nSaludos,\nPedro Castro\nHTK INGENIERÍA\nBarranquilla",
       "asunto_email": "HTK INGENIERÍA — Reparación de tarjetas electrónicas de aires"
@@ -15,7 +25,9 @@
     {
       "id": "pitch_taller_electronica",
       "titulo": "Taller Electrónica — Alianza técnica",
-      "segmentos": ["B2B taller"],
+      "segmentos": [
+        "B2B taller"
+      ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque he visto su trabajo en reparación electrónica y creo que podemos ser un buen aliado para usted.\n\nLa idea es la siguiente: de vez en cuando llegan trabajos que requieren un perfil distinto — electrónica industrial, control, automatización — que no es exactamente lo mismo que la reparación de equipos de consumo. Y viceversa: a nosotros nos llegan trabajos que tal vez encajan mejor en su taller.\n\nLa propuesta es simple: tener una relación de colegas donde usted me refiere lo industrial y yo le refiero lo que sea más de su perfil. Todos ganan — usted, nosotros y, sobre todo, el cliente que queda bien atendido.\n\n¿Le interesa la idea de tener un aliado para ese tipo de trabajos?",
       "email": "Buenos días,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nHe visto su trabajo en reparación electrónica y creo que podemos ser un buen aliado para usted.\n\nLa idea es la siguiente: de vez en cuando llegan trabajos que requieren un perfil distinto — electrónica industrial, control, automatización — que no es exactamente lo mismo que la reparación de equipos de consumo. Y viceversa: a nosotros nos llegan trabajos que tal vez encajan mejor en su taller.\n\nLa propuesta es simple: tener una relación de colegas donde usted me refiere lo industrial y yo le refiero lo que sea más de su perfil. Todos ganan — usted, nosotros y, sobre todo, el cliente que queda bien atendido.\n\n¿Le interesaría tener un aliado para ese tipo de trabajos?\n\nSaludos,\nPedro Castro\nHTK INGENIERÍA\nBarranquilla",
       "asunto_email": "HTK INGENIERÍA — Propuesta de alianza técnica"
@@ -23,7 +35,9 @@
     {
       "id": "pitch_fabrica_plasticos",
       "titulo": "Fábrica — Automatización y PLCs",
-      "segmentos": ["B2B fábrica"],
+      "segmentos": [
+        "B2B fábrica"
+      ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque usted tiene máquinas con control electrónico en producción — PLCs, variadores, tarjetas de control — y cuando una de esas falla, cada hora que pasa representa una pérdida en productividad.\n\nNosotros ayudamos a que eso no se extienda. Reparamos componentes electrónicos industriales con respuesta ágil, para que una tarjeta dañada no les pare la producción por días. Tenemos experiencia trabajando con este tipo de equipos.\n\nEl objetivo es simple: ayudarlos a mantener su operación y reducir el impacto de las fallas electrónicas en su negocio.\n\n¿Ha tenido alguna situación donde una tarjeta se daña y no consigue quién la repare a tiempo?",
       "email": "Buenos días,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nUsted tiene máquinas con control electrónico en producción — PLCs, variadores, tarjetas de control — y cuando una de esas falla, cada hora que pasa representa una pérdida en productividad.\n\nNosotros ayudamos a que eso no se extienda. Reparamos componentes electrónicos industriales con respuesta ágil, para que una tarjeta dañada no les pare la producción por días. Tenemos experiencia trabajando con este tipo de equipos.\n\nEl objetivo es simple: ayudarlos a mantener su operación y reducir el impacto de las fallas electrónicas en su negocio.\n\n¿Ha tenido alguna situación donde una tarjeta se daña y no consigue quién la repare a tiempo? Conversemos.\n\nSaludos,\nPedro Castro\nHTK INGENIERÍA\nBarranquilla",
       "asunto_email": "HTK INGENIERÍA — Reparación de componentes electrónicos industriales"
@@ -31,7 +45,9 @@
     {
       "id": "pitch_cargadores_dist",
       "titulo": "Distribuidor Cargadores — Instalación aliada",
-      "segmentos": ["distribuidor cargadores"],
+      "segmentos": [
+        "distribuidor cargadores"
+      ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque veo que usted comercializa cargadores para vehículos eléctricos y quiero proponerle algo.\n\nUsted vende el equipo, nosotros instalamos. Trabajamos como su brazo técnico en Barranquilla y la Costa: hacemos la visita, la instalación, la puesta en marcha y le garantizamos al cliente final una experiencia completa.\n\nEl beneficio para usted es claro: puede ofrecer un servicio llave en mano sin tener que montar un equipo de instalación propio. El cliente compra el cargador con usted y nosotros nos encargamos de que quede funcionando correctamente.\n\n¿Le interesaría conversar para alinear cómo podemos trabajar juntos?",
       "email": "Buenos días,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nVeo que usted comercializa cargadores para vehículos eléctricos y quiero proponerle algo.\n\nUsted vende el equipo, nosotros instalamos. Trabajamos como su brazo técnico en Barranquilla y la Costa: hacemos la visita, la instalación, la puesta en marcha y le garantizamos al cliente final una experiencia completa.\n\nEl beneficio para usted es claro: puede ofrecer un servicio llave en mano sin tener que montar un equipo de instalación propio. El cliente compra el cargador con usted y nosotros nos encargamos de que quede funcionando correctamente.\n\n¿Le interesaría conversar para alinear cómo podemos trabajar juntos?\n\nSaludos,\nPedro Castro\nHTK INGENIERÍA\nBarranquilla",
       "asunto_email": "HTK INGENIERÍA — Instalación de cargadores eléctricos en la Costa"
@@ -39,7 +55,9 @@
     {
       "id": "pitch_hoteles",
       "titulo": "Hoteles — Mantenimiento integral",
-      "segmentos": ["hoteles"],
+      "segmentos": [
+        "hoteles"
+      ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque sé que en un hotel la operación no puede parar — aires acondicionados, estabilizadores, sistemas eléctricos — todo tiene que funcionar 24/7 y cuando algo falla los huéspedes lo notan de inmediato.\n\nNosotros podemos ayudarle con el mantenimiento eléctrico y electrónico de sus instalaciones. Reparamos aires de habitaciones y áreas comunes, fabricamos estabilizadores a la medida, automatizamos iluminación y climatización, y damos soporte técnico cuando más lo necesita.\n\nTrabajamos con hoteles en Barranquilla y la Costa. ¿Le gustaría que conversemos para conocer sus necesidades y ver cómo podemos apoyarlos?",
       "email": "Buenos días,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nEn un hotel la operación no puede parar — aires acondicionados, estabilizadores, sistemas eléctricos — todo tiene que funcionar 24/7 y cuando algo falla los huéspedes lo notan de inmediato.\n\nNosotros podemos ayudarle con el mantenimiento eléctrico y electrónico de sus instalaciones. Reparamos aires de habitaciones y áreas comunes, fabricamos estabilizadores a la medida, automatizamos iluminación y climatización, y damos soporte técnico cuando más lo necesita.\n\nTrabajamos con hoteles en Barranquilla y la Costa. ¿Le gustaría conversar para conocer sus necesidades?\n\nSaludos,\nPedro Castro\nHTK INGENIERÍA\nBarranquilla",
       "asunto_email": "HTK INGENIERÍA — Mantenimiento eléctrico para hoteles"
@@ -47,7 +65,9 @@
     {
       "id": "pitch_restaurantes",
       "titulo": "Restaurantes — Equipos y eléctrica",
-      "segmentos": ["restaurantes"],
+      "segmentos": [
+        "restaurantes"
+      ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque sé que en un restaurante los equipos de cocina, neveras, congeladores y aires son críticos — si uno falla, la operación del día se complica.\n\nNosotros reparamos equipos electrónicos de cocina industrial, hacemos instalaciones eléctricas para restaurantes y ofrecemos mantenimiento preventivo para que su negocio no se detenga. También fabricamos estabilizadores de voltaje para proteger sus equipos.\n\n¿Tiene algún equipo dañado o necesita una revisión eléctrica? Sin compromiso, lo asesoramos.",
       "email": "Buenos días,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nEn un restaurante los equipos de cocina, neveras, congeladores y aires son críticos — si uno falla, la operación del día se complica.\n\nNosotros reparamos equipos electrónicos de cocina industrial, hacemos instalaciones eléctricas para restaurantes y ofrecemos mantenimiento preventivo para que su negocio no se detenga. También fabricamos estabilizadores de voltaje para proteger sus equipos.\n\n¿Tiene algún equipo dañado o necesita una revisión eléctrica? Sin compromiso, lo asesoramos.\n\nSaludos,\nPedro Castro\nHTK INGENIERÍA\nBarranquilla",
       "asunto_email": "HTK INGENIERÍA — Soluciones eléctricas para restaurantes"
@@ -55,7 +75,10 @@
     {
       "id": "pitch_consumidor",
       "titulo": "Consumidor — Reparación en taller",
-      "segmentos": ["B2C consumidor", "consumidor"],
+      "segmentos": [
+        "B2C consumidor",
+        "consumidor"
+      ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\n¿Tiene un equipo electrónico dañado? Lo revisamos sin costo en nuestro taller. Reparamos aires acondicionados, neveras, lavadoras, pantallas, microondas y más.\n\nEstamos ubicados en Barranquilla. ¿Qué equipo tiene y qué falla presenta? Le damos respuesta en poco tiempo.",
       "email": "Buenos días,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\n¿Tiene un equipo electrónico dañado? Lo revisamos sin costo en nuestro taller. Reparamos aires acondicionados, neveras, lavadoras, pantallas, microondas y más.\n\nEstamos ubicados en Barranquilla. Escríbanos qué equipo tiene y qué falla presenta, y le damos respuesta en poco tiempo.\n\nSaludos,\nPedro Castro\nHTK INGENIERÍA\nBarranquilla",
       "asunto_email": "HTK INGENIERÍA — Reparación de equipos electrónicos"
@@ -63,7 +86,9 @@
     {
       "id": "pitch_solar",
       "titulo": "Energía Solar — Instalaciones",
-      "segmentos": ["energía solar"],
+      "segmentos": [
+        "energía solar"
+      ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque ofrecemos servicios de instalación y mantenimiento de sistemas de energía solar fotovoltaica para hogares, empresas y conjuntos residenciales.\n\nHacemos diseño, montaje y puesta en marcha de paneles solares, tanto on-grid como off-grid. También damos mantenimiento a sistemas existentes.\n\n¿Tiene algún proyecto en mente o quiere saber cuánto podría ahorrar en su factura de energía? Hablemos sin compromiso.",
       "email": "Buenos días,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nOfrecemos servicios de instalación y mantenimiento de sistemas de energía solar fotovoltaica para hogares, empresas y conjuntos residenciales.\n\nHacemos diseño, montaje y puesta en marcha de paneles solares, tanto on-grid como off-grid. También damos mantenimiento a sistemas existentes.\n\n¿Tiene algún proyecto en mente o quiere saber cuánto podría ahorrar en su factura de energía? Hablemos sin compromiso.\n\nSaludos,\nPedro Castro\nHTK INGENIERÍA\nBarranquilla",
       "asunto_email": "HTK INGENIERÍA — Energía solar fotovoltaica"
@@ -71,7 +96,9 @@
     {
       "id": "pitch_comercio",
       "titulo": "Comercio — Soluciones eléctricas",
-      "segmentos": ["B2B comercio"],
+      "segmentos": [
+        "B2B comercio"
+      ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque ofrecemos soluciones eléctricas y electrónicas para locales comerciales: estabilizadores de voltaje para proteger sus equipos, instalaciones eléctricas, mantenimiento de aires acondicionados y sistemas de respaldo.\n\nTodo lo que su negocio necesita en el tema eléctrico, lo resolvemos. ¿Qué necesita para su local? Lo asesoramos sin costo.",
       "email": "Buenos días,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nOfrecemos soluciones eléctricas y electrónicas para locales comerciales: estabilizadores de voltaje para proteger sus equipos, instalaciones eléctricas, mantenimiento de aires acondicionados y sistemas de respaldo.\n\nTodo lo que su negocio necesita en el tema eléctrico, lo resolvemos.\n\n¿Qué necesita para su local? Lo asesoramos sin costo.\n\nSaludos,\nPedro Castro\nHTK INGENIERÍA\nBarranquilla",
       "asunto_email": "HTK INGENIERÍA — Soluciones eléctricas para su comercio"
@@ -79,7 +106,9 @@
     {
       "id": "pitch_gimnasios",
       "titulo": "Gimnasios — Mantenimiento eléctrico",
-      "segmentos": ["gimnasios"],
+      "segmentos": [
+        "gimnasios"
+      ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque sé que en un gimnasio los aires, las máquinas y la instalación eléctrica tienen que estar al 100% todo el tiempo — si el aire no enfria o una máquina falla, los clientes lo notan.\n\nNosotros hacemos mantenimiento de aires acondicionados, instalaciones eléctricas para máquinas de ejercicio, estabilizadores de voltaje y sistemas de ventilación.\n\n¿Necesita una revisión de sus instalaciones? Sin compromiso, lo ayudamos.",
       "email": "Buenos días,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nEn un gimnasio los aires, las máquinas y la instalación eléctrica tienen que estar al 100% todo el tiempo — si el aire no enfria o una máquina falla, los clientes lo notan.\n\nNosotros hacemos mantenimiento de aires acondicionados, instalaciones eléctricas para máquinas de ejercicio, estabilizadores de voltaje y sistemas de ventilación.\n\n¿Necesita una revisión de sus instalaciones? Sin compromiso, lo ayudamos.\n\nSaludos,\nPedro Castro\nHTK INGENIERÍA\nBarranquilla",
       "asunto_email": "HTK INGENIERÍA — Mantenimiento eléctrico para gimnasios"
@@ -87,10 +116,52 @@
     {
       "id": "pitch_clinicas",
       "titulo": "Clínicas Odontológicas — Equipos",
-      "segmentos": ["clínicas odontológicas"],
+      "segmentos": [
+        "clínicas odontológicas"
+      ],
       "whatsapp": "Buenos días, ¿cómo está?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nLe escribo porque sé que en una clínica odontológica la estabilidad eléctrica es fundamental — un corte o una variación de voltaje puede dañar equipos costosos o interrumpir un procedimiento.\n\nFabricamos estabilizadores de voltaje de precisión, hacemos mantenimiento de compresores y equipos odontológicos, e instalamos sistemas de protección contra sobretensión.\n\n¿Quiere proteger su inversión? Lo asesoramos sin compromiso.",
       "email": "Buenos días,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERÍA en Barranquilla.\n\nEn una clínica odontológica la estabilidad eléctrica es fundamental — un corte o una variación de voltaje puede dañar equipos costosos o interrumpir un procedimiento.\n\nFabricamos estabilizadores de voltaje de precisión, hacemos mantenimiento de compresores y equipos odontológicos, e instalamos sistemas de protección contra sobretensión.\n\n¿Quiere proteger su inversión? Lo asesoramos sin compromiso.\n\nSaludos,\nPedro Castro\nHTK INGENIERÍA\nBarranquilla",
       "asunto_email": "HTK INGENIERÍA — Estabilización eléctrica para clínicas odontológicas"
+    },
+    {
+      "id": "pitch_constructoras_general",
+      "titulo": "Constructoras — Automatizacion y servicios electricos",
+      "segmentos": [
+        "constructor"
+      ],
+      "whatsapp": "Buenos dias, como esta?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERIA en Barranquilla.\n\nLe escribo porque en sus proyectos de construccion hay una etapa electrica y de automatizacion que define la calidad final del edificio. Nosotros podemos ser su aliado tecnico para esa parte.\n\nOfrecemos instalacion de sistemas de automatizacion (iluminacion, climatizacion, control de acceso), cableado estructurado, instalacion de cargadores para vehiculos electricos en parqueaderos, y sistemas de CCTV y seguridad electronica.\n\nSomos una empresa agil, con experiencia en proyectos industriales y comerciales. Podemos cotizarle por proyecto y ajustarnos a sus tiempos de obra.\n\nLe interesa conversar para ver como podemos complementar su equipo en el componente electrico y de automatizacion?",
+      "email": "Buenos dias,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERIA en Barranquilla.\n\nEn sus proyectos de construccion hay una etapa electrica y de automatizacion que define la calidad final del edificio. Nosotros podemos ser su aliado tecnico para esa parte.\n\nNuestros servicios para constructoras incluyen:\n\n- Automatizacion de edificios: iluminacion, climatizacion y control de acceso centralizado.\n- Instalacion de cargadores para vehiculos electricos en parqueaderos.\n- Cableado estructurado y redes electricas.\n- Sistemas de CCTV y seguridad electronica perimetral.\n- Mantenimiento electronico de equipos de obra.\n\nSomos una empresa agil, con experiencia en proyectos industriales y comerciales en Barranquilla y la Costa. Podemos cotizar por proyecto y ajustarnos a sus tiempos de obra.\n\nLe interesaria conversar para ver como podemos complementar su equipo?\n\nSaludos,\nPedro Castro\nHTK INGENIERIA\nBarranquilla\n+57 315 603 2940",
+      "asunto_email": "HTK INGENIERIA — Servicios electricos y automatizacion para constructoras"
+    },
+    {
+      "id": "pitch_constructoras_cargadores",
+      "titulo": "Constructoras — Cargadores EV en proyectos nuevos",
+      "segmentos": [
+        "constructor"
+      ],
+      "whatsapp": "Buenos dias, como esta?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERIA en Barranquilla.\n\nLe escribo con un tema que cada vez es mas relevante en la construccion: los cargadores para vehiculos electricos.\n\nLos proyectos nuevos que incluyen puntos de carga desde el diseno tienen una ventaja competitiva clara frente a los que no. Ademas, la regulacion en Colombia esta avanzando para exigirlo en ciertos tipos de edificaciones.\n\nNosotros instalamos cargadores electricos de todas las marcas principales. Podemos asesorarlo desde la etapa de diseno para dejar la infraestructura lista, o instalar los equipos cuando el proyecto lo requiera.\n\nLe interesa conocer como incluir cargadores electricos en sus proximos proyectos?",
+      "email": "Buenos dias,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERIA en Barranquilla.\n\nCada vez es mas relevante en la construccion incluir cargadores para vehiculos electricos. Los proyectos nuevos que los incorporan desde el diseno tienen una ventaja competitiva clara. Ademas, la regulacion en Colombia esta avanzando para exigirlo en ciertos tipos de edificaciones.\n\nNosotros instalamos cargadores electricos de las principales marcas. Ofrecemos:\n\n- Asesoria en etapa de diseno para prever la infraestructura electrica necesaria.\n- Instalacion y puesta en marcha de puntos de carga.\n- Mantenimiento preventivo y correctivo.\n- Certificacion y cumplimiento normativo.\n\nPodemos trabajar por proyecto, ajustandonos a sus cronogramas de obra.\n\nLe interesa conocer como incluir cargadores en sus proximos proyectos?\n\nSaludos,\nPedro Castro\nHTK INGENIERIA\nBarranquilla\n+57 315 603 2940",
+      "asunto_email": "HTK INGENIERIA — Cargadores electricos para sus proyectos de construccion"
+    },
+    {
+      "id": "pitch_restaurantes_pro",
+      "titulo": "Restaurantes — Mantenimiento electrico preventivo",
+      "segmentos": [
+        "restaurantes"
+      ],
+      "whatsapp": "Buenos dias, como esta?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERIA en Barranquilla.\n\nEn un restaurante la operacion depende de que los equipos funcionen sin interrupcion: neveras, congeladores, campanas extractoras, hornos, aires acondicionados. Si uno falla en pleno servicio, el impacto es directo sobre el cliente y sobre los ingresos del dia.\n\nNosotros ofrecemos mantenimiento preventivo y correctivo de equipos electronicos de cocina, instalaciones electricas certificadas, estabilizadores de voltaje para proteccion de equipos, y sistemas de CCTV para monitoreo de areas criticas.\n\nLa propuesta es simple: una revision tecnica periodica para anticipar fallas antes de que ocurran, en lugar de correr a reparar cuando ya es tarde.\n\nLe interesa que coordinemos una visita de diagnostico sin costo?",
+      "email": "Buenos dias,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERIA en Barranquilla.\n\nEn un restaurante la operacion depende de que los equipos funcionen sin interrupcion: neveras, congeladores, campanas extractoras, hornos, aires acondicionados. Si uno falla en pleno servicio, el impacto es directo sobre el cliente y sobre los ingresos del dia.\n\nNuestros servicios para restaurantes incluyen:\n\n- Mantenimiento preventivo y correctivo de equipos electronicos de cocina industrial.\n- Instalaciones electricas certificadas y adecuacion de cargas.\n- Estabilizadores de voltaje a la medida para proteccion de equipos criticos.\n- Sistemas de CCTV para monitoreo de cocina, caja y areas comunes.\n- Automatizacion de iluminacion y climatizacion para eficiencia energetica.\n\nLa propuesta es simple: una revision tecnica periodica que anticipe fallas antes de que ocurran, en lugar de reaccionar cuando el equipo ya esta detenido y el cliente esperando.\n\nLe interesa que coordinemos una visita de diagnostico sin costo?\n\nSaludos,\nPedro Castro\nHTK INGENIERIA\nBarranquilla\n+57 315 603 2940",
+      "asunto_email": "HTK INGENIERIA — Mantenimiento electrico preventivo para restaurantes"
+    },
+    {
+      "id": "pitch_hoteles_pro",
+      "titulo": "Hoteles — Automatizacion y eficiencia operativa",
+      "segmentos": [
+        "hoteles"
+      ],
+      "whatsapp": "Buenos dias, como esta?\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERIA en Barranquilla.\n\nEn un hotel la percepcion del huesped se define en los detalles: que el aire funcione bien, que la iluminacion sea adecuada, que los sistemas de seguridad operen sin fallas. Detras de eso hay infraestructura electrica y electronica que requiere atencion tecnica constante.\n\nNosotros ofrecemos automatizacion de climatizacion e iluminacion en areas comunes, mantenimiento de aires acondicionados de habitaciones y lobby, sistemas CCTV y control de acceso, estabilizadores y proteccion electrica, e instalacion de cargadores para vehiculos electricos de sus huespedes.\n\nTrabajamos con hoteles en Barranquilla y la Costa, con respuesta agil cuando surge una emergencia y con planes de mantenimiento programado para que esas emergencias no ocurran.\n\nLe gustaria que revisemos sus instalaciones actuales y le propongamos un plan a la medida?",
+      "email": "Buenos dias,\n\nSoy Pedro Castro, ingeniero, de HTK INGENIERIA en Barranquilla.\n\nEn un hotel la percepcion del huesped se define en los detalles: que el aire funcione bien, que la iluminacion sea adecuada, que los sistemas de seguridad operen sin fallas. Detras de eso hay infraestructura electrica y electronica que requiere atencion tecnica constante.\n\nNuestros servicios para hoteles incluyen:\n\n- Automatizacion de climatizacion e iluminacion en areas comunes para eficiencia energetica.\n- Mantenimiento preventivo y correctivo de aires acondicionados en habitaciones, lobby y salon de eventos.\n- Sistemas de CCTV y control de acceso para areas administrativas y de servicio.\n- Estabilizadores de voltaje y proteccion electrica para equipos criticos.\n- Instalacion de cargadores para vehiculos electricos de sus huespedes.\n\nTrabajamos con hoteles en Barranquilla y la Costa, con respuesta agil cuando surge una emergencia y con planes de mantenimiento programado para que esas emergencias no ocurran.\n\nLe gustaria que revisemos sus instalaciones actuales y le propongamos un plan a la medida de su operacion?\n\nSaludos,\nPedro Castro\nHTK INGENIERIA\nBarranquilla\n+57 315 603 2940",
+      "asunto_email": "HTK INGENIERIA — Mantenimiento y automatizacion para hoteles"
     }
   ]
 }
