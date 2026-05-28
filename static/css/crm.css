@@ -1,10 +1,24 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800display=swap");
+
 :root {
  --htk-primary: #00d4aa;
+--htk-primary-hover: #00bf9a;
+--htk-primary-dim: rgba(0,212,170,0.12);
+--htk-success: #10b981;
+--htk-warning: #f59e0b;
+--htk-danger: #ef4444;
+--htk-text: #f4f4f5;
+--htk-text-dim: #a1a1aa;
+--htk-text-muted: #71717a;
+--htk-border: rgba(255,255,255,0.08);
+--htk-radius: 12px;
+--htk-radius-sm: 8px;
+--htk-transition: 200ms ease;
  --htk-dark: #0d1b2a;
  --htk-card: #1b2838;
  --htk-sidebar: #0f1a2b;
  }
- body { background: var(--htk-dark); font-family: 'Segoe UI', system-ui, sans-serif; }
+ body { background: var(--htk-dark); font-family: "Inter", "Segoe UI", system-ui, sans-serif; }
 .sidebar {
  background: var(--htk-sidebar);
  min-height: 100vh;
@@ -569,7 +583,7 @@
  white-space: pre-wrap;
  font-size: 0.85em;
  color: rgba(255,255,255,0.8);
- font-family: 'Segoe UI', system-ui, sans-serif;
+ font-family: "Inter", "Segoe UI", system-ui, sans-serif;
  line-height: 1.55;
  }
 .pitch-var-highlight { color: var(--htk-primary); font-weight: 600; }
@@ -583,7 +597,7 @@
  border: 1px solid rgba(255,255,255,0.1);
  color: #fff;
  border-radius: 10px;
- font-family: 'Segoe UI', system-ui, sans-serif;
+ font-family: "Inter", "Segoe UI", system-ui, sans-serif;
  font-size: 0.9em;
  line-height: 1.5;
  width: 100%;
@@ -881,3 +895,21 @@ table.dataTable.no-footer {
 [data-bs-theme="dark"] .badge.bg-warning { background: #d97706 !important; }
 [data-bs-theme="dark"] .badge.bg-success { background: #059669 !important; }
 [data-bs-theme="dark"] .badge.bg-danger { background: #dc2626 !important; }
+/* ─── UI Pro Max Mejoras ─── */
+button, .btn, .nav-link, a, .action-btn {
+  transition: all var(--htk-transition);
+}
+button:hover, .btn:hover {
+  transform: translateY(-1px);
+}
+button:active, .btn:active {
+  transform: translateY(0);
+}
+.card-crm, .table-container {
+  border-radius: var(--htk-radius);
+  border: 1px solid var(--htk-border);
+  transition: border-color var(--htk-transition);
+}
+.card-crm:hover {
+  border-color: var(--htk-primary-dim);
+}
