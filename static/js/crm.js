@@ -354,7 +354,7 @@ function navigateToTab(tabName) {
  if (tabName === 'kanban') loadKanban();
  if (tabName === 'clients') loadClients();
  if (tabName === 'workorders') loadWorkOrders();
- if (tabName === 'leads') loadLeads();
+ if (tabName === 'leads') { _segmentsCache = null; populateSegmentSelects().then(() => loadLeads()); }
  if (tabName === 'interactions') loadInteractions();
  if (tabName === 'inventario') loadInventario();
  if (tabName === 'facturacion') loadFacturas();
@@ -4147,7 +4147,9 @@ async function saveSegment() {
     }
     bootstrap.Modal.getInstance(document.getElementById('segmentModal')).hide();
     showToast(existing ? 'Segmento actualizado' : 'Segmento creado');
+    _segmentsCache = null;  // invalidar cache
     await loadSegmentsList();
+    await populateSegmentSelects();  // actualizar dropdowns
   } catch(e) { showToast('Error: ' + e.message, 'danger'); }
 }
 
@@ -4156,7 +4158,9 @@ async function deleteSegment(key) {
   try {
     await fetch('/api/segments/' + key, { method:'DELETE' });
     showToast('Segmento eliminado');
+    _segmentsCache = null;  // invalidar cache
     await loadSegmentsList();
+    await populateSegmentSelects();  // actualizar dropdowns
   } catch(e) { showToast('Error: ' + e.message, 'danger'); }
 }
 
