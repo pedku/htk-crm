@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "gog": {
+      "version": "1.0.0",
+      "installedAt": 1779914813707
+    },
+    "data-enricher": {
+      "version": "1.0.0",
+      "installedAt": 1779918530619
+    },
+    "action-suggester": {
+      "version": "1.0.5",
+      "installedAt": 1779918549767
+    },
+    "daily-report": {
+      "version": "1.0.0",
+      "installedAt": 1779918571269
+    },
+    "biz-reporter": {
+      "version": "1.0.0",
+      "installedAt": 1779918589323
+    },
+    "ai-lead-generator-skill": {
+      "version": "1.0.0",
+      "installedAt": 1779918607682
+    }
+  }
+}
