@@ -1,6 +1,17 @@
 # MEMORY.md — HTK INGENIERIA (HOUSETRONIK S.A.S.)
 
-> Last updated: 2026-05-23 (noche)
+> Last updated: 2026-05-28 (mañana)
+
+---
+
+## 🏗️ Arquitectura Frontend CRM (2026-05-28)
+Monolito → 17 modulos: crm.js 5240l → 264l (-95%). Cada modulo JS alineado con su contraparte en app/routes/.
+
+## 🎨 UI Redesign (2026-05-28)
+ui-ux-pro-max skill: Flat Design + Minimalism. Paleta azul #2563EB, Plus Jakarta Sans.
+
+## 📊 Prospeccion (2026-05-28)
++43 leads: 15 restaurantes, 13 hoteles, 15 constructoras. Nuevo segmento constructor. Total CRM: 147 leads. Pitches profesionales sin emojis agregados.
 
 ---
 
