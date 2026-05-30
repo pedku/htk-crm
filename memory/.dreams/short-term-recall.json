@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-28T15:04:00.498Z",
+  "updatedAt": "2026-05-29T13:00:02.316Z",
   "entries": {
     "memory:memory/2026-05-04.md:1:14": {
       "key": "memory:memory/2026-05-04.md:1:14",
@@ -9,13 +9,13 @@
       "endLine": 14,
       "source": "memory",
       "snippet": "# 2026-05-04 — Configuración Inicial ## 🚀 Setup del Agente - Configurada identidad HTK-Asistente (⚡) - Creada estructura de datos en `data/` (leads, projects, transactions, inventory) - Definido esquema de datos en `data/schema.md` - MEMORY.md inicializada con estructura de empresa ## Pendientes - [ ] Cargar leads iniciales - [ ] Registrar proyectos activos - [ ] Configurar estado financiero actual - [ ] Definir recordatorios periódicos (cron jobs) si aplica",
-      "recallCount": 24,
+      "recallCount": 25,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 12.875457568705986,
+      "totalScore": 13.358336402715157,
       "maxScore": 1,
       "firstRecalledAt": "2026-05-05T03:00:36.925Z",
-      "lastRecalledAt": "2026-05-28T15:04:00.498Z",
+      "lastRecalledAt": "2026-05-28T21:40:40.399Z",
       "queryHashes": [
         "a0c515277fbd",
         "273bd8d0a7c3",
@@ -40,7 +40,8 @@
         "5b8a3f5128f7",
         "a1f0cc563b3a",
         "0f31bf269083",
-        "71bf0284ff12"
+        "71bf0284ff12",
+        "1bd53ec1bf9a"
       ],
       "recallDays": [
         "2026-05-04",
@@ -76,13 +77,13 @@
       "endLine": 32,
       "source": "memory",
       "snippet": "# Memory Flush — 2026-05-09 (madrugada) ## Resumen de la sesión - Estrategia de marketing: diagnosticamos que lo más útil ahora es contactar leads existentes en horario hábil, no campañas complejas - Se creó **toolkit de automatización** (sin IA): auto_enrich.py, auto_score.py, auto_schedule.py, auto_campaign.py, backup_db.sh - **CRM integrado**: pestaña Automatización con botones para enriquecer/puntuar/programar/campaña/backup - **Scraping masivo**: 26 leads con website scrapeados → 47/48 leads con datos de contacto (98%) - Restaurantes: Los Kioscos (314 879 6240) y La Vianda (320 517 2042) encontrados por sub-agente - 42 leads programados para contacto desde Sáb 9/05 8am - 5 git commits",
-      "recallCount": 24,
+      "recallCount": 25,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 11.029164731502533,
+      "totalScore": 11.502941054105758,
       "maxScore": 0.5078620284795761,
       "firstRecalledAt": "2026-05-11T14:00:54.593Z",
-      "lastRecalledAt": "2026-05-28T14:11:40.883Z",
+      "lastRecalledAt": "2026-05-28T21:40:40.399Z",
       "queryHashes": [
         "467bd60087ef",
         "b4aaf7796a33",
@@ -106,7 +107,8 @@
         "b33aa7787484",
         "893bb6a56c0c",
         "0f31bf269083",
-        "8259c6770e74"
+        "8259c6770e74",
+        "1bd53ec1bf9a"
       ],
       "recallDays": [
         "2026-05-11",
@@ -143,13 +145,13 @@
       "endLine": 34,
       "source": "memory",
       "snippet": "## Infraestructura - htk-ingenieria.com:8080 → sitio web corporativo - crm.htk-ingenieria.com:5000 → CRM HTK - Ambos via cloudflared tunnel, con systemd services - htk-crm.service y htk-website.service - cloudflared-tunnel.service ## Ajustes pendientes - NIT pendiente de agregar al sitio - Cloudflare cache puede necesitar purga - Contactar leads cargadores mañana 8am sábado",
-      "recallCount": 14,
+      "recallCount": 15,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 6.312372039258479,
+      "totalScore": 6.783419473469256,
       "maxScore": 0.5306326910853385,
       "firstRecalledAt": "2026-05-11T14:00:54.593Z",
-      "lastRecalledAt": "2026-05-28T13:59:22.688Z",
+      "lastRecalledAt": "2026-05-28T21:40:40.399Z",
       "queryHashes": [
         "467bd60087ef",
         "b4aaf7796a33",
@@ -163,7 +165,8 @@
         "d3bc03109446",
         "152b5a40e85c",
         "b1d795c12c1e",
-        "0f31bf269083"
+        "0f31bf269083",
+        "1bd53ec1bf9a"
       ],
       "recallDays": [
         "2026-05-11",
@@ -196,13 +199,13 @@
       "endLine": 34,
       "source": "memory",
       "snippet": "- showToast con auto-dismiss 4s ### Entornos - Producción: `crm.htk-ingenieria.com` (main, 4b855ef) - Desarrollo: `dev.htk-ingenieria.com` (modular-frontend, 8 commits nuevos) ### Pendientes - BUG_REPORT.md documenta 11 bugs (quedan 🟡 vacíos en kanban/interacciones, 🟢 consolidate escapeHtml, 🟢 PITCHES_PATH hardcodeado, 🟢 toast configurable) - Faltan tests de perfil WO (mensajes, pagos, cambio estado desde perfil)",
-      "recallCount": 10,
+      "recallCount": 11,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 4.715745376050473,
+      "totalScore": 5.1886162415146835,
       "maxScore": 0.529916876554489,
       "firstRecalledAt": "2026-05-18T10:33:25.520Z",
-      "lastRecalledAt": "2026-05-28T13:59:22.688Z",
+      "lastRecalledAt": "2026-05-28T21:40:40.399Z",
       "queryHashes": [
         "fd62315c5a83",
         "63b02abac58a",
@@ -212,7 +215,8 @@
         "b1d795c12c1e",
         "0b8d51bbb4f1",
         "5b8a3f5128f7",
-        "0f31bf269083"
+        "0f31bf269083",
+        "1bd53ec1bf9a"
       ],
       "recallDays": [
         "2026-05-18",
@@ -411,6 +415,130 @@
         "iteraciones",
         "intenté",
         "media"
+      ]
+    },
+    "memory:memory/2026-05-28.md:65:98": {
+      "key": "memory:memory/2026-05-28.md:65:98",
+      "path": "memory/2026-05-28.md",
+      "startLine": 65,
+      "endLine": 98,
+      "source": "memory",
+      "snippet": "- Pillow para resize + conversión WebP + thumbnails - SortableJS para drag-drop - Flask-Bcrypt + Flask-Limiter para seguridad ### 6 Fases del Plan 1. Seguridad (bcrypt, rate limiting, cambio contraseña) 2. CRUD Servicios (crear, eliminar, reordenar, toggle, selector iconos) 3. Biblioteca de Medios (FilePond, Pillow, galería visual) 4. Blog Completo (borradores, preview, tags, SEO, contador) 5. Páginas Estáticas (CRUD, ruta dinámica) 6. SEO + Infra (sitemap, robots.txt, backups, dashboard métricas) --- ## ⚡ Ejecución Paralela — 3 Agentes (28-May-2026 ~17:30) ### Agente 1: Fase 1+2 — Seguridad + Servicios ✅ - `routes/auth.py` — login/logout/cambiar-password con bcrypt, rate limiting 5/min",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 0.4903467535972595,
+      "maxScore": 0.4903467535972595,
+      "firstRecalledAt": "2026-05-29T13:00:02.316Z",
+      "lastRecalledAt": "2026-05-29T13:00:02.316Z",
+      "queryHashes": [
+        "08c230213b49"
+      ],
+      "recallDays": [
+        "2026-05-29"
+      ],
+      "conceptTags": [
+        "backup",
+        "backups",
+        "drag-drop",
+        "flask-bcrypt",
+        "flask-limiter",
+        "robots.txt",
+        "28-may-2026",
+        "routes/auth.py"
+      ]
+    },
+    "memory:memory/2026-05-28.md:36:72": {
+      "key": "memory:memory/2026-05-28.md:36:72",
+      "path": "memory/2026-05-28.md",
+      "startLine": 36,
+      "endLine": 72,
+      "source": "memory",
+      "snippet": "- Páginas de proyectos clickeables con grid `row g-4` - Blog público con artículos - Navbar en `base.html` — solucionó bug de sub-páginas sin navegación - Breadcrumb fix: `padding-top: 80px` en `.page-hero` - Panel admin: `/admin/login` (pass: `htk2026`) - TinyMCE 7.6 integrado en editor de blog - Admin con `admin_base.html` (sidebar oscura, sin navbar público) - Upload de imágenes: `/static/uploads/`, endpoint `/api/upload` ### Key Decisions - Landing page = HTML original intacto. No reescribir diseño. - TinyMCE sobre Summernote (más profesional) - admin_base.html separado del template público ### Directorios - **CRM:** `/home/peku/.openclaw/workspace/crm/` (puertos: 18800 prod, 18801 dev",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 0.48835613727569577,
+      "maxScore": 0.48835613727569577,
+      "firstRecalledAt": "2026-05-29T13:00:02.316Z",
+      "lastRecalledAt": "2026-05-29T13:00:02.316Z",
+      "queryHashes": [
+        "08c230213b49"
+      ],
+      "recallDays": [
+        "2026-05-29"
+      ],
+      "conceptTags": [
+        "g-4",
+        "base.html",
+        "sub-páginas",
+        "padding-top",
+        "page-hero",
+        "admin/login",
+        "7.6",
+        "admin-base.html"
+      ]
+    },
+    "memory:memory/2026-05-28.md:119:133": {
+      "key": "memory:memory/2026-05-28.md:119:133",
+      "path": "memory/2026-05-28.md",
+      "startLine": 119,
+      "endLine": 133,
+      "source": "memory",
+      "snippet": "- Sin sudo disponible (no reiniciar cloudflared-tunnel) - GitHub CLI (`gh`) roto con Node v24 - Flask viejo a veces no reinicia automáticamente → reinicio manual necesario --- ## 📊 Dashboard de Logros del Día - CRM UI rediseñado: ✅ - 43 nuevos leads: ✅ - Frontend modularizado (-95% líneas en crm.js): ✅ - Sitio web v3 reconstruido: ✅ - Admin panel con TinyMCE: ✅ - Plan Maestro v5 cargado: ✅ - Fases 1-5 implementadas: ✅",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 0.4851555466651916,
+      "maxScore": 0.4851555466651916,
+      "firstRecalledAt": "2026-05-29T13:00:02.316Z",
+      "lastRecalledAt": "2026-05-29T13:00:02.316Z",
+      "queryHashes": [
+        "08c230213b49"
+      ],
+      "recallDays": [
+        "2026-05-29"
+      ],
+      "conceptTags": [
+        "cloudflared-tunnel",
+        "crm.js",
+        "1-5",
+        "sudo",
+        "disponible",
+        "reiniciar",
+        "cloudflared",
+        "tunnel"
+      ]
+    },
+    "memory:memory/2026-05-28.md:1:42": {
+      "key": "memory:memory/2026-05-28.md:1:42",
+      "path": "memory/2026-05-28.md",
+      "startLine": 1,
+      "endLine": 42,
+      "source": "memory",
+      "snippet": "# 2026-05-28 — Daily Memory Log --- ## 🔄 Sesión 1: UI + Prospección + Arquitectura Frontend CRM ### UI CRM Redesign - Paleta azul #2563EB, Plus Jakarta Sans, Flat Design + Minimalism - Skill ui-ux-pro-max aplicada - Commit `682f0e8` en branch dev ### Prospección (+43 leads) - **Restaurantes:** 15 leads (PRO-128→142) - **Hoteles:** 13 leads (PRO-143→155) - **Constructoras:** 15 leads (PRO-156→170) - Nuevo segmento \"constructor\" agregado a tabla `segmentos` - Total CRM: 147 leads - Pitches profesionales duales (WPP + Email) en `crm/data/pitches.json` ### Arquitectura Frontend CRM - 17 módulos JS: core.js, segments.js, pitches.js, dashboard.js, search.js, notifications.js, clients.js, wor",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 0.48374415338039395,
+      "maxScore": 0.48374415338039395,
+      "firstRecalledAt": "2026-05-29T13:00:02.316Z",
+      "lastRecalledAt": "2026-05-29T13:00:02.316Z",
+      "queryHashes": [
+        "08c230213b49"
+      ],
+      "recallDays": [
+        "2026-05-29"
+      ],
+      "conceptTags": [
+        "ui-ux-pro-max",
+        "pro-128",
+        "pro-143",
+        "pro-156",
+        "crm/data/pitches.json",
+        "core.js",
+        "segments.js",
+        "pitches.js"
       ]
     }
   }
