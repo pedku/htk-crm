@@ -706,7 +706,7 @@ def send_invoice_whatsapp(inv_id):
         def send_via_bot(file_path, msg_caption):
             payload = py_json.dumps({'to': telefono, 'document': file_path, 'caption': msg_caption}).encode()
             req = urllib.request.Request(
-                'http://localhost:18802/send-document',
+                'http://localhost:18802/send',
                 data=payload,
                 headers={'Content-Type': 'application/json'},
                 method='POST'
@@ -789,25 +789,28 @@ def _send_invoice_whatsapp_background(inv_id):
             inv = conn2.execute("SELECT * FROM invoices WHERE id = ?", (inv_id,)).fetchone()
             if inv:
                 client = conn2.execute("SELECT * FROM clients WHERE id = ?", (inv['client_id'],)).fetchone()
-                if client and dict(client).get('telefono'):
+                if client and client['telefono']:
                     telefono = str(client['telefono']).strip()
                     total = float(inv['total_general'])
-                    caption = (
+                    factura_url = f'http://localhost:18800/factura/{inv_id}'
+                    msg = (
                         f"⚡ *HTK INGENIERIA* — Factura {inv['numero']} ✅ PAGADA\n\n"
                         f"Cliente: {client['nombre'] or '—'}\n"
-                        f"Total pagado: ${total:,.0f} COP\n\n"
-                        f"¡Gracias por tu pago! ⚡"
+                        f"Total pagado: ${total:,.0f} COP\n"
+                        f"Fecha: {inv['pagada_fecha'] or ''[:10]}\n\n"
+                        f"Puedes consultar tu factura aqui:\n{factura_url}\n\n"
+                        f"Gracias por confiar en HTK INGENIERIA ⚡"
                     )
                     try:
-                        payload = py_json.dumps({'to': telefono, 'document': pdf_path, 'caption': caption}).encode()
+                        payload = py_json.dumps({'to': telefono, 'message': msg}).encode()
                         req = urllib.request.Request(
-                            'http://localhost:18802/send-document',
+                            'http://localhost:18802/send',
                             data=payload, headers={'Content-Type': 'application/json'}, method='POST'
                         )
                         with urllib.request.urlopen(req, timeout=30) as resp:
-                            print(f"✅ Factura {inv_id} enviada por pago")
+                            logger.info("Factura %s notificada por WhatsApp", inv_id)
                     except Exception as e:
-                        logger.warning("Error enviando factura pagada: %s", e)
+                        logger.warning("Error enviando notificacion de pago: %s", e)
         finally:
             conn2.close()
 
