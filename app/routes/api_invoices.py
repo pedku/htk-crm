@@ -1,7 +1,10 @@
 """API Invoices Blueprint — Facturación CRUD + acciones."""
 import os
 from datetime import datetime, timedelta
+import logging
 from flask import Blueprint, jsonify, request, render_template
+
+logger = logging.getLogger(__name__)
 from app.core.db import get_db, now_iso, next_invoice_num
 from app.core.auth import login_required
 
@@ -472,7 +475,7 @@ def pagar_factura(inv_id):
             t.daemon = True
             t.start()
         except Exception as notify_e:
-            print(f"⚠️ Error enviando notificación de pago: {notify_e}")
+            logger.warning('Error enviando notificacion de pago: %s', notify_e)
         
         return jsonify(result)
     except Exception as e:
@@ -732,9 +735,9 @@ def send_invoice_whatsapp(inv_id):
                 )
                 pdf_ok = os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 1000
                 if not pdf_ok:
-                    print(f"PDF gen failed: {result.stderr[-200:] if result.stderr else 'no error'}")
+                    logger.warning("PDF gen failed: %s", result.stderr[-200:] if result.stderr else 'no error')
             except Exception as e:
-                print(f"PDF gen exception: {e}")
+                logger.error("PDF gen exception: %s", e, exc_info=True)
         else:
             pdf_ok = True
         

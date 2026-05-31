@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import logging
 from flask import Flask
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -429,6 +430,10 @@ def create_app():
     if not os.path.exists(DB_PATH) or os.path.getsize(DB_PATH) == 0:
         print("⚠ DB no encontrada. Ejecuta migrate_to_sqlite.py primero.")
     init_db()
+
+    # Logging estructurado (F1.2)
+    from app.logging_config import setup_logging
+    setup_logging(app)
 
     # Register Blueprints
     from app.routes.views import views_bp

@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger('app.routes.api_leads')
 """API Leads Blueprint — CRUD, conversion, pipeline, tags, interactions."""
 import uuid
 import json as json_lib

@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger('app.routes.api_bot')
 """API Bot Blueprint — Config, send-message, silence/unsilence, global on/off, status, log."""
 import os
 import json

@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger('app.routes.api_wo')
 """API Work Orders Blueprint — CRUD, Kanban, status, payments, notifications, templates."""
 import json
 import re
@@ -150,11 +152,11 @@ def api_work_orders():
                     from app.services.bot_service import send_whatsapp
                     result = send_whatsapp(telefono, tmpl_text)
                     if result.get('ok'):
-                        print(f"  📨 Notificación auto-enviada a {telefono} para OT {new_id}")
+                        logger.info("Notificacion auto-enviada a %s para OT %s", telefono, new_id)
                     else:
-                        print(f"  ⚠️ No se pudo notificar OT {new_id} a {telefono}: {result.get('error')}")
+                        logger.warning("No se pudo notificar OT %s a %s: %s", new_id, telefono, result.get("error"))
         except Exception as notify_err:
-            print(f"  ⚠️ Error en auto-notificación OT {new_id}: {notify_err}")
+            logger.error("Error en auto-notificacion OT %s: %s", new_id, notify_err)
         
         return jsonify(wo_to_dict(conn, new_id)), 201
     except Exception as e:
