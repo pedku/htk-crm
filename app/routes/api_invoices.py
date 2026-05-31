@@ -366,6 +366,30 @@ def update_invoice(inv_id):
 
 # ── ELIMINAR / ANULAR ────────────────────────────────────────────────
 
+
+@api_invoices_bp.route("/api/facturas/<inv_id>/delete", methods=["DELETE"])
+@login_required
+def delete_invoice_permanently(inv_id):
+    """Eliminar factura permanentemente (solo borradores)."""
+    conn = get_db()
+    try:
+        inv = conn.execute("SELECT * FROM invoices WHERE id = ?", (inv_id,)).fetchone()
+        if not inv:
+            return jsonify({"error": "Factura no encontrada"}), 404
+        if inv["estado"] != "borrador":
+            return jsonify({"error": "Solo se pueden eliminar facturas en borrador"}), 400
+        conn.execute("DELETE FROM invoice_items WHERE invoice_id = ?", (inv_id,))
+        conn.execute("DELETE FROM invoices WHERE id = ?", (inv_id,))
+        conn.commit()
+        _delete_pdf_from_drive(inv_id)
+        return jsonify({"ok": True})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
 @api_invoices_bp.route('/api/facturas/<inv_id>', methods=['DELETE'])
 @login_required
 def delete_invoice(inv_id):
@@ -377,6 +401,7 @@ def delete_invoice(inv_id):
         conn.execute("UPDATE invoices SET estado = 'anulada', activo = 0, updated_at = ? WHERE id = ?",
                      (now_iso(), inv_id))
         conn.commit()
+        _delete_pdf_from_drive(inv_id)
         return jsonify({'ok': True, 'estado': 'anulada'})
     finally:
         conn.close()
@@ -764,6 +789,40 @@ def send_invoice_whatsapp(inv_id):
                                'nota': f'Bot no disponible: {e2}'})
     finally:
         conn.close()
+
+
+
+# ── DELETE PDF FROM DRIVE ─────────────────────────────────────────────
+def _delete_pdf_from_drive(inv_id):
+    """Delete invoice PDF from Google Drive and local disk."""
+    import subprocess, os as _os, json as _json
+    pdf_path = f'/home/peku/htk-whatsapp-bot/facturas/{inv_id}.pdf'
+    if _os.path.exists(pdf_path):
+        try:
+            _os.remove(pdf_path)
+            logger.info("PDF local eliminado: %s.pdf", inv_id)
+        except Exception as e:
+            logger.warning("Error eliminando PDF local: %s", e)
+    try:
+        env = {**_os.environ, 'GOG_KEYRING_BACKEND': 'file',
+               'GOG_KEYRING_PASSWORD': 'htk_gog_keyring_2026',
+               'GOG_ACCOUNT': 'info@htk-ingenieria.com'}
+        result = subprocess.run(
+            ['gog', 'drive', 'search', f'{inv_id}.pdf', '--max', '1', '--json', '--no-input'],
+            env=env, capture_output=True, timeout=10, text=True
+        )
+        if result.returncode == 0 and result.stdout:
+            files = _json.loads(result.stdout)
+            if isinstance(files, list) and files:
+                file_id = files[0].get('id', '')
+                if file_id:
+                    subprocess.run(
+                        ['gog', 'drive', 'delete', file_id, '--force', '--no-input'],
+                        env=env, capture_output=True, timeout=10
+                    )
+                    logger.info("PDF eliminado de Drive: %s.pdf", inv_id)
+    except Exception as e:
+        logger.warning("Error eliminando PDF de Drive: %s", e)
 
 
 def _send_invoice_whatsapp_background(inv_id):

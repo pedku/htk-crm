@@ -63,6 +63,7 @@ function renderFacturasTable() {
     if (f.estado === 'borrador') {
       btns += '<button class="action-btn primary" onclick="showFacturaModal(\'' + f.id + '\')" title="Editar"><i class="bi bi-pencil"></i></button>';
       btns += '<button class="action-btn danger" onclick="anularFactura(\'' + f.id + '\')" title="Anular"><i class="bi bi-x-circle"></i></button>';
+      btns += '<button class="action-btn danger" onclick="eliminarBorrador(\'' + f.id + '\')" title="Eliminar permanentemente" style="color:#dc3545;"><i class="bi bi-trash"></i></button>';
     }
     if (f.estado === 'emitida' || f.estado === 'vencida') {
       btns += '<button class="action-btn primary" style="color:#198754;" onclick="pagarFactura(\'' + f.id + '\')" title="Pagar"><i class="bi bi-check-circle"></i></button>';
@@ -401,6 +402,16 @@ async function pagarFactura(id) {
     const data = await resp.json();
     showToast('Factura pagada ✅', 'success');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
+    loadFacturas();
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+async function eliminarBorrador(id) {
+  if (!confirm('¿Eliminar permanentemente esta factura en borrador? Esta accion no se puede deshacer.')) return;
+  try {
+    const resp = await fetch(API + '/api/facturas/' + id + '/delete', { method:'DELETE', credentials:'same-origin' });
+    if (!resp.ok) { handleFetchError(resp); return; }
+    showToast('Borrador eliminado ✅', 'success');
     loadFacturas();
   } catch(e) { showToast('Error: ' + e.message, 'danger'); }
 }
