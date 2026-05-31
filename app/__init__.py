@@ -428,6 +428,8 @@ def init_db():
 def create_app():
     app = Flask(__name__, template_folder='../templates', static_folder='../static')
     app.secret_key = 'htk-crm-secret-key-2026-cambiame'
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = False
 
     # Run DB migrations and seeds
     if not os.path.exists(DB_PATH) or os.path.getsize(DB_PATH) == 0:

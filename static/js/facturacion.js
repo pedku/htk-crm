@@ -255,7 +255,7 @@ async function saveFactura() {
     const url = id ? `/api/facturas/${id}` : '/api/facturas';
     const method = id ? 'PUT' : 'POST';
     const resp = await fetch(API + url, {
-      method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+      method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body), credentials:'same-origin'
     });
     if (!resp.ok) {
       const text = await resp.text();
@@ -358,7 +358,7 @@ async function loadFacturaPayments(id, inv) {
 async function emitirFactura(id) {
   if (!confirm('¿Emitir esta factura? Ya no se podrá editar.')) return;
   try {
-    const resp = await fetch(API + `/api/facturas/${id}/emitir`, { method:'POST' });
+    const resp = await fetch(API + `/api/facturas/${id}/emitir`, { method:'POST', credentials:'same-origin' });
     if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
     showToast('Factura emitida ✅', 'success');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
@@ -369,7 +369,7 @@ async function emitirFactura(id) {
 async function pagarFactura(id) {
   if (!confirm('¿Registrar pago de esta factura?')) return;
   try {
-    const resp = await fetch(API + `/api/facturas/${id}/pagar`, { method:'POST' });
+    const resp = await fetch(API + `/api/facturas/${id}/pagar`, { method:'POST', credentials: 'same-origin' });
     if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
     showToast('Factura pagada ✅', 'success');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
@@ -380,7 +380,7 @@ async function pagarFactura(id) {
 async function anularFactura(id) {
   if (!confirm('¿Anular esta factura?')) return;
   try {
-    const resp = await fetch(API + `/api/facturas/${id}`, { method:'DELETE' });
+    const resp = await fetch(API + `/api/facturas/${id}`, { method:'DELETE', credentials:'same-origin' });
     if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
     showToast('Factura anulada', 'warning');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
@@ -404,7 +404,7 @@ async function imprimirFactura(id) {
 async function enviarFacturaWhatsApp(id) {
   if (!confirm('¿Enviar esta factura por WhatsApp al cliente?')) return;
   try {
-    const resp = await fetch(API + `/api/facturas/${id}/enviar-whatsapp`, { method:'POST' });
+    const resp = await fetch(API + `/api/facturas/${id}/enviar-whatsapp`, { method:'POST', credentials:'same-origin' });
     const data = await resp.json();
     if (data.ok) showToast('Factura enviada por WhatsApp ✅', 'success');
     else showToast(data.error || 'Error al enviar', 'error');
