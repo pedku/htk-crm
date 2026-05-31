@@ -358,34 +358,59 @@ async function loadFacturaPayments(id, inv) {
 async function emitirFactura(id) {
   if (!confirm('¿Emitir esta factura? Ya no se podrá editar.')) return;
   try {
-    const resp = await fetch(API + `/api/facturas/${id}/emitir`, { method:'POST', credentials:'same-origin' });
-    if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
+    const resp = await fetch(API + '/api/facturas/' + id + '/emitir', { method:'POST', credentials:'same-origin' });
+    if (!resp.ok) { handleFetchError(resp); return; }
     showToast('Factura emitida ✅', 'success');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
     loadFacturas();
-  } catch(e) { alert('Error: ' + e.message); }
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
+}
+
+async function handleFetchError(resp) {
+  const ct = resp.headers.get('content-type') || '';
+  const text = await resp.text();
+  if (ct.includes('text/html') || text.startsWith('<!')) {
+    showToast('Sesión expirada — recarga la página e inicia sesión de nuevo', 'danger');
+    setTimeout(() => window.location.href = '/login', 2000);
+  } else {
+    try { showToast(JSON.parse(text).error || 'Error del servidor', 'danger'); }
+    catch(e) { showToast('Error desconocido', 'danger'); }
+  }
 }
 
 async function pagarFactura(id) {
   if (!confirm('¿Registrar pago de esta factura?')) return;
   try {
-    const resp = await fetch(API + `/api/facturas/${id}/pagar`, { method:'POST', credentials: 'same-origin' });
-    if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
+    const resp = await fetch(API + '/api/facturas/' + id + '/pagar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ metodo_pago: 'CRM' }),
+      credentials: 'same-origin'
+    });
+    if (!resp.ok) {
+      const contentType = resp.headers.get('content-type') || '';
+      const text = await resp.text();
+      if (contentType.includes('text/html') || text.startsWith('<!')) {
+        throw new Error('Sesión expirada — recarga la página y vuelve a iniciar sesión');
+      }
+      try { throw new Error(JSON.parse(text).error || 'Error desconocido'); } catch(e) { throw new Error('Error de servidor'); }
+    }
+    const data = await resp.json();
     showToast('Factura pagada ✅', 'success');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
     loadFacturas();
-  } catch(e) { alert('Error: ' + e.message); }
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
 }
 
 async function anularFactura(id) {
   if (!confirm('¿Anular esta factura?')) return;
   try {
-    const resp = await fetch(API + `/api/facturas/${id}`, { method:'DELETE', credentials:'same-origin' });
-    if (!resp.ok) { const text = await resp.text(); throw new Error(text.startsWith('<!') ? 'Sesión expirada — recarga la página' : (JSON.parse(text).error || text)); }
+    const resp = await fetch(API + '/api/facturas/' + id, { method:'DELETE', credentials:'same-origin' });
+    if (!resp.ok) { handleFetchError(resp); return; }
     showToast('Factura anulada', 'warning');
     bootstrap.Modal.getInstance(document.getElementById('facturaViewModal'))?.hide();
     loadFacturas();
-  } catch(e) { alert('Error: ' + e.message); }
+  } catch(e) { showToast('Error: ' + e.message, 'danger'); }
 }
 
 async function imprimirFactura(id) {
