@@ -454,6 +454,10 @@ def create_app():
     app.register_blueprint(api_misc_bp)
     app.register_blueprint(api_invoices_bp)
 
+    # Healthcheck endpoint (F1.3)
+    from app.routes.health import health_bp
+    app.register_blueprint(health_bp)
+
     # Cache-busting: evitar que el navegador cachee HTML
     @app.after_request
     def add_no_cache_header(response):
