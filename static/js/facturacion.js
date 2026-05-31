@@ -380,6 +380,7 @@ async function handleFetchError(resp) {
 
 async function pagarFactura(id) {
   if (!confirm('¿Registrar pago de esta factura?')) return;
+  console.log('[PAGAR] Iniciando pago para', id, 'API:', API);
   try {
     const resp = await fetch(API + '/api/facturas/' + id + '/pagar', {
       method: 'POST',
@@ -387,9 +388,12 @@ async function pagarFactura(id) {
       body: JSON.stringify({ metodo_pago: 'CRM' }),
       credentials: 'same-origin'
     });
+    console.log('[PAGAR] Respuesta:', resp.status, 'ok:', resp.ok);
     if (!resp.ok) {
-      const contentType = resp.headers.get('content-type') || '';
+      const ct = (resp.headers.get('content-type') || '').split(';')[0];
       const text = await resp.text();
+      console.log('[PAGAR] Error! Status:', resp.status, 'CT:', ct, 'Body:', text.substring(0,200));
+      if (ct.includes('text/html') || text.startsWith('<!')) {
       if (contentType.includes('text/html') || text.startsWith('<!')) {
         throw new Error('Sesión expirada — recarga la página y vuelve a iniciar sesión');
       }
