@@ -33,7 +33,7 @@ def health():
                'GOG_KEYRING_BACKEND': 'file',
                'GOG_KEYRING_PASSWORD': 'htk_gog_keyring_2026'}
         result = subprocess.run(
-            ['gog', 'auth', 'list', '--no-input', '--json'],
+            ['/home/peku/.local/bin/gog', 'auth', 'list', '--no-input', '--json'],
             env=env, capture_output=True, timeout=10, text=True
         )
         if result.returncode == 0 and 'info@htk-ingenieria.com' in result.stdout:

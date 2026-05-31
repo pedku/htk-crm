@@ -464,3 +464,10 @@ async function loadFacturasStats() {
   } catch(e) {}
 }
 
+
+function exportarFacturas() {
+  const filtro = document.getElementById('factEstadoFilter');
+  const estado = filtro ? filtro.value : '';
+  const params = new URLSearchParams({ estado });
+  window.location.href = '/api/facturas/export?' + params;
+}

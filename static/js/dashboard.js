@@ -63,6 +63,7 @@ async function loadDashboard() {
  loadOTFinancialStats(orders);
  loadFacturasStats();
  cargarDashboardFinanciero();
+ loadSystemStatus();
 
  hideLoading('dashboardLoading','dashboardContent');
  } catch(e) { showToast('Error al cargar dashboard', 'danger'); hideLoading('dashboardLoading','dashboardContent'); }
@@ -175,4 +176,37 @@ async function cargarDashboardFinanciero() {
       });
     }
   } catch(e) { console.error('Dashboard financiero:', e); }
+}
+
+async function loadSystemStatus() {
+  try {
+    const data = await fetchJSON('/api/health');
+    if (!data || !data.checks) return;
+    
+    const updateCard = (id, status, el) => {
+      const card = document.getElementById('sysCard' + id);
+      el.textContent = status === 'ok' ? 'Conectado' : 'Error';
+      el.style.color = status === 'ok' ? 'var(--htk-success)' : 'var(--htk-danger)';
+      if (card) {
+        card.querySelector('.stat-accent-bar').className = 'stat-accent-bar ' + (status === 'ok' ? 'green' : 'red');
+      }
+    };
+    
+    updateCard('DB', data.checks.db.status, document.getElementById('sysDB'));
+    updateCard('Drive', data.checks.drive.status, document.getElementById('sysDrive'));
+    updateCard('Bot', data.checks.whatsapp_bot.status, document.getElementById('sysBot'));
+    
+    document.getElementById('sysUptime').textContent = data.uptime || '—';
+  } catch(e) {}
+}
+
+async function ejecutarBackup() {
+  if (!confirm('¿Crear backup de la base de datos ahora?')) return;
+  showToast('Creando backup...', 'warning');
+  try {
+    const resp = await fetch(API + '/api/auto/backup', { method:'POST', credentials:'same-origin' });
+    const data = await resp.json();
+    if (data.ok) showToast('Backup creado ✅', 'success');
+    else showToast('Error: ' + (data.error || 'desconocido'), 'danger');
+  } catch(e) { showToast('Error de conexión', 'danger'); }
 }
