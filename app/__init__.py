@@ -458,6 +458,10 @@ def create_app():
     from app.routes.health import health_bp
     app.register_blueprint(health_bp)
 
+    # Dashboard Financiero (F2.3)
+    from app.routes.finanzas import finanzas_bp
+    app.register_blueprint(finanzas_bp)
+
     # Cache-busting: evitar que el navegador cachee HTML
     @app.after_request
     def add_no_cache_header(response):

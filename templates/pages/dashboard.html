@@ -153,6 +153,58 @@
   </div>
  </div>
 
+ <!-- Financial Dashboard (F2.3) -->
+ <div class="row g-3 mt-2">
+  <div class="col-md-12">
+   <div class="table-container">
+    <div class="section-title"><i class="bi bi-currency-dollar"></i> Resumen Financiero</div>
+    <div class="row g-3 mt-2" id="finanzasRow">
+     <div class="col-md-3">
+      <div class="stat-card">
+       <div class="stat-accent-bar green"></div>
+       <div class="d-flex justify-content-between align-items-start">
+        <div>
+         <div class="stat-number" id="finIngresosMes">$0</div>
+         <div class="stat-label">Ingresos este mes</div>
+        </div>
+        <div class="stat-icon" style="color:var(--htk-success);"><i class="bi bi-currency-dollar"></i></div>
+       </div>
+       <div class="stat-trend up" id="finVariacion"><i class="bi bi-arrow-up"></i> vs mes anterior</div>
+      </div>
+     </div>
+     <div class="col-md-3">
+      <div class="stat-card">
+       <div class="stat-accent-bar yellow"></div>
+       <div class="d-flex justify-content-between align-items-start">
+        <div>
+         <div class="stat-number" id="finPendiente">$0</div>
+         <div class="stat-label">Por cobrar</div>
+        </div>
+        <div class="stat-icon" style="color:var(--htk-warning);"><i class="bi bi-hourglass-split"></i></div>
+       </div>
+      </div>
+     </div>
+     <div class="col-md-6">
+      <div class="stat-card">
+       <div class="stat-accent-bar blue"></div>
+       <div class="d-flex justify-content-between align-items-start">
+        <div style="width:100%;">
+         <div class="stat-label">Top Clientes del Mes</div>
+         <div id="finTopClientes" style="font-size:0.85em;margin-top:6px;"><span class="text-muted">Cargando...</span></div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+    <div class="row mt-2">
+     <div class="col-md-12">
+      <canvas id="graficoIngresos" height="80" style="width:100%;"></canvas>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+
  <!-- Charts Row -->
  <div class="row g-3 mt-2">
  <div class="col-md-6">

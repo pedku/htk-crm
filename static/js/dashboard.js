@@ -62,6 +62,7 @@ async function loadDashboard() {
  renderUpcomingFollowups();
  loadOTFinancialStats(orders);
  loadFacturasStats();
+ cargarDashboardFinanciero();
 
  hideLoading('dashboardLoading','dashboardContent');
  } catch(e) { showToast('Error al cargar dashboard', 'danger'); hideLoading('dashboardLoading','dashboardContent'); }
@@ -83,4 +84,95 @@ function loadOTFinancialStats(orders) {
   if (elPresupuestado) elPresupuestado.textContent = '$' + totalPresupuestado.toLocaleString('es-CO');
   if (elAbonado) elAbonado.textContent = '$' + totalAbonado.toLocaleString('es-CO');
   if (elPendiente) elPendiente.textContent = '$' + totalPendiente.toLocaleString('es-CO');
+}
+
+async function loadFacturasStats() {
+  try {
+    const data = await fetchJSON('/api/facturas/stats');
+    if (!data) return;
+    document.getElementById('statFactPendientes').textContent = data.pendientes || 0;
+    document.getElementById('statFactVencidas').textContent = data.vencidas || 0;
+    document.getElementById('statFactTotalMes').textContent = '$' + (data.total_mes || 0).toLocaleString('es-CO');
+  } catch(e) {}
+}
+
+async function renderUpcomingFollowups() {
+  const el = document.getElementById('upcomingFollowups');
+  if (!el) return;
+  try {
+    const data = await fetchJSON('/api/seguimientos/hoy');
+    if (Array.isArray(data) && data.length) {
+      el.innerHTML = data.map(s =>
+        '<div class="d-flex align-items-center gap-2 py-1"><i class="bi bi-person"></i> ' +
+        escHtml(s.nombre || '') + ' — <small class="text-muted">' + (s.nota || '') + '</small></div>'
+      ).join('');
+    } else {
+      el.innerHTML = '<div class="text-muted py-2 text-center">Sin seguimientos pendientes ✅</div>';
+    }
+  } catch(e) { el.innerHTML = '<div class="text-muted py-2">Error cargando</div>'; }
+}
+
+async function cargarDashboardFinanciero() {
+  try {
+    const data = await fetchJSON('/api/finanzas/stats');
+    if (!data) return;
+
+    // Widgets numéricos
+    const fmt = v => '$' + Math.round(v).toLocaleString('es-CO');
+    const elIngresos = document.getElementById('finIngresosMes');
+    const elVariacion = document.getElementById('finVariacion');
+    const elPendiente = document.getElementById('finPendiente');
+
+    if (elIngresos) elIngresos.textContent = fmt(data.ingresos_mes_actual);
+    if (elPendiente) elPendiente.textContent = fmt(data.pendiente_cobro);
+
+    if (elVariacion) {
+      const pct = data.variacion_pct;
+      const icon = pct >= 0 ? '▲' : '▼';
+      elVariacion.innerHTML = '<i class="bi bi-arrow-' + (pct >= 0 ? 'up' : 'down') + '"></i> ' +
+        Math.abs(pct).toFixed(1) + '% vs mes anterior';
+      elVariacion.className = 'stat-trend ' + (pct >= 0 ? 'up' : 'down');
+    }
+
+    // Top clientes
+    const elTop = document.getElementById('finTopClientes');
+    if (elTop && data.top_clientes?.length) {
+      elTop.innerHTML = data.top_clientes.map(c =>
+        '<div class="d-flex justify-content-between py-1" style="border-bottom:1px solid rgba(255,255,255,0.04);">' +
+        '<span>' + escHtml(c.nombre) + '</span><span style="color:var(--htk-primary);">' + fmt(c.total) + '</span></div>'
+      ).join('');
+    } else if (elTop) {
+      elTop.innerHTML = '<span class="text-muted">Sin datos aún</span>';
+    }
+
+    // Gráfico de ingresos últimos 6 meses
+    const canvas = document.getElementById('graficoIngresos');
+    if (canvas && data.ultimos_6_meses?.length && typeof Chart !== 'undefined') {
+      const ctx = canvas.getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.ultimos_6_meses.map(m => m.mes),
+          datasets: [{
+            label: 'Ingresos',
+            data: data.ultimos_6_meses.map(m => m.total),
+            backgroundColor: '#2563EB',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              ticks: { callback: v => fmt(v), color: '#94A3B8' },
+              grid: { color: 'rgba(255,255,255,0.04)' }
+            },
+            x: { ticks: { color: '#94A3B8' } }
+          }
+        }
+      });
+    }
+  } catch(e) { console.error('Dashboard financiero:', e); }
 }
