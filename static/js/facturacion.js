@@ -394,7 +394,6 @@ async function pagarFactura(id) {
       const text = await resp.text();
       console.log('[PAGAR] Error! Status:', resp.status, 'CT:', ct, 'Body:', text.substring(0,200));
       if (ct.includes('text/html') || text.startsWith('<!')) {
-      if (contentType.includes('text/html') || text.startsWith('<!')) {
         throw new Error('Sesión expirada — recarga la página y vuelve a iniciar sesión');
       }
       try { throw new Error(JSON.parse(text).error || 'Error desconocido'); } catch(e) { throw new Error('Error de servidor'); }
