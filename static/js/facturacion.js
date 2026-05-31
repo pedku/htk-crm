@@ -160,14 +160,15 @@ function addFacturaItem(desc, cant, precio, iva) {
     <div style="flex:1;min-width:160px;">
       <input type="text" class="form-control form-control-sm fact-item-desc" value="${escHtml(desc||'')}" placeholder="Descripción" oninput="updateFacturaPreview()">
     </div>
-    <div style="width:70px;">
-      <input type="number" class="form-control form-control-sm fact-item-cant" value="${cant||1}" min="0.1" step="0.1" oninput="updateFacturaPreview()">
+    <div style="width:90px;">
+      <input type="number" class="form-control form-control-sm fact-item-cant" value="${cant||1}" min="0.1" step="0.1" oninput="updateFacturaPreview()" style="-moz-appearance:textfield;">
+      <style>.fact-item-cant::-webkit-inner-spin-button,.fact-item-cant::-webkit-outer-spin-button,.fact-item-iva::-webkit-inner-spin-button,.fact-item-iva::-webkit-outer-spin-button,.fact-item-precio::-webkit-inner-spin-button,.fact-item-precio::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}</style>
     </div>
-    <div style="width:100px;">
+    <div style="width:120px;">
       <input type="number" class="form-control form-control-sm fact-item-precio" value="${precio||0}" min="0" step="1000" oninput="updateFacturaPreview()">
     </div>
-    <div style="width:70px;">
-      <input type="number" class="form-control form-control-sm fact-item-iva" value="${iva||19}" min="0" max="100" step="0.5" oninput="updateFacturaPreview()">
+    <div style="width:90px;">
+      <input type="number" class="form-control form-control-sm fact-item-iva" value="${iva||19}" min="0" max="100" step="0.5" oninput="updateFacturaPreview()" style="-moz-appearance:textfield;">
     </div>
     <div style="width:60px;text-align:center;">
       <div class="form-check">
@@ -175,7 +176,7 @@ function addFacturaItem(desc, cant, precio, iva) {
         <label class="form-check-label" style="font-size:0.65rem;color:rgba(255,255,255,0.5);">Incl.</label>
       </div>
     </div>
-    <div style="width:100px;">
+    <div style="width:110px;">
       <span class="fact-item-total" style="font-weight:600;color:#fff;">$0</span>
     </div>
     <button class="btn btn-sm btn-outline-danger" onclick="this.closest('.fact-item-row').remove();updateFacturaPreview();" title="Quitar"><i class="bi bi-trash"></i></button>
@@ -191,20 +192,21 @@ function updateFacturaPreview() {
     const precio = parseFloat(row.querySelector('.fact-item-precio')?.value) || 0;
     const iva = parseFloat(row.querySelector('.fact-item-iva')?.value) || 0;
     const ivaIncl = row.querySelector('.fact-item-iva-incl')?.checked || false;
-    let total;
-    let ivaLinea;
+    let total, ivaLinea, baseLinea;
     if (ivaIncl) {
-      // IVA incluido en el precio
+      // IVA incluido en el precio — extraer IVA del precio total
       total = cant * precio;
       ivaLinea = cant * precio * iva / (100 + iva);
+      baseLinea = total - ivaLinea;  // Base imponible (sin IVA)
     } else {
-      // IVA discriminado (default)
-      total = cant * precio * (1 + iva / 100);
+      // IVA discriminado: total = precio + IVA aparte
       ivaLinea = cant * precio * iva / 100;
+      total = cant * precio + ivaLinea;
+      baseLinea = cant * precio;
     }
     const totalEl = row.querySelector('.fact-item-total');
     if (totalEl) totalEl.textContent = '$' + Math.round(total).toLocaleString('es-CO');
-    sub += cant * precio;
+    sub += baseLinea;
     iva_total += ivaLinea;
   });
   const desc = parseFloat(document.getElementById('factDescuento')?.value) || 0;
