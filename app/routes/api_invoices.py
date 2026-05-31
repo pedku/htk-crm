@@ -792,13 +792,11 @@ def _send_invoice_whatsapp_background(inv_id):
                 if client and client['telefono']:
                     telefono = str(client['telefono']).strip()
                     total = float(inv['total_general'])
-                    factura_url = f'http://localhost:18800/factura/{inv_id}'
                     msg = (
                         f"⚡ *HTK INGENIERIA* — Factura {inv['numero']} ✅ PAGADA\n\n"
                         f"Cliente: {client['nombre'] or '—'}\n"
                         f"Total pagado: ${total:,.0f} COP\n"
-                        f"Fecha: {inv['pagada_fecha'] or ''[:10]}\n\n"
-                        f"Puedes consultar tu factura aqui:\n{factura_url}\n\n"
+                        f"Fecha: {(inv['pagada_fecha'] or '')[:10]}\n\n"
                         f"Gracias por confiar en HTK INGENIERIA ⚡"
                     )
                     try:
