@@ -51,6 +51,9 @@ def init_db():
         _ensure_columns(migrate_conn, 'work_orders', [
             'tipo', 'campos_extra', 'valor_total', 'client_id'
         ])
+        _ensure_columns(migrate_conn, 'work_orders', [
+            'fotos', 'firma_entrega', 'fecha_entrega'
+        ])
         migrate_conn.commit()
     finally:
         migrate_conn.close()
@@ -457,6 +460,10 @@ def create_app():
     # Healthcheck endpoint (F1.3)
     from app.routes.health import health_bp
     app.register_blueprint(health_bp)
+
+    # Tracking público para clientes (F3.3)
+    from app.routes.tracking import tracking_bp
+    app.register_blueprint(tracking_bp)
 
     # Dashboard Financiero (F2.3)
     from app.routes.finanzas import finanzas_bp

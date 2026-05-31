@@ -806,3 +806,68 @@ def api_wo_template(template_id):
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
+# ── FOTOS OT (F3.1) ──────────────────────────────────────────────────
+import uuid, os as _os, json as _json
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))), 'static', 'uploads', 'ot')
+ALLOWED = {'jpg', 'jpeg', 'png', 'webp'}
+MAX_FOTOS = 5
+
+@api_wo_bp.route('/api/work_orders/<wo_id>/fotos', methods=['POST'])
+@login_required
+def upload_foto_ot(wo_id):
+    conn = get_db()
+    try:
+        wo = conn.execute("SELECT fotos FROM work_orders WHERE id=?", (wo_id,)).fetchone()
+        if not wo:
+            return jsonify({'error': 'OT no encontrada'}), 404
+        fotos = _json.loads(wo['fotos'] or '[]')
+        if len(fotos) >= MAX_FOTOS:
+            return jsonify({'error': f'Maximo {MAX_FOTOS} fotos por OT'}), 400
+        file = request.files.get('foto')
+        tag = request.form.get('tag', 'general')
+        if not file or file.filename.rsplit('.', 1)[-1].lower() not in ALLOWED:
+            return jsonify({'error': 'Archivo invalido'}), 400
+        _os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        ext = file.filename.rsplit('.', 1)[-1].lower()
+        filename = f"OT-{wo_id}_{uuid.uuid4().hex[:8]}.{ext}"
+        file.save(_os.path.join(UPLOAD_FOLDER, filename))
+        fotos.append({"url": f"/static/uploads/ot/{filename}", "tag": tag,
+                      "fecha": now_iso()[:10]})
+        conn.execute("UPDATE work_orders SET fotos=? WHERE id=?", (_json.dumps(fotos), wo_id))
+        conn.commit()
+        logger.info("Foto agregada a OT-%s: %s", wo_id, filename)
+        return jsonify({'fotos': fotos}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+# ── FIRMA DIGITAL OT (F3.2) ──────────────────────────────────────────
+
+@api_wo_bp.route('/api/work_orders/<wo_id>/firma', methods=['POST'])
+@login_required
+def guardar_firma(wo_id):
+    data = request.get_json() or {}
+    firma = data.get('firma', '')
+    if not firma.startswith('data:image/png;base64,'):
+        return jsonify({'error': 'Firma invalida'}), 400
+    conn = get_db()
+    try:
+        conn.execute("""
+            UPDATE work_orders
+            SET firma_entrega=?, fecha_entrega=?, estado='entregado'
+            WHERE id=?
+        """, (firma, now_iso(), wo_id))
+        conn.commit()
+        logger.info("Firma guardada OT-%s → entregada", wo_id)
+        return jsonify({'ok': True}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()

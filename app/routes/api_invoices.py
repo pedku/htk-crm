@@ -807,9 +807,57 @@ def _send_invoice_whatsapp_background(inv_id):
                         with urllib.request.urlopen(req, timeout=30) as resp:
                             print(f"✅ Factura {inv_id} enviada por pago")
                     except Exception as e:
-                        print(f"⚠️ Error enviando factura pagada: {e}")
+                        logger.warning("Error enviando factura pagada: %s", e)
         finally:
             conn2.close()
+
+
+# ── EXPORTAR FACTURAS A CSV (F2.2) ────────────────────────────────────
+import csv, io
+
+@api_invoices_bp.route('/api/facturas/export')
+@login_required
+def export_facturas_csv():
+    estado = request.args.get('estado', '')
+    desde = request.args.get('desde', '2000-01-01')
+    hasta = request.args.get('hasta', '2099-12-31')
+
+    query = """
+        SELECT f.numero, c.nombre AS cliente, c.telefono,
+               f.fecha_emision, f.fecha_vencimiento,
+               f.sub_total, f.iva_total, f.total_general, f.estado, f.metodo_pago
+        FROM invoices f
+        JOIN clients c ON c.id = f.client_id
+        WHERE f.fecha_emision BETWEEN ? AND ?
+    """
+    params = [desde, hasta]
+    if estado:
+        query += " AND f.estado = ?"
+        params.append(estado)
+    query += " ORDER BY f.fecha_emision DESC"
+
+    rows = get_db().execute(query, params).fetchall()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['N° Factura', 'Cliente', 'Telefono', 'Emision', 'Vencimiento',
+                     'Subtotal', 'IVA', 'Total', 'Estado', 'Metodo Pago'])
+    for r in rows:
+        writer.writerow([
+            r['numero'], r['cliente'], r['telefono'],
+            r['fecha_emision'], r['fecha_vencimiento'],
+            round(r['sub_total'] or 0), round(r['iva_total'] or 0),
+            round(r['total_general'] or 0), r['estado'], r['metodo_pago'] or ''
+        ])
+
+    output.seek(0)
+    filename = f'facturas_{desde}_{hasta}.csv'
+    from flask import Response
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv; charset=utf-8-sig',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+    )
 
 
 # ── RUTA PÚBLICA DE VISTA DE FACTURA ─────────────────────────────────
