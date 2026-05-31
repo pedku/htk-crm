@@ -1,5 +1,7 @@
 # HTK CRM v3 — Sistema Integral de Gestión Empresarial
 
+![Tests](https://github.com/pedku/htk-crm/actions/workflows/test.yml/badge.svg)
+
 CRM + WhatsApp Bot unificados para **HTK INGENIERIA (HOUSETRONIK S.A.S.)**  
 Automatización Industrial · IoT · Mantenimiento Electrónico · Cargadores EV  
 📍 Barranquilla, Colombia · 🇨🇴
