@@ -687,7 +687,7 @@ def send_invoice_whatsapp(inv_id):
         total = inv.get('total_general', 0)
         caption = (
             f"⚡ *HTK INGENIERIA* — Factura {inv['numero']}\n\n"
-            f"Cliente: {client.get('nombre', '—')}\n"
+            f"Cliente: {dict(client).get('nombre', '—')}\n"
             f"Total: ${total:,.0f} COP\n"
             f"Vence: {inv['fecha_vencimiento']}\n\n"
             f"Gracias por confiar en nosotros ⚡"
@@ -718,7 +718,7 @@ def send_invoice_whatsapp(inv_id):
             from app.services.bot_service import send_whatsapp as sw
             msg = (
                 f"⚡ *HTK INGENIERIA* — Factura {inv['numero']}\n\n"
-                f"Cliente: {client.get('nombre', '—')}\n"
+                f"Cliente: {dict(client).get('nombre', '—')}\n"
                 f"Total: ${total:,.0f} COP\n"
                 f"Vence: {inv['fecha_vencimiento']}\n\n"
                 f"Gracias por confiar en nosotros ⚡"
@@ -789,12 +789,12 @@ def _send_invoice_whatsapp_background(inv_id):
             inv = conn2.execute("SELECT * FROM invoices WHERE id = ?", (inv_id,)).fetchone()
             if inv:
                 client = conn2.execute("SELECT * FROM clients WHERE id = ?", (inv['client_id'],)).fetchone()
-                if client and client.get('telefono'):
+                if client and dict(client).get('telefono'):
                     telefono = str(client['telefono']).strip()
                     total = float(inv['total_general'])
                     caption = (
                         f"⚡ *HTK INGENIERIA* — Factura {inv['numero']} ✅ PAGADA\n\n"
-                        f"Cliente: {client.get('nombre', '—')}\n"
+                        f"Cliente: {client['nombre'] or '—'}\n"
                         f"Total pagado: ${total:,.0f} COP\n\n"
                         f"¡Gracias por tu pago! ⚡"
                     )
