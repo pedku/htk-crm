@@ -63,7 +63,7 @@ async function loadDashboard() {
  loadOTFinancialStats(orders);
  loadFacturasStats();
  cargarDashboardFinanciero();
- loadSystemStatus();
+ 
 
  hideLoading('dashboardLoading','dashboardContent');
  } catch(e) { showToast('Error al cargar dashboard', 'danger'); hideLoading('dashboardLoading','dashboardContent'); }

@@ -36,7 +36,7 @@ const PLACEHOLDERS = {
 };
 
 function switchConfigTab(tab) {
-  const validTabs = ['general','bot','templates','prices','segments','company','usuarios'];
+  const validTabs = ['general','bot','templates','prices','segments','company','usuarios','sistema'];
   if (!validTabs.includes(tab)) tab = 'general';
 
   document.querySelectorAll('#configSubtabs .client-profile-tab').forEach(b => b.classList.remove('active'));
@@ -59,7 +59,8 @@ function switchConfigTab(tab) {
   else if (tab === 'prices') loadPricesTab();
   else if (tab === 'segments') loadSegmentsTab();
   else if (tab === 'company') loadCompanyConfig();
-  else if (tab === 'usuarios') { /* placeholder */ }
+  else if (tab === "sistema") { setTimeout(loadSystemStatus, 200); }
+  else if (tab === "usuarios") { /* placeholder */ }
 }
 
 window.switchConfigTab = switchConfigTab;

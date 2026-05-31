@@ -6,6 +6,7 @@
   <button type="button" class="client-profile-tab active" data-config-tab="general" onclick="switchConfigTab('general')"><i class="bi bi-gear"></i> General</button>
   <button type="button" class="client-profile-tab" data-config-tab="bot" onclick="switchConfigTab('bot')"><i class="bi bi-robot"></i> Bot WhatsApp</button>
   <button type="button" class="client-profile-tab" data-config-tab="templates" onclick="switchConfigTab('templates')"><i class="bi bi-chat-square-text"></i> Plantillas OT</button>
+  <button type="button" class="client-profile-tab" data-config-tab="sistema" onclick="switchConfigTab('sistema');loadSystemStatus()"><i class="bi bi-cpu"></i> Sistema</button>
   <button type="button" class="client-profile-tab" data-config-tab="prices" onclick="switchConfigTab('prices')"><i class="bi bi-tags"></i> Precios</button>
   <button type="button" class="client-profile-tab" data-config-tab="segments" onclick="switchConfigTab('segments')"><i class="bi bi-diagram-3"></i> Segmentos</button>
   <button type="button" class="client-profile-tab" data-config-tab="company" onclick="switchConfigTab('company')"><i class="bi bi-building"></i> Empresa</button>
@@ -493,6 +494,39 @@
   </div>
  </div>
 
+ <!-- Sistema -->
+ <div class="config-panel" id="config-tab-sistema" class="config-subtab" style="display:none;">
+  <div class="row g-3">
+   <div class="col-md-3">
+    <div class="stat-card" id="sysCardDB">
+     <div class="stat-accent-bar green"></div>
+     <div><div class="stat-label">Base de Datos</div><div class="stat-number" id="sysDB" style="font-size:0.85em;">—</div></div>
+    </div>
+   </div>
+   <div class="col-md-3">
+    <div class="stat-card" id="sysCardDrive">
+     <div class="stat-accent-bar green"></div>
+     <div><div class="stat-label">Google Drive</div><div class="stat-number" id="sysDrive" style="font-size:0.85em;">—</div></div>
+    </div>
+   </div>
+   <div class="col-md-3">
+    <div class="stat-card" id="sysCardBot">
+     <div class="stat-accent-bar green"></div>
+     <div><div class="stat-label">WhatsApp Bot</div><div class="stat-number" id="sysBot" style="font-size:0.85em;">—</div></div>
+    </div>
+   </div>
+   <div class="col-md-3">
+    <div class="stat-card">
+     <div><div class="stat-label">Uptime</div><div class="stat-number" id="sysUptime" style="font-size:0.85em;">—</div></div>
+    </div>
+   </div>
+  </div>
+  <div class="d-flex gap-2 mt-3">
+   <button class="btn btn-sm btn-outline-light" onclick="ejecutarBackup()"><i class="bi bi-download"></i> Backup ahora</button>
+   <a href="/api/health" target="_blank" class="btn btn-sm btn-outline-light"><i class="bi bi-json"></i> Ver JSON Health</a>
+   <a href="/api/facturas/export" class="btn btn-sm btn-outline-light"><i class="bi bi-file-earmark-spreadsheet"></i> Exportar todas las facturas</a>
+  </div>
+ </div>
 
 
 </div>

@@ -206,60 +206,7 @@
  </div>
 
  
- <!-- Estado del Sistema -->
- <div class="row g-3 mt-2">
-  <div class="col-md-12">
-   <div class="table-container">
-    <div class="section-title"><i class="bi bi-cpu"></i> Estado del Sistema</div>
-    <div class="row g-3 mt-2" id="sistemaRow">
-     <div class="col-md-3">
-      <div class="stat-card" id="sysCardDB">
-       <div class="stat-accent-bar green"></div>
-       <div class="d-flex justify-content-between align-items-start">
-        <div><div class="stat-label">Base de Datos</div><div class="stat-number" id="sysDB" style="font-size:0.85em;">—</div></div>
-        <div class="stat-icon"><i class="bi bi-database"></i></div>
-       </div>
-      </div>
-     </div>
-     <div class="col-md-3">
-      <div class="stat-card" id="sysCardDrive">
-       <div class="stat-accent-bar green"></div>
-       <div class="d-flex justify-content-between align-items-start">
-        <div><div class="stat-label">Google Drive</div><div class="stat-number" id="sysDrive" style="font-size:0.85em;">—</div></div>
-        <div class="stat-icon"><i class="bi bi-cloud"></i></div>
-       </div>
-      </div>
-     </div>
-     <div class="col-md-3">
-      <div class="stat-card" id="sysCardBot">
-       <div class="stat-accent-bar green"></div>
-       <div class="d-flex justify-content-between align-items-start">
-        <div><div class="stat-label">WhatsApp Bot</div><div class="stat-number" id="sysBot" style="font-size:0.85em;">—</div></div>
-        <div class="stat-icon" style="color:var(--htk-success);"><i class="bi bi-whatsapp"></i></div>
-       </div>
-      </div>
-     </div>
-     <div class="col-md-3">
-      <div class="stat-card">
-       <div class="stat-accent-bar blue"></div>
-       <div class="d-flex justify-content-between align-items-start">
-        <div><div class="stat-label">Uptime</div><div class="stat-number" id="sysUptime" style="font-size:0.85em;">—</div></div>
-        <div class="stat-icon"><i class="bi bi-clock"></i></div>
-       </div>
-      </div>
-     </div>
-    </div>
-    <div class="d-flex gap-2 mt-2">
-     <button class="btn btn-sm btn-outline-light" onclick="ejecutarBackup()" title="Backup manual de la base de datos"><i class="bi bi-download"></i> Backup ahora</button>
-     <a href="/api/health" target="_blank" class="btn btn-sm btn-outline-light"><i class="bi bi-json"></i> API Health</a>
-     <a href="/api/facturas/export" class="btn btn-sm btn-outline-light"><i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV</a>
-    </div>
-   </div>
-  </div>
- </div>
-
-
-<!-- Charts Row -->
+ <!-- Charts Row -->
  <div class="row g-3 mt-2">
  <div class="col-md-6">
  <div class="table-container">
