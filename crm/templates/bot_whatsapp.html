@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bot WhatsApp — HTK CRM</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root { --htk-primary: #00d4aa; --htk-dark: #111827; --htk-card: #1a2332; --htk-bg: #0d1b2a; --htk-border: rgba(255,255,255,0.06); }
+    body { background: var(--htk-bg); color: rgba(255,255,255,0.85); font-family: 'Segoe UI', system-ui, sans-serif; }
+    .topbar { background: var(--htk-card); padding: 14px 24px; border-bottom: 1px solid var(--htk-border); display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; overflow-x: auto; }
+    .topbar a { color: rgba(255,255,255,0.5); text-decoration: none; }
+    .topbar a:hover { color: var(--htk-primary); }
+    .topbar h4 { margin: 0; font-weight: 600; font-size: 1.1em; white-space: nowrap; }
+    .card-crm { background: var(--htk-card); border: 1px solid var(--htk-border); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+    .section-title { font-size: 0.95em; font-weight: 600; color: var(--htk-primary); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--htk-border); display: flex; align-items: center; gap: 8px; }
+    .btn-htk { background: var(--htk-primary); color: #000; border: none; font-weight: 600; border-radius: 8px; padding: 6px 14px; font-size: 0.82em; cursor: pointer; transition: all 0.2s; }
+    .btn-htk:hover { background: #00bf9a; color: #000; }
+    .btn-htk-outline { background: transparent; color: var(--htk-primary); border: 1px solid rgba(0,212,170,0.3); font-weight: 600; border-radius: 8px; padding: 6px 14px; font-size: 0.82em; cursor: pointer; transition: all 0.2s; }
+    .btn-htk-outline:hover { background: var(--htk-primary); color: #000; }
+    .btn-danger-outline { background: transparent; color: #ef4444; border: 1px solid rgba(239,68,68,0.3); font-weight: 600; border-radius: 8px; padding: 6px 14px; font-size: 0.82em; cursor: pointer; }
+    .btn-danger-outline:hover { background: #ef4444; color: #fff; }
+    .form-control, .form-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 0.88em; }
+    .form-control:focus, .form-select:focus { border-color: var(--htk-primary); box-shadow: 0 0 0 0.2rem rgba(0,212,170,0.15); background: rgba(255,255,255,0.08); color: #fff; }
+    .form-select option { background: #1a2332; color: #fff; }
+    .form-label { color: rgba(255,255,255,0.7); font-size: 0.85em; font-weight: 500; margin-bottom: 4px; }
+    .form-text { color: rgba(255,255,255,0.35); font-size: 0.75em; }
+    .stat-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+    .stat-item { flex: 1; min-width: 120px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--htk-border); text-align: center; }
+    .stat-item .value { font-size: 1.3em; font-weight: 700; }
+    .stat-item .label { font-size: 0.75em; color: rgba(255,255,255,0.4); }
+    .log-viewer { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 16px; font-size: 0.75rem; font-family: monospace; max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.5; }
+    .toast-container { z-index: 9999; }
+    /* tabs */
+    .nav-tabs-crm { display: flex; gap: 2px; border-bottom: 1px solid var(--htk-border); margin-bottom: 20px; overflow-x: auto; }
+    .nav-tabs-crm .tab-btn { background: transparent; border: none; color: rgba(255,255,255,0.5); padding: 10px 18px; font-size: 0.85em; font-weight: 500; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+    .nav-tabs-crm .tab-btn:hover { color: rgba(255,255,255,0.8); }
+    .nav-tabs-crm .tab-btn.active { color: var(--htk-primary); border-bottom-color: var(--htk-primary); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    /* keywords editor */
+    .kw-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .kw-row input { flex: 1; }
+    .kw-row select { width: 180px; }
+    .kw-row .remove-kw { cursor: pointer; color: rgba(255,255,255,0.3); font-size: 1.1em; }
+    .kw-row .remove-kw:hover { color: #ef4444; }
+    .opcion-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; font-weight: 600; }
+    .opcion-1 { background: rgba(59,130,246,0.2); color: #60a5fa; }
+    .opcion-2 { background: rgba(245,158,11,0.2); color: #fbbf24; }
+    .opcion-3 { background: rgba(16,185,129,0.2); color: #34d399; }
+    .opcion-4 { background: rgba(239,68,68,0.2); color: #f87171; }
+    .opcion-5 { background: rgba(139,92,246,0.2); color: #a78bfa; }
+    .opcion-6 { background: rgba(236,72,153,0.2); color: #f472b6; }
+    .msg-preview { background: #0f172a; border-radius: 8px; padding: 10px; font-size: 0.78em; font-family: monospace; white-space: pre-wrap; max-height: 120px; overflow-y: auto; margin-top: 6px; border: 1px solid rgba(255,255,255,0.05); }
+    .group-label { font-size: 0.8em; font-weight: 600; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.05em; margin: 12px 0 8px; padding-top: 8px; border-top: 1px dashed var(--htk-border); }
+    .group-label:first-of-type { border-top: none; margin-top: 0; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <i class="bi bi-robot" style="color:var(--htk-primary);font-size:1.2em;"></i>
+    <h4>Bot WhatsApp</h4>
+    <div style="margin-left:auto;display:flex;gap:4px;align-items:center;">
+      <a href="/" class="btn-htk-outline" style="font-size:0.72em;padding:4px 10px;white-space:nowrap;"><i class="bi bi-speedometer2"></i> CRM</a>
+    </div>
+    <span class="badge bg-secondary" id="botStatusBadge" style="font-size:0.72em;flex-shrink:0;">⏳ Verificando...</span>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toastMsg" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header"><i class="bi bi-check-circle-fill text-success me-2"></i><strong class="me-auto">HTK CRM</strong><button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button></div>
+      <div class="toast-body" id="toastBody"></div>
+    </div>
+  </div>
+
+  <div class="container-fluid p-3 p-md-4">
+    <!-- Tabs -->
+    <div class="nav-tabs-crm" role="tablist">
+      <button class="tab-btn active" data-tab="tab-status"><i class="bi bi-info-circle"></i> Estado</button>
+      <button class="tab-btn" data-tab="tab-horarios"><i class="bi bi-clock"></i> Horarios</button>
+      <button class="tab-btn" data-tab="tab-mensajes"><i class="bi bi-chat-dots"></i> Mensajes</button>
+      <button class="tab-btn" data-tab="tab-keywords"><i class="bi bi-tags"></i> Keywords</button>
+      <button class="tab-btn" data-tab="tab-ajustes"><i class="bi bi-gear"></i> Ajustes</button>
+    </div>
+
+    <!-- ═══ TAB 1: ESTADO ═══ -->
+    <div class="tab-content active" id="tab-status">
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <div class="card-crm">
+            <div class="section-title"><i class="bi bi-info-circle"></i> Estado del Bot</div>
+            <div class="stat-grid mb-3">
+              <div class="stat-item"><div class="value" id="botState">—</div><div class="label">Estado</div></div>
+              <div class="stat-item"><div class="value" id="botConnected">—</div><div class="label">WhatsApp</div></div>
+              <div class="stat-item"><div class="value" id="botNumber">—</div><div class="label">Número</div></div>
+              <div class="stat-item"><div class="value" id="botUptime">—</div><div class="label">Uptime</div></div>
+            </div>
+            <!-- QR Section -->
+            <div class="section-title mt-3"><i class="bi bi-qr-code"></i> QR Autenticación</div>
+            <div id="qrContainer" class="text-center mb-2" style="min-height:200px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border-radius:12px;border:1px dashed var(--htk-border);">
+              <div style="color:rgba(255,255,255,0.3);font-size:0.85em;">
+                <i class="bi bi-qr-code" style="font-size:2em;display:block;margin-bottom:8px;"></i>
+                Cargando QR...
+              </div>
+            </div>
+            <div class="d-flex gap-2 flex-wrap mt-2">
+              <button class="btn-htk-outline" onclick="refreshQR()"><i class="bi bi-arrow-clockwise"></i> Regenerar QR</button>
+              <a id="qrDirectLink" href="#" target="_blank" class="btn-htk-outline" style="display:none;text-decoration:none;"><i class="bi bi-box-arrow-up-right"></i> Abrir QR</a>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              <button class="btn-htk" onclick="toggleBot()"><i class="bi bi-power"></i> Encender / Apagar</button>
+              <button class="btn-htk-outline" onclick="refreshStatus()"><i class="bi bi-arrow-clockwise"></i> Refrescar</button>
+              <button class="btn-htk-outline" onclick="reloadBotConfig()"><i class="bi bi-arrow-repeat"></i> Recargar Config</button>
+            </div>
+          </div>
+          <div class="card-crm">
+            <div class="section-title"><i class="bi bi-send"></i> Enviar mensaje manual</div>
+            <div class="mb-2">
+              <label class="form-label">Número (formato internacional, sin +)</label>
+              <input type="text" id="sendNumero" class="form-control form-control-sm" placeholder="573001234567">
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Mensaje</label>
+              <textarea id="sendMensaje" class="form-control" rows="5" style="font-size:0.85em;font-family:monospace;"></textarea>
+            </div>
+            <button class="btn-htk w-100" onclick="enviarManual()"><i class="bi bi-whatsapp"></i> Enviar</button>
+            <div id="sendResult" class="small mt-2" style="color:rgba(255,255,255,0.4);"></div>
+          </div>
+          <div class="card-crm">
+            <div class="section-title"><i class="bi bi-volume-mute"></i> Silenciar / Desilenciar</div>
+            <div class="mb-2">
+              <label class="form-label">Número</label>
+              <input type="text" id="silenceNumero" class="form-control form-control-sm" placeholder="573001234567">
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn-danger-outline" onclick="silenciar('silence')"><i class="bi bi-bell-slash"></i> Silenciar</button>
+              <button class="btn-htk-outline" onclick="silenciar('unsilence')" style="border-color:#16a34a;color:#16a34a;"><i class="bi bi-bell"></i> Desilenciar</button>
+            </div>
+            <div id="silenceResult" class="small mt-2" style="color:rgba(255,255,255,0.4);"></div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="card-crm">
+            <div class="section-title"><i class="bi bi-diagram-3"></i> Flujo de trabajo</div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;">
+                  <h6 style="color:#0dcaf0;font-size:0.85em;font-weight:600;margin-bottom:12px;">📥 Recepción</h6>
+                  <div class="timeline-flow">
+                    <div class="flow-item"><div class="title">Mensaje entrante</div><div class="desc">Cliente escribe al WhatsApp de HTK</div></div>
+                    <div class="flow-item"><div class="title">Detección de intención</div><div class="desc">Palabras clave → opción 1-6</div></div>
+                    <div class="flow-item"><div class="title">Respuesta automática</div><div class="desc">Mensaje contextual según opción</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;">
+                  <h6 style="color:#198754;font-size:0.85em;font-weight:600;margin-bottom:12px;">🔄 Gestión</h6>
+                  <div style="position:relative;padding-left:28px;margin-bottom:14px;"><div style="font-weight:600;font-size:0.9em;">Sesión por chat</div><div style="font-size:0.8em;color:rgba(255,255,255,0.45);">Estado: idle → menú → detalles → lead</div></div>
+                  <div style="position:relative;padding-left:28px;margin-bottom:14px;"><div style="font-weight:600;font-size:0.9em;">Derivación a ingeniero</div><div style="font-size:0.8em;color:rgba(255,255,255,0.45);">Si no entiende o pasa el límite de mensajes</div></div>
+                  <div style="position:relative;padding-left:28px;"><div style="font-weight:600;font-size:0.9em;">Lead creado en CRM</div><div style="font-size:0.8em;color:rgba(255,255,255,0.45);">Cada nuevo contacto se registra automáticamente</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-crm">
+            <div class="section-title justify-content-between">
+              <span><i class="bi bi-journal-text"></i> Últimas actividades</span>
+              <button class="btn-htk-outline" onclick="refreshLog()" style="font-size:0.75em;padding:4px 10px;"><i class="bi bi-arrow-clockwise"></i></button>
+            </div>
+            <div class="log-viewer" id="botLog">Cargando logs...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB 2: HORARIOS ═══ -->
+    <div class="tab-content" id="tab-horarios">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card-crm">
+            <div class="section-title"><i class="bi bi-briefcase"></i> Horario Semana (Lun-Vie)</div>
+            <div class="row g-3">
+              <div class="col-6">
+                <label class="form-label">Hora de inicio</label>
+                <input type="number" class="form-control" id="cfg_horario_semana_inicio" min="0" max="23" value="8">
+                <div class="form-text">Hora del día (0-23)</div>
+              </div>
+              <div class="col-6">
+                <label class="form-label">Hora de fin</label>
+                <input type="number" class="form-control" id="cfg_horario_semana_fin" min="0" max="23" value="18">
+                <div class="form-text">Hora del día (0-23)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card-crm">
+            <div class="section-title"><i class="bi bi-calendar-week"></i> Horario Sábado</div>
+            <div class="row g-3">
+              <div class="col-6">
+                <label class="form-label">Hora de inicio</label>
+                <input type="number" class="form-control" id="cfg_horario_sabado_inicio" min="0" max="23" value="8">
+                <div class="form-text">Hora del día (0-23)</div>
+              </div>
+              <div class="col-6">
+                <label class="form-label">Hora de fin</label>
+                <input type="number" class="form-control" id="cfg_horario_sabado_fin" min="0" max="23" value="13">
+                <div class="form-text">Hora del día (0-23)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="card-crm">
+            <div class="section-title"><i class="bi bi-info-circle"></i> Vista previa del horario</div>
+            <div id="horarioPreview" style="font-size:0.9em;color:rgba(255,255,255,0.6);">
+              ⏰ Lun-Vie: <strong id="previewSemana">8:00 - 18:00</strong> | Sáb: <strong id="previewSabado">8:00 - 13:00</strong>
+            </div>
+            <div class="mt-2 form-text">Los mensajes fuera de este horario recibirán el mensaje automático de "fuera de horario".<br>
+            <strong>Nota:</strong> La consulta de órdenes de trabajo funciona <strong>24/7</strong> sin importar el horario.</div>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex gap-2 mt-2 mb-4">
+        <button class="btn-htk" onclick="guardarConfig('horario')"><i class="bi bi-floppy"></i> Guardar Horarios</button>
+        <button class="btn-htk-outline" onclick="recargarBot()"><i class="bi bi-arrow-repeat"></i> Recargar en Bot</button>
+      </div>
+    </div>
+
+    <!-- ═══ TAB 3: MENSAJES ═══ -->
+    <div class="tab-content" id="tab-mensajes">
+      <div class="card-crm">
+        <div class="section-title justify-content-between">
+          <span><i class="bi bi-chat-dots"></i> Mensajes del Bot</span>
+          <span style="font-size:0.75em;color:rgba(255,255,255,0.35);">Usa <code>{nombre}</code> para el nombre del contacto</span>
+        </div>
+        <div id="mensajesContainer"></div>
+      </div>
+      <div class="d-flex gap-2 mt-2 mb-4">
+        <button class="btn-htk" onclick="guardarMensajes()"><i class="bi bi-floppy"></i> Guardar Todos los Mensajes</button>
+        <button class="btn-htk-outline" onclick="recargarBot()"><i class="bi bi-arrow-repeat"></i> Recargar en Bot</button>
+      </div>
+    </div>
+
+    <!-- ═══ TAB 4: KEYWORDS ═══ -->
+    <div class="tab-content" id="tab-keywords">
+      <div class="card-crm">
+        <div class="section-title justify-content-between">
+          <span><i class="bi bi-tags"></i> Palabras Clave → Opción</span>
+          <span style="font-size:0.75em;color:rgba(255,255,255,0.35);">Detectan la intención del cliente automáticamente</span>
+        </div>
+        <div class="row mb-3">
+          <div class="col-auto">
+            <span class="opcion-badge opcion-1">1 = Reparación</span>
+          </div>
+          <div class="col-auto">
+            <span class="opcion-badge opcion-2">2 = E/E</span>
+          </div>
+          <div class="col-auto">
+            <span class="opcion-badge opcion-3">3 = Automatización</span>
+          </div>
+          <div class="col-auto">
+            <span class="opcion-badge opcion-4">4 = Cargadores</span>
+          </div>
+          <div class="col-auto">
+            <span class="opcion-badge opcion-5">5 = IoT</span>
+          </div>
+          <div class="col-auto">
+            <span class="opcion-badge opcion-6">6 = Otra</span>
+          </div>
+        </div>
+        <div id="keywordsContainer"></div>
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn-htk-outline" onclick="agregarKeyword()"><i class="bi bi-plus-lg"></i> Agregar palabra</button>
+          <button class="btn-htk" onclick="guardarKeywords()"><i class="bi bi-floppy"></i> Guardar Keywords</button>
+        </div>
+      </div>
+      <div class="d-flex gap-2 mt-2 mb-4">
+        <button class="btn-htk-outline" onclick="recargarBot()"><i class="bi bi-arrow-repeat"></i> Recargar en Bot</button>
+      </div>
+    </div>
+
+    <!-- ═══ TAB 5: AJUSTES ═══ -->
+    <div class="tab-content" id="tab-ajustes">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card-crm">
+            <div class="section-title"><i class="bi bi-toggle-on"></i> Toggles</div>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div>
+                <div style="font-weight:500;">Consulta de OT 24/7</div>
+                <div style="font-size:0.78em;color:rgba(255,255,255,0.4);">Los clientes pueden consultar su orden por WhatsApp</div>
+              </div>
+              <div class="form-check form-switch" style="padding-left:60px;">
+                <input class="form-check-input" type="checkbox" id="cfg_consulta_ot_activa" style="transform:scale(1.3);cursor:pointer;">
+              </div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div>
+                <div style="font-weight:500;">Palabras Clave Activas</div>
+                <div style="font-size:0.78em;color:rgba(255,255,255,0.4);">Auto-detectar intención por palabras clave (desactivar = solo menú numérico)</div>
+              </div>
+              <div class="form-check form-switch" style="padding-left:60px;">
+                <input class="form-check-input" type="checkbox" id="cfg_keywords_activas" checked style="transform:scale(1.3);cursor:pointer;">
+              </div>
+            </div>
+          </div>
+          <div class="card-crm">
+            <div class="section-title"><i class="bi bi-sliders"></i> Parámetros</div>
+            <div class="mb-3">
+              <label class="form-label">Timeout de sesión inactiva (ms)</label>
+              <input type="number" class="form-control" id="cfg_reset_timeout_ms" value="1800000" step="60000">
+              <div class="form-text">30 min = 1800000. 0 = no resetear nunca</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Máx mensajes automáticos antes de derivar</label>
+              <input type="number" class="form-control" id="cfg_max_auto_mensajes" value="5" min="1" max="20">
+              <div class="form-text">Si el cliente insiste sin elegir opción, se deriva a ingeniero</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Número del Bot WhatsApp</label>
+              <input type="text" class="form-control" id="cfg_bot_number" value="573156032940">
+              <div class="form-text">Formato internacional sin + (NO cambiar si no estás seguro)</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">URL API CRM</label>
+              <input type="text" class="form-control" id="cfg_crm_api_url" value="http://localhost:18800">
+              <div class="form-text">Solo cambiar si el CRM cambia de puerto</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card-crm">
+            <div class="section-title"><i class="bi bi-arrow-repeat"></i> Acciones</div>
+            <div class="d-grid gap-2">
+              <button class="btn-htk" onclick="guardarAjustes()"><i class="bi bi-floppy"></i> Guardar Ajustes</button>
+              <button class="btn-htk-outline" onclick="recargarBot()"><i class="bi bi-arrow-repeat"></i> Recargar Config en el Bot</button>
+              <button class="btn-htk-outline" onclick="refreshStatus()"><i class="bi bi-arrow-clockwise"></i> Refrescar Estado</button>
+            </div>
+          </div>
+          <div class="card-crm">
+            <div class="section-title"><i class="bi bi-info-circle"></i> Sobre la configuración</div>
+            <div style="font-size:0.82em;color:rgba(255,255,255,0.5);line-height:1.6;">
+              <p>⚠️ Los cambios se guardan en la base de datos del CRM, pero el bot no los aplica hasta que hagas clic en <strong>"Recargar Config"</strong> o <strong>"Recargar en Bot"</strong>.</p>
+              <p><strong>Horarios:</strong> Definen cuándo el bot responde automáticamente. Fuera de horario envía el mensaje de "fuera de horario".</p>
+              <p><strong>Mensajes:</strong> Todos los textos que el bot usa para responder. Usa <code>{nombre}</code> para personalizar.</p>
+              <p><strong>Keywords:</strong> Mapa de palabras clave → número de opción. Si un cliente escribe "inverter", el bot responde con la opción de reparación (1).</p>
+              <p><strong>Órdenes de Trabajo:</strong> La consulta de OT funciona <strong>24/7</strong>, incluso fuera del horario hábil.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let _botStatus = null;
+    const OPTS = ['', 'Reparación', 'E/E', 'Automatización', 'Cargadores', 'IoT', 'Otra'];
+
+    // ─── TOAST ──────────────────────────────────────────
+    function showToast(msg, type) {
+      const t = document.getElementById('toastMsg');
+      document.getElementById('toastBody').textContent = msg;
+      t.querySelector('.toast-header i').className = (!type || type === 'success')
+        ? 'bi bi-check-circle-fill text-success me-2'
+        : 'bi bi-exclamation-triangle-fill text-danger me-2';
+      new bootstrap.Toast(t).show();
+    }
+
+    // ─── TABS ────────────────────────────────────────────
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ─── STATUS ──────────────────────────────────────────
+    async function refreshStatus() {
+      const badge = document.getElementById('botStatusBadge');
+      try {
+        const r = await fetch('/api/bot/status');
+        _botStatus = await r.json();
+        if (_botStatus.error || !_botStatus.ok) {
+          badge.textContent = '⚠️ Offline';
+          badge.className = 'badge bg-danger ms-auto';
+          document.getElementById('botState').textContent = 'Desconectado';
+          document.getElementById('botConnected').textContent = '❌';
+          document.getElementById('botNumber').textContent = '—';
+          document.getElementById('botUptime').textContent = '—';
+          return;
+        }
+        const isOn = _botStatus.status === 'on';
+        badge.textContent = isOn ? '🟢 Activo' : '🔴 Apagado';
+        badge.className = isOn ? 'badge bg-success ms-auto' : 'badge bg-danger ms-auto';
+        document.getElementById('botState').textContent = isOn ? 'Encendido' : 'Apagado';
+        const waStatus = _botStatus.whatsapp || 'disconnected';
+        let waIcon, waText;
+        if (waStatus === 'connected') {
+          waIcon = '🟢'; waText = 'WhatsApp Conectado';
+        } else if (waStatus === 'qr_pending' || waStatus === 'authenticated') {
+          waIcon = '🟡'; waText = 'Escanea QR pendiente';
+        } else {
+          waIcon = '🔴'; waText = 'WhatsApp Desconectado';
+        }
+        document.getElementById('botConnected').innerHTML = `<span style="color:${waStatus==='connected'?'#198754':waStatus==='qr_pending'?'#d97706':'#ef4444'};">${waIcon} ${waText}</span>`;
+        document.getElementById('botNumber').textContent = _botStatus.botNumber ? '57' + _botStatus.botNumber : '—';
+        const up = _botStatus.uptime || 0;
+        document.getElementById('botUptime').textContent = Math.floor(up / 3600) + 'h ' + Math.floor((up % 3600) / 60) + 'm';
+      } catch(e) {
+        badge.textContent = '⚠️ Error';
+        badge.className = 'badge bg-danger ms-auto';
+        document.getElementById('botState').textContent = 'Error';
+      }
+    }
+
+    async function toggleBot() {
+      if (!_botStatus) await refreshStatus();
+      const newState = _botStatus?.status === 'on' ? 'off' : 'on';
+      const endpoint = newState === 'on' ? '/api/bot/global-on' : '/api/bot/global-off';
+      try {
+        const r = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin' });
+        const res = await r.json();
+        showToast(res.ok ? '✅ Bot '+(newState==='on'?'encendido':'apagado') : '⚠️ Error');
+        refreshStatus();
+      } catch(e) { showToast('⚠️ Error','danger'); }
+    }
+
+    async function reloadBotConfig() {
+      showToast('⏳ Recargando configuración en el bot...','');
+      try {
+        const r = await fetch('/api/bot/config/reload', {
+          method:'POST',
+          credentials:'same-origin'
+        });
+        const res = await r.json();
+        showToast(res.ok ? '✅ Config recargada en el bot' : '⚠️ '+(res.error||'Error'), res.ok?'success':'danger');
+      } catch(e) { showToast('⚠️ Error de conexión con el bot','danger'); }
+    }
+
+    // ─── SEND ────────────────────────────────────────────
+    async function enviarManual() {
+      const to = document.getElementById('sendNumero').value.trim();
+      const msg = document.getElementById('sendMensaje').value.trim();
+      const result = document.getElementById('sendResult');
+      if (!to || !msg) { result.textContent = '⚠️ Completa número y mensaje'; result.style.color = '#dc2626'; return; }
+      result.textContent = '⏳ Enviando...'; result.style.color = '#d97706';
+      try {
+        const r = await fetch('/api/send-message', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify({numero:to, mensaje:msg}) });
+        const res = await r.json();
+        if (res.ok) { result.textContent = '✅ Enviado'; result.style.color = '#198754'; document.getElementById('sendMensaje').value = ''; }
+        else { result.textContent = '❌ '+(res.error||'error'); result.style.color = '#dc2626'; }
+      } catch(e) { result.textContent = '❌ Error de conexión'; result.style.color = '#dc2626'; }
+    }
+
+    // ─── SILENCE ─────────────────────────────────────────
+    async function silenciar(action) {
+      const num = document.getElementById('silenceNumero').value.trim();
+      const result = document.getElementById('silenceResult');
+      if (!num) { result.textContent = '⚠️ Ingresa un número'; result.style.color = '#dc2626'; return; }
+      try {
+        const r = await fetch('/api/bot/'+(action==='silence'?'silence':'unsilence'), { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify({numero:num}) });
+        const res = await r.json();
+        result.textContent = res.ok ? '✅ '+(action==='silence'?'Silenciado':'Desilenciado') : '⚠️ Error';
+        result.style.color = res.ok ? '#198754' : '#dc2626';
+      } catch(e) { result.textContent = '❌ Error'; result.style.color = '#dc2626'; }
+    }
+
+    // ─── LOGS ────────────────────────────────────────────
+    async function refreshLog() {
+      const el = document.getElementById('botLog');
+      el.textContent = 'Cargando...';
+      try {
+        const r = await fetch('/api/bot/log');
+        const res = await r.json();
+        el.textContent = res.log ? res.log.split('\n').slice(-60).join('\n') : (res.error||'Sin logs');
+        el.scrollTop = el.scrollHeight;
+      } catch(e) { el.textContent = '❌ Error: '+e.message; }
+    }
+
+    // ════════════════════════════════════════════════════════
+    // ═══ CONFIG MANAGER ═══
+    // ════════════════════════════════════════════════════════
+
+    let allConfig = {};
+    let allConfigFlat = {};  // { key: item, ... }
+
+    async function loadAllConfig() {
+      try {
+        const r = await fetch('/api/bot/config/categorias');
+        const raw = await r.json();
+        allConfig = raw;
+        // Build flat lookup: { key: item }
+        allConfigFlat = {};
+        for (const cat of Object.values(raw)) {
+          for (const item of cat) {
+            allConfigFlat[item.key] = item;
+          }
+        }
+        return allConfig;
+      } catch(e) { showToast('⚠️ Error cargando config','danger'); return {}; }
+    }
+
+    function val(key) {
+      return allConfigFlat[key] ? allConfigFlat[key].value : '';
+    }
+
+    // ─── HORARIOS ──────────────────────────────────────────
+    function renderHorarios() {
+      document.getElementById('cfg_horario_semana_inicio').value = val('horario_semana_inicio') || '8';
+      document.getElementById('cfg_horario_semana_fin').value = val('horario_semana_fin') || '18';
+      document.getElementById('cfg_horario_sabado_inicio').value = val('horario_sabado_inicio') || '8';
+      document.getElementById('cfg_horario_sabado_fin').value = val('horario_sabado_fin') || '13';
+      updateHorarioPreview();
+      ['cfg_horario_semana_inicio','cfg_horario_semana_fin','cfg_horario_sabado_inicio','cfg_horario_sabado_fin'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateHorarioPreview);
+      });
+    }
+
+    function updateHorarioPreview() {
+      const si = parseInt(document.getElementById('cfg_horario_semana_inicio').value)||0;
+      const sf = parseInt(document.getElementById('cfg_horario_semana_fin').value)||0;
+      const sbi = parseInt(document.getElementById('cfg_horario_sabado_inicio').value)||0;
+      const sbf = parseInt(document.getElementById('cfg_horario_sabado_fin').value)||0;
+      document.getElementById('previewSemana').textContent = `${si}:00 - ${sf}:00`;
+      document.getElementById('previewSabado').textContent = `${sbi}:00 - ${sbf}:00`;
+    }
+
+    async function guardarConfig(tab) {
+      const data = {};
+      if (tab === 'horario') {
+        data.horario_semana_inicio = document.getElementById('cfg_horario_semana_inicio').value;
+        data.horario_semana_fin = document.getElementById('cfg_horario_semana_fin').value;
+        data.horario_sabado_inicio = document.getElementById('cfg_horario_sabado_inicio').value;
+        data.horario_sabado_fin = document.getElementById('cfg_horario_sabado_fin').value;
+      }
+      try {
+        const r = await fetch('/api/bot/config', { method:'PUT', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify(data) });
+        const res = await r.json();
+        if (res.ok) showToast('✅ Config guardada ('+res.updated+' items)');
+        else showToast('⚠️ '+(res.error||'Error'),'danger');
+      } catch(e) { showToast('⚠️ Error de red','danger'); }
+    }
+
+    // ─── MENSAJES ──────────────────────────────────────────
+    const GRUPOS_ORDEN = { presentacion:1, bienvenida:2, reintento:3, submenu:4, opciones:5, derivacion:6 };
+    const GRUPOS_LABEL = { presentacion:'📋 Presentación', bienvenida:'🏠 Bienvenida / Menú', reintento:'🔄 Reintento', submenu:'📂 Submenús', opciones:'📌 Opciones de servicio', derivacion:'📤 Derivación y cierre' };
+    const MSG_KEYS = ['msg_presentacion','msg_bienvenida','msg_reintento','msg_submenu_ee','msg_reparacion_equipos','msg_elevadores','msg_estabilizadores','msg_automatizacion','msg_cargadores','msg_iot','msg_otra_consulta','msg_derivar_ingeniero','msg_fuera_horario','msg_urgente','msg_despedida','msg_default'];
+
+    function renderMensajes() {
+      const container = document.getElementById('mensajesContainer');
+      container.innerHTML = '';
+      if (!allConfig.mensajes) return;
+      const msgs = [...allConfig.mensajes].sort((a,b) => {
+        const ga = GRUPOS_ORDEN[a.grupo]||99, gb = GRUPOS_ORDEN[b.grupo]||99;
+        if (ga !== gb) return ga - gb;
+        return a.grupo === b.grupo ? 0 : 0;
+      });
+      let lastGroup = '';
+      msgs.forEach(item => {
+        if (item.grupo && item.grupo !== lastGroup) {
+          if (lastGroup) container.innerHTML += '<hr style="border-color:var(--htk-border);margin:16px 0;">';
+          const label = GRUPOS_LABEL[item.grupo] || item.grupo.toUpperCase();
+          container.innerHTML += `<div class="group-label">${label}</div>`;
+          lastGroup = item.grupo;
+        }
+        const rows = (item.value || '').split('\n').length;
+        container.innerHTML += `
+          <div class="mb-3">
+            <label class="form-label">${item.descripcion || item.key} <span style="color:rgba(255,255,255,0.25);font-size:0.85em;">(${item.key})</span></label>
+            <textarea class="form-control msg-textarea" data-key="${item.key}" rows="${Math.max(rows, 3)}" style="font-family:monospace;font-size:0.82em;">${escapeHtml(item.value || '')}</textarea>
+          </div>`;
+      });
+    }
+
+    async function guardarMensajes() {
+      const data = {};
+      document.querySelectorAll('.msg-textarea').forEach(el => {
+        data[el.dataset.key] = el.value;
+      });
+      try {
+        const r = await fetch('/api/bot/config', { method:'PUT', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify(data) });
+        const res = await r.json();
+        showToast(res.ok ? '✅ Mensajes guardados ('+res.updated+' items)' : '⚠️ '+(res.error||'Error'),'danger');
+      } catch(e) { showToast('⚠️ Error de red','danger'); }
+    }
+
+    // ─── KEYWORDS ──────────────────────────────────────────
+    function renderKeywords() {
+      const container = document.getElementById('keywordsContainer');
+      container.innerHTML = '';
+      try {
+        const kw = JSON.parse(val('keywords') || '{}');
+        Object.entries(kw).forEach(([word, opt]) => addKeywordRow(word, opt));
+      } catch(e) { showToast('⚠️ Error cargando keywords','danger'); }
+    }
+
+    function addKeywordRow(word, opt) {
+      const container = document.getElementById('keywordsContainer');
+      const row = document.createElement('div');
+      row.className = 'kw-row';
+      row.innerHTML = `
+        <input type="text" class="form-control kw-word" value="${escapeHtml(word)}" placeholder="palabra clave">
+        <select class="form-select kw-opt">
+          ${[1,2,3,4,5,6].map(n => `<option value="${n}" ${n==opt?'selected':''}>${n} — ${OPTS[n]}</option>`).join('')}
+        </select>
+        <span class="remove-kw" onclick="this.parentElement.remove()"><i class="bi bi-x-circle"></i></span>`;
+      container.appendChild(row);
+    }
+
+    function agregarKeyword() { addKeywordRow('', 1); }
+
+    async function guardarKeywords() {
+      const kw = {};
+      document.querySelectorAll('.kw-row').forEach(row => {
+        const word = row.querySelector('.kw-word').value.trim().toLowerCase();
+        const opt = parseInt(row.querySelector('.kw-opt').value);
+        if (word) kw[word] = opt;
+      });
+      try {
+        const r = await fetch('/api/bot/config', { method:'PUT', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify({keywords: JSON.stringify(kw)}) });
+        const res = await r.json();
+        showToast(res.ok ? '✅ Keywords guardadas ('+Object.keys(kw).length+' palabras)' : '⚠️ '+(res.error||'Error'),'danger');
+      } catch(e) { showToast('⚠️ Error de red','danger'); }
+    }
+
+    // ─── AJUSTES ───────────────────────────────────────────
+    function renderAjustes() {
+      const checks = ['consulta_ot_activa'];
+      checks.forEach(k => {
+        const el = document.getElementById('cfg_'+k);
+        if (el) el.checked = val(k) === 'true' || val(k) === true;
+      });
+      const nums = ['reset_timeout_ms','max_auto_mensajes'];
+      nums.forEach(k => {
+        const el = document.getElementById('cfg_'+k);
+        if (el) el.value = val(k) || '';
+      });
+      const texts = ['bot_number','crm_api_url'];
+      texts.forEach(k => {
+        const el = document.getElementById('cfg_'+k);
+        if (el) el.value = val(k) || '';
+      });
+    }
+
+    async function guardarAjustes() {
+      const data = {};
+      data.consulta_ot_activa = document.getElementById('cfg_consulta_ot_activa').checked ? 'true' : 'false';
+      data.reset_timeout_ms = document.getElementById('cfg_reset_timeout_ms').value;
+      data.max_auto_mensajes = document.getElementById('cfg_max_auto_mensajes').value;
+      data.bot_number = document.getElementById('cfg_bot_number').value;
+      data.crm_api_url = document.getElementById('cfg_crm_api_url').value;
+      try {
+        const r = await fetch('/api/bot/config', { method:'PUT', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify(data) });
+        const res = await r.json();
+        showToast(res.ok ? '✅ Ajustes guardados ('+res.updated+' items)' : '⚠️ '+(res.error||'Error'),'danger');
+      } catch(e) { showToast('⚠️ Error de red','danger'); }
+    }
+
+    // ─── RECARGAR BOT ──────────────────────────────────────
+    function recargarBot() {
+      reloadBotConfig();
+    }
+
+    // ─── HELPERS ───────────────────────────────────────────
+    function escapeHtml(s) {
+      if (!s) return '';
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ════════════════════════════════════════════════════════
+    // ═══ INIT ═══
+    // ════════════════════════════════════════════════════════
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      refreshStatus();
+      refreshLog();
+      setInterval(refreshStatus, 30000);
+
+      await loadAllConfig();
+      renderHorarios();
+      renderMensajes();
+      renderKeywords();
+      renderAjustes();
+      loadQR();
+    });
+
+    // ─── QR ────────────────────────────────────────────────
+    let qrRefreshTimer = null;
+
+    async function loadQR() {
+      try {
+        const r = await fetch('/api/bot/qr-url');
+        const data = await r.json();
+        const container = document.getElementById('qrContainer');
+        const link = document.getElementById('qrDirectLink');
+        if (data.url) {
+          container.innerHTML = `<img src="${data.url}" style="max-width:220px;border-radius:12px;" alt="QR WhatsApp" onerror="this.parentElement.innerHTML='<div style=color:#ef4444;font-size:0.85em;><i class=bi bi-exclamation-triangle style=font-size:2em;display:block;margin-bottom:8px;></i>Error al cargar QR</div>'">`;
+          link.href = data.url;
+          link.style.display = 'inline-block';
+        } else {
+          container.innerHTML = `<div style="color:rgba(255,255,255,0.3);font-size:0.85em;">
+            <i class="bi bi-qr-code" style="font-size:2em;display:block;margin-bottom:8px;"></i>
+            Sin QR generado aún. Inicia el bot para generar uno.
+          </div>`;
+          link.style.display = 'none';
+        }
+      } catch(e) {
+        console.log('QR load error:', e);
+      }
+    }
+
+    async function refreshQR() {
+      const container = document.getElementById('qrContainer');
+      const link = document.getElementById('qrDirectLink');
+      container.innerHTML = `<div style="color:var(--htk-primary);font-size:0.85em;">
+        <i class="bi bi-arrow-repeat" style="font-size:2em;display:block;margin-bottom:8px;animation:spin 1s linear infinite;"></i>
+        Regenerando QR...
+      </div>`;
+      link.style.display = 'none';
+      try {
+        await fetch('/api/bot/qr', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin' });
+        // Wait a bit then reload QR URL
+        setTimeout(loadQR, 8000);
+      } catch(e) {
+        container.innerHTML = `<div style="color:#ef4444;font-size:0.85em;">
+          <i class="bi bi-exclamation-triangle" style="font-size:2em;display:block;margin-bottom:8px;"></i>
+          Error al regenerar QR
+        </div>`;
+      }
+    }
+
+    // Auto-refresh QR every 30s while not connected
+    setInterval(() => {
+      const connected = document.getElementById('botConnected')?.textContent || '';
+      if (connected.includes('Conectando')) {
+        loadQR();
+      }
+    }, 30000);
+
+    // Spin animation for refresh
+    const style = document.createElement('style');
+    style.textContent = '@keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }';
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>
