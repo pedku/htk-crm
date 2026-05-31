@@ -792,7 +792,7 @@ def _send_invoice_whatsapp_background(inv_id):
                 if client and client['telefono']:
                     telefono = str(client['telefono']).strip()
                     total = float(inv['total_general'])
-                    msg = (
+                    caption = (
                         f"⚡ *HTK INGENIERIA* — Factura {inv['numero']} ✅ PAGADA\n\n"
                         f"Cliente: {client['nombre'] or '—'}\n"
                         f"Total pagado: ${total:,.0f} COP\n"
@@ -800,9 +800,9 @@ def _send_invoice_whatsapp_background(inv_id):
                         f"Gracias por confiar en HTK INGENIERIA ⚡"
                     )
                     try:
-                        payload = py_json.dumps({'to': telefono, 'message': msg}).encode()
+                        payload = py_json.dumps({'to': telefono, 'document': pdf_path, 'caption': caption}).encode()
                         req = urllib.request.Request(
-                            'http://localhost:18802/send',
+                            'http://localhost:18802/send-document',
                             data=payload, headers={'Content-Type': 'application/json'}, method='POST'
                         )
                         with urllib.request.urlopen(req, timeout=30) as resp:
