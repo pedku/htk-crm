@@ -731,7 +731,7 @@ def send_invoice_whatsapp(inv_id):
         def send_via_bot(file_path, msg_caption):
             payload = py_json.dumps({'to': telefono, 'document': file_path, 'caption': msg_caption}).encode()
             req = urllib.request.Request(
-                'http://localhost:18802/send',
+                'http://localhost:18802/send-document',
                 data=payload,
                 headers={'Content-Type': 'application/json'},
                 method='POST'
@@ -750,21 +750,21 @@ def send_invoice_whatsapp(inv_id):
             )
             return sw(telefono, msg)
         
-        # 1. Try generating PDF fresh
+        # 1. Always regenerate PDF fresh (state may have changed since last gen)
         pdf_ok = False
-        if not os.path.exists(pdf_path) or os.path.getsize(pdf_path) < 1000:
-            try:
-                result = subprocess.run(
-                    ['python3', 'pdf-gen.py', inv_id],
-                    cwd=BOT_DIR, capture_output=True, timeout=45, text=True
-                )
-                pdf_ok = os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 1000
-                if not pdf_ok:
-                    logger.warning("PDF gen failed: %s", result.stderr[-200:] if result.stderr else 'no error')
-            except Exception as e:
-                logger.error("PDF gen exception: %s", e, exc_info=True)
-        else:
-            pdf_ok = True
+        try:
+            # Remove old PDF first to avoid serving stale version
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
+            result = subprocess.run(
+                ['python3', 'pdf-gen.py', inv_id],
+                cwd=BOT_DIR, capture_output=True, timeout=45, text=True
+            )
+            pdf_ok = os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 1000
+            if not pdf_ok:
+                logger.warning("PDF gen failed: %s", result.stderr[-200:] if result.stderr else 'no error')
+        except Exception as e:
+            logger.error("PDF gen exception: %s", e, exc_info=True)
         
         # 2. Send PDF if available, else text fallback
         if pdf_ok:
@@ -831,15 +831,16 @@ def _send_invoice_whatsapp_background(inv_id):
     BOT_DIR = '/home/peku/htk-whatsapp-bot'
     pdf_path = os.path.join(BOT_DIR, 'facturas', f'{inv_id}.pdf')
     
-    # Generate PDF if not exists
-    if not os.path.exists(pdf_path) or os.path.getsize(pdf_path) < 1000:
-        try:
-            subprocess.run(
-                ['python3', 'pdf-gen.py', inv_id],
-                cwd=BOT_DIR, capture_output=True, timeout=45, text=True
-            )
-        except:
-            pass
+    # Always regenerate PDF fresh (state may have changed since last gen)
+    try:
+        if os.path.exists(pdf_path):
+            os.remove(pdf_path)
+        subprocess.run(
+            ['python3', 'pdf-gen.py', inv_id],
+            cwd=BOT_DIR, capture_output=True, timeout=45, text=True
+        )
+    except:
+        pass
     
     # Send if PDF exists
     if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 1000:

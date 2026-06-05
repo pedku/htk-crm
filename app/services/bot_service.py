@@ -178,12 +178,22 @@ def bot_action(action, payload_data=None):
             return json.loads(resp.read())
     except Exception as e:
         return {'ok': False, 'error': str(e)}
-def send_email(to, subject, body, html=False):
-    """Send email via SMTP using configured credentials."""
+def send_email(to, subject, body, html=False, attachments=None):
+    """Send email via SMTP using configured credentials.
+    
+    Args:
+        to: Recipient email
+        subject: Email subject
+        body: Email body text
+        html: If True, body is HTML
+        attachments: Optional list of dicts with 'path' and 'name' keys
+    """
     import smtplib
     import os
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
+    from email.mime.base import MIMEBase
+    from email import encoders
     
     conn = get_db()
     try:
@@ -213,11 +223,31 @@ def send_email(to, subject, body, html=False):
         subtype = 'html' if html else 'plain'
         msg.attach(MIMEText(body, subtype, 'utf-8'))
         
+        # Attach files if provided
+        if attachments:
+            for att in attachments:
+                filepath = att.get('path', '')
+                filename = att.get('name', os.path.basename(filepath))
+                if not filepath or not os.path.exists(filepath):
+                    continue
+                try:
+                    with open(filepath, 'rb') as f:
+                        part = MIMEBase('application', 'octet-stream')
+                        part.set_payload(f.read())
+                    encoders.encode_base64(part)
+                    part.add_header(
+                        'Content-Disposition',
+                        f'attachment; filename="{filename}"'
+                    )
+                    msg.attach(part)
+                except Exception as e:
+                    print(f"⚠️ Error adjuntando {filepath}: {e}")
+        
         server = smtplib.SMTP(host, port, timeout=15)
         server.starttls()
         server.login(user, password)
         server.send_message(msg)
         server.quit()
-        return {'ok': True, 'to': to, 'subject': subject}
+        return {'ok': True, 'to': to, 'subject': subject, 'attachments': len(attachments or [])}
     except Exception as e:
         return {'ok': False, 'error': str(e)}

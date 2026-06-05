@@ -281,11 +281,21 @@
       <button class="btn btn-outline-htk" onclick="recargarConfigBot()">
        <i class="bi bi-arrow-repeat"></i> 🔄 Recargar en el bot
       </button>
+      <button class="btn btn-outline-success" id="cfgStartBotBtn" style="display:none;" onclick="startBot()">
+       <i class="bi bi-play-fill"></i> Iniciar Bot
+      </button>
+      <button class="btn btn-outline-warning" id="cfgStopBotBtn" style="display:none;" onclick="stopBot()">
+       <i class="bi bi-stop-fill"></i> Detener Bot
+      </button>
+      <button class="btn btn-outline-info" id="cfgQrBtn" style="display:none;" onclick="showBotQR()">
+       <i class="bi bi-qr-code"></i> Escanear QR
+      </button>
       <button class="btn btn-outline-danger" id="cfgRestartBotBtn" style="display:none;" onclick="restartBot()">
        <i class="bi bi-arrow-clockwise"></i> Reiniciar Bot
       </button>
      </div>
      <div id="cfgSaveResult" class="mt-2"></div>
+     <div id="cfgQrDisplay" class="mt-3 text-center" style="display:none;"></div>
     </div><!-- /botCfgForm -->
    </div>
 

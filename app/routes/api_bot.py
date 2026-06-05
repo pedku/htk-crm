@@ -495,19 +495,23 @@ def api_lid_stats():
 # ── SEND EMAIL ───────────────────────────────────────────────────────
 
 @api_bot_bp.route('/api/send-email', methods=['POST'])
-@login_required
 def api_send_email():
+    # Allow localhost without auth (for internal tools)
+    is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1')
+    if 'user' not in session and not is_local:
+        return jsonify({'error': 'No autenticado'}), 401
     data = request.get_json()
     to = data.get('to')
     subject = data.get('subject')
     body = data.get('body')
     lead_id = data.get('lead_id')
     html = data.get('html', False)
+    attachments = data.get('attachments')  # [{'path': '...', 'name': '...'}, ...]
     
     if not to or not subject or not body:
         return jsonify({'ok': False, 'error': 'to, subject y body requeridos'}), 400
     
-    result = send_email(to, subject, body, html)
+    result = send_email(to, subject, body, html, attachments)
     if lead_id and result.get('ok'):
         actividad_crear(lead_id, 'email', 'Email enviado: ' + subject, body[:150])
     return jsonify(result)

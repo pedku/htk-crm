@@ -74,6 +74,75 @@ def api_clients_by_lid(lid):
         conn.close()
 
 
+@api_clients_bp.route('/api/clients/from-bot', methods=['POST'])
+def api_clients_from_bot():
+    """Endpoint sin auth para que el bot registre clientes (solo localhost)."""
+    remote = request.remote_addr
+    if remote not in ('127.0.0.1', 'localhost', '::1'):
+        if request.headers.get('CF-Connecting-IP'):
+            return jsonify({'error': 'Forbidden'}), 403
+    
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data'}), 400
+    
+    conn = get_db()
+    try:
+        telefono = data.get('telefono', '')
+        # Buscar si ya existe por teléfono primero
+        existing = None
+        if telefono:
+            existing = conn.execute(
+                "SELECT id FROM clients WHERE telefono LIKE ?",
+                (f'%{telefono}%',)
+            ).fetchone()
+        
+        if existing:
+            # Ya existe — actualizar datos si faltan
+            updates = []
+            params = []
+            for field in ('nombre', 'tipo_documento', 'documento', 'direccion'):
+                if data.get(field):
+                    updates.append(f"{field} = ?")
+                    params.append(data[field])
+            if updates:
+                params.append(existing['id'])
+                conn.execute(
+                    f"UPDATE clients SET {', '.join(updates)} WHERE id = ?",
+                    params
+                )
+                conn.commit()
+            return jsonify({'ok': True, 'cliente_id': existing['id'], 'actualizado': True}), 200
+        
+        # Crear nuevo cliente
+        new_id = f"CLI-{int(__import__('time').time() * 1000) % 100000}"
+        now = __import__('datetime').datetime.now().isoformat()
+        conn.execute("""
+            INSERT INTO clients (id, telefono, nombre, fuente, primer_contacto,
+                ultimo_contacto, interacciones_totales, estado, tipo_documento,
+                documento, direccion, notas)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            new_id,
+            telefono,
+            data.get('nombre', ''),
+            data.get('fuente', 'WhatsApp'),
+            now, now, 1,
+            data.get('estado', 'cliente'),
+            data.get('tipo_documento', ''),
+            data.get('documento', ''),
+            data.get('direccion', ''),
+            data.get('notas', 'Registro automático desde WhatsApp bot')
+        ))
+        conn.commit()
+        return jsonify({'ok': True, 'cliente_id': new_id}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
 @api_clients_bp.route('/api/clients', methods=['GET', 'POST'])
 @login_required
 def api_clients():

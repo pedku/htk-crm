@@ -27,6 +27,7 @@ const ESTADOS = {
   MENU: "menu",              // Menú mostrado, esperando opción
   SUBMENU_EE: "submenu_ee", // Submenú E/E, esperando 1 o 2
   AWAITING_DETAIL: "awaiting_detail", // Esperando datos del cliente
+  AWAITING_REGISTRO: "awaiting_registro", // Capturando datos para facturación
   LEAD_COMPLETE: "lead_complete",     // Lead finalizado, derivado
   CLOSED: "closed",          // Conversación cerrada
   SILENT: "silent",          // Pedro ya atendió, bot no responde
@@ -302,6 +303,40 @@ function estaEnHorario() {
 // ─── LEADS (agregación por sesión) ────────────────────
 // Un lead por sesión, se enriquece progresivamente
 // Solo se guarda definitivamente cuando está COMPLETO
+// ─── GUARDAR CLIENTE EN CRM ──────────────────────
+function guardarClienteCRM(data) {
+  const http = require("http");
+  const body = JSON.stringify({
+    telefono: data.telefono?.replace(/@[\s\S]+$/, '').replace(/^\+?57/, '') || '',
+    nombre: data.nombre || '',
+    tipo_documento: data.tipoDoc || '',
+    documento: data.documento || '',
+    direccion: data.direccion || '',
+    fuente: 'WhatsApp',
+    estado: 'cliente',
+    notas: 'Registro automático desde WhatsApp bot',
+  });
+
+  const req = http.request({
+    hostname: "localhost",
+    port: 18800,
+    path: "/api/clients/from-bot",
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) },
+    timeout: 5000,
+  }, (res) => {
+    let resp = "";
+    res.on("data", c => resp += c);
+    res.on("end", () => {
+      if (res.statusCode === 201) console.log("✅ CRM: cliente registrado desde WhatsApp");
+      else console.log("⚠️ CRM: respuesta " + res.statusCode + " al registrar cliente");
+    });
+  });
+  req.on("error", (e) => console.log("⚠️ CRM: error al registrar cliente:", e.message));
+  req.write(body);
+  req.end();
+}
+
 function guardarLeads() {
   try {
     const all = [];
@@ -395,8 +430,8 @@ function detectarOpcion(texto, estado) {
   if (/^(menu|menú|inicio|empezar|volver|atrás|start|comenzar|reiniciar)$/i.test(t)) return "reset";
   if (/^(gracias|ok|okey|bye|chao|adios|listo|thanks|thank you|dale|si|sí|de acuerdo|ok ok|okey dokey)$/i.test(t)) return "despedida";
 
-  // Si está esperando datos del cliente → NO revisar keywords ni números de menú
-  if (estado === ESTADOS.AWAITING_DETAIL) {
+  // Si está esperando datos del cliente o registro → NO revisar keywords ni números de menú
+  if (estado === ESTADOS.AWAITING_DETAIL || estado === ESTADOS.AWAITING_REGISTRO) {
     return "detalle"; // Todo lo que escriba es un detalle
   }
 
@@ -454,8 +489,80 @@ function responder(session, estado, opcion, texto, nombre) {
 
     // ─── PRESENTACION: capturar nombre ─────────
     case ESTADOS.PRESENTACION: {
-      // Guardar lo que dijo como posible nombre
-      const nombreIngresado = texto.trim().substring(0, 60) || "👤";
+      const raw = texto.trim().substring(0, 60);
+
+      // Detectar saludos / small talk en vez de nombre
+      // Cubre tildes, errores ortográficos, variaciones informales
+      const rawL = raw.toLowerCase().replace(/[¿?!¡.,;:*]/g, '').trim();
+      const esSaludo = [
+        // Una palabra: saludo puro (exacto, sin match parcial tipo "hola" en "holanda")
+        /^(hola|hol[ií]s?|olis?|ola|alo|buenas?|buen[oa]|saludos?|hey|ey|eh|oye|oiga|oi|listo|d[ií]as?)$/i,
+        // Dos palabras: saludo compuesto
+        /^(buenos? d[ií]as?$|buen d[ií]a$|buenas? (tardes|noches)$|mucho gusto$|un gusto$|todo bien$|bien gracias$|por favor$)/i,
+        // Preguntas sociales (cómo estás, qué tal, etc.)
+        /^c[oó]mo (est[aá]s|vas|van|vamos|est[aá]n|estamos)$/i,
+        /^(q|qu[eé]|ke|k|que) (tal|h[aá]ces?|mas|hubo|ond[ae]|pas[aá])$/i,
+        /^(kiubo|quiubo|q h[uú]bo)$/i,
+        /^bien y t[uú]/i,
+        // Preguntas directas sobre servicios (no son nombres)
+        /^(tienen|necesito|quisiera|cu[aá]nto|precio|costo|informaci[oó]n|info|ayuda)/i,
+        // "Quiero" / "Solo quiero" + algo (nadie se llama así)
+        /^(solo )?quiero/i,
+        /^(me )?(puedes|puede|podr[ií]as)/i,
+        /^(consulta|cotizaci[oó]n|saber|valor|presupuesto)/i,
+        /^(una )?consulta/i,
+        /^([eé]sto es|es para|es que|es sobre)/i,
+        /^(bueno |bien )?(quiero|necesito|tengo|tengo una|tengo un)/i,
+        /^(mira|escucha|oiga|digame|dígame)/i,
+        /^(te explico|les explico|les comento|te comento)/i,
+      ];
+      if (esSaludo.some(r => r.test(rawL))) {
+        return '¡Hola! 😊 Para poder ayudarte, necesito que me digas *tu nombre* por favor. ¿Cómo te llamas?';
+        // No cambiamos estado, sigue en PRESENTACION
+      }
+
+      // Analizar estructura del texto para detectar si es realmente un nombre
+      // Reglas: nombres tienen max 4 palabras (2 nombres + 2 apellidos)
+      // y preposiciones/conectores indican que NO es un nombre (con excepciones)
+      const palabras = rawL.split(/\s+/).filter(Boolean);
+      
+      // Palabras que JAMÁS aparecen en un nombre real
+      const noNameWords = new Set([
+        'para','por','con','sin','en','entre','hacia','hasta','desde','sobre','bajo','tras','ante',
+        'y','e','o','u','ni','pero','mas','sino','aunque','porque','pues',
+        'un','una','unos','unas',
+        'yo','tu','tú','él','ella','usted','nosotros','ellos','ellas',
+        'mi','mí','ti','si','sí','su','le','lo','se','nos','te','les',
+        'que','quien','quién','como','cómo','cual','cuál','cuando','cuándo','donde','dónde','qué',
+        'esto','eso','este','esta','ese','esa','aquel','aquella','algo','nada',
+        'todo','toda','cada','mucho','poco','muy','bien','mal',
+        'solo','sólo','más','menos','ya','no',
+        'es','ha','he','has','han','hay','sea','fue','era','soy','eres',
+        'son','somos','está','están','estoy','estamos','tengo','tiene','quiere',
+        'necesito','necesita','saber','puede','puedo','hace','hacer','dice','va','voy',
+        'ok','vale','listo','gracias','bueno','hola','hey','porfa',
+        'del','al','le','se','te','me',
+      ]);
+      
+      // Excepción: palabras que SÍ pueden aparecer en apellidos compuestos
+      const nameConnectors = new Set(['de','del','la','los','las','y','san','santa']);
+      
+      // Clasificar cada palabra
+      const prohibidas = palabras.filter(p => noNameWords.has(p));
+      const conectoresNombre = palabras.filter(p => nameConnectors.has(p));
+      const normales = palabras.filter(p => !noNameWords.has(p) && !nameConnectors.has(p));
+      
+      // Si hay palabras prohibidas (que no son conectores de apellidos) → no es nombre
+      const tienePalabraProhibida = prohibidas.some(p => !nameConnectors.has(p));
+      // Si solo hay conectores de apellido + nombres normales, es válido (ej: "De la Cruz")
+      const soloConectoresValidos = prohibidas.every(p => nameConnectors.has(p));
+      
+      if (tienePalabraProhibida || palabras.length > 4 || (palabras.length > 0 && normales.length === 0 && conectoresNombre.length > 0)) {
+        return '¡Hola! 😊 Para poder ayudarte, necesito que me digas *tu nombre* por favor. ¿Cómo te llamas?';
+      }
+
+      // Guardar lo que dijo como nombre
+      const nombreIngresado = raw || "👤";
       session.lead.nombre = nombreIngresado;
       session.nombre = nombreIngresado;
 
@@ -527,12 +634,14 @@ function responder(session, estado, opcion, texto, nombre) {
         session.estado = ESTADOS.AWAITING_DETAIL;
         return p(msgs.estabilizadores);
       }
-      // Si no es sub-opción válida, tratar como detalle
-      session.lead.opcion = "Elevadores y Estabilizadores";
-      session.lead.detalle = texto;
-      session.estado = ESTADOS.AWAITING_DETAIL;
-      // Mostrar info general de E/E y pedir detalles
-      return p(msgs.submenu_elev_estab + "\n\n" + "¿Qué tipo de equipo necesitas, " + n + "? Cuéntanos tu caso y un ingeniero te asesorará.");
+      // No reconoció 1 ni 2 — re-preguntar con autoCount
+      session.autoCount = (session.autoCount || 0) + 1;
+      if (session.autoCount >= config.maxAutoMensajes) {
+        const lead = finalizarLead(session);
+        session.estado = ESTADOS.SILENT;
+        return p(msgs.derivar_ingeniero);
+      }
+      return '❌ Opción no válida. Responde *1* para Elevador o *2* para Estabilizador.\n\n' + p(msgs.submenu_elev_estab);
     }
 
     // ─── AWAITING DETAIL: cliente dando info ──────
@@ -541,11 +650,138 @@ function responder(session, estado, opcion, texto, nombre) {
       const prev = session.lead.detalle || "";
       session.lead.detalle = prev ? prev + " | " + texto : texto;
 
-      // Finalizar lead
+      // Finalizar lead (notifica a Pedro + guarda en CRM como lead)
       finalizarLead(session);
-      session.estado = ESTADOS.SILENT;
 
-      return p(msgs.derivar_ingeniero);
+      // Intentar registrar datos del cliente para facturación/OT
+      session.regData = { telefono: session.numero, nombre: session.nombre || session.lead?.nombre || '' };
+      session.regStep = 0;
+      session.estado = ESTADOS.AWAITING_REGISTRO;
+      return '📋 Para darle *seguimiento y prioridad* a tu solicitud, necesito tus datos básicos:
+
+✅ Identificarte como cliente
+✅ Tener tu dirección para coordinar servicios
+✅ Agilizar futuras solicitudes
+
+*Paso 1/3:* ¿Cuál es tu tipo de documento?
+Responde *CC* (Cédula), *NIT* (empresa) o *CE* (extranjería).
+
+Si prefieres no registrar, responde *NO* y un ingeniero te contactará igual. 😊';
+
+    // ─── AWAITING REGISTRO: capturando datos del cliente ──
+    case ESTADOS.AWAITING_REGISTRO: {
+      const raw = texto.trim();
+      const rawL = raw.toLowerCase();
+
+      // Salir del registro en cualquier paso
+      if (/^(no gracias|despu[eé]s|saltar|omitir|ahora no|skip)$/i.test(rawL)) {
+        session.estado = ESTADOS.SILENT;
+        return p(msgs.derivar_ingeniero);
+      }
+
+      const step = session.regStep ?? 0;
+
+      // ── helper para mostrar confirmación ──
+      function mostrarConfirmacion() {
+        const d = session.regData;
+        return '📋 *Resumen de tus datos:*\n\n'
+          + '📄 Tipo doc: *' + (d.tipoDoc || '—') + '*\n'
+          + '🔢 Documento: *' + (d.documento || '—') + '*\n'
+          + '🏙️ Ciudad: *' + (d.ciudad || '—') + '*\n'
+          + '📍 Dirección: *' + (d.direccion || '—') + '*\n\n'
+          + '¿Los datos son correctos?\n'
+          + '1️⃣ *Sí*, registrar y enviar solicitud\n'
+          + '2️⃣ *No*, corregir un dato';
+      }
+
+      function mostrarCorreccion() {
+        return '¿Qué dato deseas corregir?\n'
+          + '1️⃣ Tipo de documento\n'
+          + '2️⃣ Número de documento\n'
+          + '3️⃣ Ciudad\n'
+          + '4️⃣ Dirección';
+      }
+
+      // ── PASO 0: Tipo de documento ──
+      if (step === 0) {
+        const match = rawL.match(/^(cc|c[eé]dula|nit|ce|extranjer[aí]a|pasaporte)$/i);
+        if (!match) {
+          return '❌ Tipo de documento no válido. Responde *CC*, *NIT* o *CE*.\n\nO escribe *NO* para saltar.';
+        }
+        const t = match[1].toUpperCase();
+        session.regData.tipoDoc = /^(CÉDULA|CEDULA|CC)$/i.test(t) ? 'CC'
+          : /^NIT$/i.test(t) ? 'NIT'
+          : 'CE';
+        if (session.regConfirm) { session.regStep = 4; session.regConfirm = false; return mostrarConfirmacion(); }
+        session.regStep = 1;
+        return '📋 *Paso 2/4:* Escribe tu *número de ' + session.regData.tipoDoc + '* (solo números).\nEjemplo: 1234567890';
+      }
+
+      // ── PASO 1: Número de documento ──
+      if (step === 1) {
+        const docNum = raw.replace(/[^\d]/g, '');
+        if (docNum.length < 4) {
+          return '❌ El número debe tener al menos 4 dígitos. Intenta de nuevo.';
+        }
+        session.regData.documento = docNum;
+        if (session.regConfirm) { session.regStep = 4; session.regConfirm = false; return mostrarConfirmacion(); }
+        session.regStep = 2;
+        return '📋 *Paso 3/4:* Escribe tu *ciudad*.\nEjemplo: Barranquilla';
+      }
+
+      // ── PASO 2: Ciudad ──
+      if (step === 2) {
+        if (raw.length < 3) {
+          return '❌ Escribe el nombre de tu ciudad.';
+        }
+        session.regData.ciudad = raw;
+        if (session.regConfirm) { session.regStep = 4; session.regConfirm = false; return mostrarConfirmacion(); }
+        session.regStep = 3;
+        return '📋 *Paso 4/4:* Escribe tu *dirección* completa.\nEjemplo: Cra 50 #80-30, Barranquilla';
+      }
+
+      // ── PASO 3: Dirección ──
+      if (step === 3) {
+        if (raw.length < 5) {
+          return '❌ La dirección es muy corta. Escribe tu dirección completa.';
+        }
+        session.regData.direccion = raw;
+        session.regConfirm = false;
+        session.regStep = 4;
+        return mostrarConfirmacion();
+      }
+
+      // ── PASO 4: Confirmación ──
+      if (step === 4) {
+        if (rawL === '1' || /^(s[ií]|si|correcto|confirmo|ok|dale)$/i.test(rawL)) {
+          // ✅ Guardar en CRM
+          guardarClienteCRM(session.regData);
+          session.regStep = undefined;
+          session.regData = undefined;
+          session.estado = ESTADOS.SILENT;
+          return '✅ *Solicitud registrada exitosamente.*\n\nHemos guardado tus datos para darte seguimiento prioritario. Un ingeniero de HTK te contactará pronto.\n\n📌 Tus datos están seguros y solo se usarán para gestionar tu solicitud.';
+        }
+        // No → ir a corrección
+        session.regStep = 5;
+        return mostrarCorreccion();
+      }
+
+      // ── PASO 5: Corrección (elegir qué campo) ──
+      if (step === 5) {
+        const opcion = parseInt(raw);
+        if (opcion >= 1 && opcion <= 4) {
+          const stepMap = [0, 1, 2, 3];
+          session.regStep = stepMap[opcion - 1];
+          session.regConfirm = true;  // Después de corregir, volver a confirmación
+          const labels = ['tipo de documento (CC/NIT/CE)', 'número de documento', 'ciudad', 'dirección'];
+          return '✏️ Corrige tu *' + labels[opcion - 1] + '*:';
+        }
+        return '❌ Opción no válida.\n\n' + mostrarCorreccion();
+      }
+
+      // Fallback: reiniciar
+      session.regStep = 0;
+      return '📋 Vamos a empezar. ¿Cuál es tu tipo de documento? (*CC*, *NIT* o *CE*)';
     }
 
     // ─── SILENT: Pedro atendió, bot no responde ──
@@ -744,6 +980,34 @@ client.on("message", async (msg) => {
     // Detectar comando/opción según el estado actual
     const opcion = detectarOpcion(texto, session.estado);
 
+    // ─── FUERA DE HORARIO ───────────────────────
+    if (!enHorario && session.estado !== ESTADOS.IDLE) {
+      await msg.reply(personalizar(msgs.fuera_horario, nombre));
+      return;
+    }
+
+    // ─── CONSULTA OT (antes de comandos globales para manejo propio) ──
+    if (session.estado === ESTADOS.CONSULTA_OT) {
+      const textoConsulta = texto.toUpperCase().trim();
+      
+      if (textoConsulta === 'MENU' || textoConsulta === 'SALIR' || textoConsulta === 'VOLVER' || textoConsulta === 'NO' || opcion === 'reset') {
+        session.estado = ESTADOS.MENU;
+        await msg.reply(personalizar(msgs.bienvenida, nombre));
+        return;
+      }
+      
+      const respuestaOT = await consultarOT(textoConsulta, config.crmApiUrl);
+      if (respuestaOT.startsWith('❌')) {
+        // Error: código no válido o no encontrado — quedarse en el mismo estado
+        await msg.reply(respuestaOT + '\n\n📋 Escribe otro código o *MENU* para volver al inicio.');
+        return;
+      }
+      // Éxito: mostrar resultado y quedarse esperando otro código
+      session.estado = ESTADOS.CONSULTA_OT;
+      await msg.reply(respuestaOT + '\n\n📋 Escribe *otro código* para consultar, o *MENU* para volver.');
+      return;
+    }
+
     // ─── COMANDOS GLOBALES ──────────────────────
 
     // URGENTE desde cualquier estado
@@ -786,28 +1050,6 @@ client.on("message", async (msg) => {
       session.leadFinalizado = false;
       session.autoCount = 0;
       session.nombre = "";
-      return;
-    }
-
-    // ─── FUERA DE HORARIO ───────────────────────
-    if (!enHorario && session.estado !== ESTADOS.IDLE) {
-      await msg.reply(personalizar(msgs.fuera_horario, nombre));
-      return;
-    }
-
-    // ─── CONSULTA OT ──────────────────────────
-    if (session.estado === ESTADOS.CONSULTA_OT) {
-      const textoConsulta = texto.toUpperCase().trim();
-      
-      if (textoConsulta === 'MENU' || textoConsulta === 'SALIR' || opcion === 'reset') {
-        session.estado = ESTADOS.MENU;
-        await msg.reply(personalizar(msgs.bienvenida, nombre));
-        return;
-      }
-      
-      const respuestaOT = await consultarOT(textoConsulta, config.crmApiUrl);
-      session.estado = ESTADOS.MENU;
-      await msg.reply(respuestaOT + '\n\n' + personalizar(msgs.bienvenida, nombre));
       return;
     }
 
