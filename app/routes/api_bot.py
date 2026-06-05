@@ -175,7 +175,7 @@ def api_bot_global_on():
 @api_bot_bp.route('/api/bot/status')
 def api_bot_status():
     """Bot status with auth handling for localhost."""
-    is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1')
+    is_local = request.remote_addr in ('127.0.0.1', 'localhost', '::1') and not request.headers.get('CF-Connecting-IP')
     is_auth = 'user' in session
     if not is_local and not is_auth:
         return jsonify({'ok': False, 'error': 'No autenticado', 'status': 'auth_required'}), 401
@@ -428,35 +428,36 @@ NODE_BIN = '/home/peku/.config/nvm/versions/node/v24.15.0/bin/node'
 
 @api_bot_bp.route('/api/bot/qr')
 def api_bot_qr():
-    """QR login: stop bot, restart it, wait for QR, return image."""
-    qr_path = os.path.join(BOT_DIR, 'qr-code.png')
+    """Return QR image from bot (local non-Docker setup)."""
+    # Paths to check in order
+    possible_paths = [
+        os.path.join(BOT_DIR, 'qr-code.png'),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'img', 'bot_qr.png'),
+    ]
     
     try:
-        # 1. Stop and restart bot to generate fresh QR
-        try:
-            subprocess.run(['systemctl', '--user', 'stop', 'htk-whatsapp-bot'],
-                          capture_output=True, timeout=8)
-        except:
-            pass
-        subprocess.run(['pkill', '-9', '-f', 'bot\\.js'], capture_output=True, timeout=5)
-        _time_module.sleep(2)
+        import shutil
+        # Try to copy fresh QR from bot (handles local nohup setup)
+        src = os.path.join(BOT_DIR, 'qr-code.png')
+        if os.path.exists(src) and os.path.getsize(src) > 100:
+            from flask import send_file
+            resp = send_file(src, mimetype='image/png')
+            resp.headers['Cache-Control'] = 'no-cache'
+            resp.headers['Pragma'] = 'no-cache'
+            resp.headers['Expires'] = '0'
+            return resp
         
-        # 2. Start bot (it will generate QR internally)
-        subprocess.run(['systemctl', '--user', 'start', 'htk-whatsapp-bot'],
-                      capture_output=True, timeout=8)
+        # Fallback to other paths
+        for p in possible_paths:
+            if os.path.exists(p) and os.path.getsize(p) > 100:
+                from flask import send_file
+                resp = send_file(p, mimetype='image/png')
+                resp.headers['Cache-Control'] = 'no-cache' 
+                resp.headers['Pragma'] = 'no-cache'
+                resp.headers['Expires'] = '0'
+                return resp
         
-        # 3. Wait for QR image to be generated (bot.js saves it)
-        for _ in range(20):
-            _time_module.sleep(1)
-            if os.path.exists(qr_path) and os.path.getsize(qr_path) > 100:
-                age = _time_module.time() - os.path.getmtime(qr_path)
-                if age < 5:  # Fresh QR
-                    from flask import send_file
-                    resp = send_file(qr_path, mimetype='image/png')
-                    resp.headers['Cache-Control'] = 'no-cache'
-                    return resp
-        
-        return jsonify({'ok': False, 'error': 'QR no generado aún, intenta de nuevo'}), 202
+        return jsonify({'ok': False, 'error': 'QR no generado aún'}), 202
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 

@@ -154,6 +154,12 @@ def send_whatsapp(numero, mensaje):
         return {'ok': False, 'error': str(e)}
 
 
+def _get_bot_url():
+    """Get bot API base URL (configurable via env var for Docker)."""
+    import os
+    return os.environ.get('BOT_API_URL', 'http://localhost:18802')
+
+
 def bot_action(action, payload_data=None):
     """Generic bot action proxy (silence, unsilence, global-off, global-on, status)."""
     endpoints = {
@@ -169,7 +175,7 @@ def bot_action(action, payload_data=None):
     try:
         payload = json.dumps(payload_data or {}).encode()
         req = urllib.request.Request(
-            f'http://localhost:18802/{endpoints[action]}',
+            f'{_get_bot_url()}/{endpoints[action]}',
             data=payload,
             headers={'Content-Type': 'application/json'},
             method='POST'

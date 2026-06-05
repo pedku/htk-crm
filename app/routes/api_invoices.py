@@ -731,7 +731,7 @@ def send_invoice_whatsapp(inv_id):
         def send_via_bot(file_path, msg_caption):
             payload = py_json.dumps({'to': telefono, 'document': file_path, 'caption': msg_caption}).encode()
             req = urllib.request.Request(
-                'http://localhost:18802/send-document',
+                f'{os.environ.get("BOT_API_URL", "http://localhost:18802")}/send-document',
                 data=payload,
                 headers={'Content-Type': 'application/json'},
                 method='POST'
@@ -862,7 +862,7 @@ def _send_invoice_whatsapp_background(inv_id):
                     try:
                         payload = py_json.dumps({'to': telefono, 'document': pdf_path, 'caption': caption}).encode()
                         req = urllib.request.Request(
-                            'http://localhost:18802/send-document',
+                            f'{os.environ.get("BOT_API_URL", "http://localhost:18802")}/send-document',
                             data=payload, headers={'Content-Type': 'application/json'}, method='POST'
                         )
                         with urllib.request.urlopen(req, timeout=30) as resp:
