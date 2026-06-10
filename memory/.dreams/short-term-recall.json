@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-29T13:00:02.316Z",
+  "updatedAt": "2026-06-10T12:59:06.792Z",
   "entries": {
     "memory:memory/2026-05-04.md:1:14": {
       "key": "memory:memory/2026-05-04.md:1:14",
@@ -9,13 +9,13 @@
       "endLine": 14,
       "source": "memory",
       "snippet": "# 2026-05-04 — Configuración Inicial ## 🚀 Setup del Agente - Configurada identidad HTK-Asistente (⚡) - Creada estructura de datos en `data/` (leads, projects, transactions, inventory) - Definido esquema de datos en `data/schema.md` - MEMORY.md inicializada con estructura de empresa ## Pendientes - [ ] Cargar leads iniciales - [ ] Registrar proyectos activos - [ ] Configurar estado financiero actual - [ ] Definir recordatorios periódicos (cron jobs) si aplica",
-      "recallCount": 25,
+      "recallCount": 27,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 13.358336402715157,
+      "totalScore": 14.30650212937684,
       "maxScore": 1,
       "firstRecalledAt": "2026-05-05T03:00:36.925Z",
-      "lastRecalledAt": "2026-05-28T21:40:40.399Z",
+      "lastRecalledAt": "2026-06-05T05:05:20.770Z",
       "queryHashes": [
         "a0c515277fbd",
         "273bd8d0a7c3",
@@ -41,7 +41,9 @@
         "a1f0cc563b3a",
         "0f31bf269083",
         "71bf0284ff12",
-        "1bd53ec1bf9a"
+        "1bd53ec1bf9a",
+        "7be30f300f33",
+        "9c54a98b8ed0"
       ],
       "recallDays": [
         "2026-05-04",
@@ -57,7 +59,9 @@
         "2026-05-25",
         "2026-05-26",
         "2026-05-27",
-        "2026-05-28"
+        "2026-05-28",
+        "2026-05-31",
+        "2026-06-05"
       ],
       "conceptTags": [
         "configuración",
@@ -77,13 +81,13 @@
       "endLine": 32,
       "source": "memory",
       "snippet": "# Memory Flush — 2026-05-09 (madrugada) ## Resumen de la sesión - Estrategia de marketing: diagnosticamos que lo más útil ahora es contactar leads existentes en horario hábil, no campañas complejas - Se creó **toolkit de automatización** (sin IA): auto_enrich.py, auto_score.py, auto_schedule.py, auto_campaign.py, backup_db.sh - **CRM integrado**: pestaña Automatización con botones para enriquecer/puntuar/programar/campaña/backup - **Scraping masivo**: 26 leads con website scrapeados → 47/48 leads con datos de contacto (98%) - Restaurantes: Los Kioscos (314 879 6240) y La Vianda (320 517 2042) encontrados por sub-agente - 42 leads programados para contacto desde Sáb 9/05 8am - 5 git commits",
-      "recallCount": 25,
+      "recallCount": 29,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 11.502941054105758,
+      "totalScore": 13.378270921111106,
       "maxScore": 0.5078620284795761,
       "firstRecalledAt": "2026-05-11T14:00:54.593Z",
-      "lastRecalledAt": "2026-05-28T21:40:40.399Z",
+      "lastRecalledAt": "2026-06-05T16:15:31.029Z",
       "queryHashes": [
         "467bd60087ef",
         "b4aaf7796a33",
@@ -108,11 +112,13 @@
         "893bb6a56c0c",
         "0f31bf269083",
         "8259c6770e74",
-        "1bd53ec1bf9a"
+        "1bd53ec1bf9a",
+        "1508005a7707",
+        "905b494777e2",
+        "f18fa7c9e705",
+        "9f887ce4a897"
       ],
       "recallDays": [
-        "2026-05-11",
-        "2026-05-12",
         "2026-05-13",
         "2026-05-14",
         "2026-05-15",
@@ -125,7 +131,10 @@
         "2026-05-24",
         "2026-05-25",
         "2026-05-26",
-        "2026-05-28"
+        "2026-05-28",
+        "2026-05-31",
+        "2026-06-02",
+        "2026-06-05"
       ],
       "conceptTags": [
         "backup",
@@ -145,13 +154,13 @@
       "endLine": 34,
       "source": "memory",
       "snippet": "## Infraestructura - htk-ingenieria.com:8080 → sitio web corporativo - crm.htk-ingenieria.com:5000 → CRM HTK - Ambos via cloudflared tunnel, con systemd services - htk-crm.service y htk-website.service - cloudflared-tunnel.service ## Ajustes pendientes - NIT pendiente de agregar al sitio - Cloudflare cache puede necesitar purga - Contactar leads cargadores mañana 8am sábado",
-      "recallCount": 15,
+      "recallCount": 19,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 6.783419473469256,
+      "totalScore": 8.717747186124322,
       "maxScore": 0.5306326910853385,
       "firstRecalledAt": "2026-05-11T14:00:54.593Z",
-      "lastRecalledAt": "2026-05-28T21:40:40.399Z",
+      "lastRecalledAt": "2026-06-05T16:14:56.040Z",
       "queryHashes": [
         "467bd60087ef",
         "b4aaf7796a33",
@@ -166,7 +175,11 @@
         "152b5a40e85c",
         "b1d795c12c1e",
         "0f31bf269083",
-        "1bd53ec1bf9a"
+        "1bd53ec1bf9a",
+        "1508005a7707",
+        "905b494777e2",
+        "9c54a98b8ed0",
+        "f18fa7c9e705"
       ],
       "recallDays": [
         "2026-05-11",
@@ -179,7 +192,10 @@
         "2026-05-22",
         "2026-05-23",
         "2026-05-24",
-        "2026-05-28"
+        "2026-05-28",
+        "2026-05-31",
+        "2026-06-02",
+        "2026-06-05"
       ],
       "conceptTags": [
         "htk-ingenieria.com",
@@ -199,13 +215,13 @@
       "endLine": 34,
       "source": "memory",
       "snippet": "- showToast con auto-dismiss 4s ### Entornos - Producción: `crm.htk-ingenieria.com` (main, 4b855ef) - Desarrollo: `dev.htk-ingenieria.com` (modular-frontend, 8 commits nuevos) ### Pendientes - BUG_REPORT.md documenta 11 bugs (quedan 🟡 vacíos en kanban/interacciones, 🟢 consolidate escapeHtml, 🟢 PITCHES_PATH hardcodeado, 🟢 toast configurable) - Faltan tests de perfil WO (mensajes, pagos, cambio estado desde perfil)",
-      "recallCount": 11,
+      "recallCount": 13,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 5.1886162415146835,
+      "totalScore": 6.169761778414251,
       "maxScore": 0.529916876554489,
       "firstRecalledAt": "2026-05-18T10:33:25.520Z",
-      "lastRecalledAt": "2026-05-28T21:40:40.399Z",
+      "lastRecalledAt": "2026-06-05T05:05:20.770Z",
       "queryHashes": [
         "fd62315c5a83",
         "63b02abac58a",
@@ -216,7 +232,9 @@
         "0b8d51bbb4f1",
         "5b8a3f5128f7",
         "0f31bf269083",
-        "1bd53ec1bf9a"
+        "1bd53ec1bf9a",
+        "1508005a7707",
+        "9c54a98b8ed0"
       ],
       "recallDays": [
         "2026-05-18",
@@ -227,7 +245,9 @@
         "2026-05-24",
         "2026-05-25",
         "2026-05-26",
-        "2026-05-28"
+        "2026-05-28",
+        "2026-05-31",
+        "2026-06-05"
       ],
       "conceptTags": [
         "auto-dismiss",
@@ -282,13 +302,13 @@
       "endLine": 34,
       "source": "memory",
       "snippet": "- Para salir: escribir \"MENU\", \"SALIR\", \"VOLVER\" ### 4. Archivos modificados - `bot.js`: +normalizarTexto, +BREAK_SILENCE_KEYWORDS, +tieneBreakSilence, detectarOpcion normalizado, detectarFAQ normalizado, CONSULTA_OT persistente, SILENT con break-silence - `config.js`: consultaOTActiva: true - `messages.js`: opción 7 en bienvenida ### Estado actual - Bot corriendo via systemd `htk-whatsapp-bot.service` - Commit: ee4e88b (htk-whatsapp-bot repo) y 40f337a (.openclaw/whatsapp-bot repo) - CRM web activo en htk-crm.service",
-      "recallCount": 8,
+      "recallCount": 9,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 3.7312075823545454,
-      "maxScore": 0.48983639478683466,
+      "totalScore": 4.228840696811676,
+      "maxScore": 0.4976331144571304,
       "firstRecalledAt": "2026-05-22T22:13:21.352Z",
-      "lastRecalledAt": "2026-05-28T13:56:21.880Z",
+      "lastRecalledAt": "2026-05-31T23:06:20.312Z",
       "queryHashes": [
         "d3bc03109446",
         "82e2557c269a",
@@ -297,14 +317,16 @@
         "893bb6a56c0c",
         "5b8a3f5128f7",
         "07260f46eb16",
-        "31d7faa8d680"
+        "31d7faa8d680",
+        "9dbb0f06a92e"
       ],
       "recallDays": [
         "2026-05-22",
         "2026-05-24",
         "2026-05-25",
         "2026-05-26",
-        "2026-05-28"
+        "2026-05-28",
+        "2026-05-31"
       ],
       "conceptTags": [
         "bot.js",
@@ -361,19 +383,23 @@
       "endLine": 50,
       "source": "memory",
       "snippet": "- `crm/app/__init__.py` — Migración tablas `invoices` + `invoice_items` - `crm/templates/base.html` — Sidebar/mobile nav + include - `crm/static/js/crm.js` — +400 líneas funcionalidad facturación - `crm/static/css/crm.css` — Estilos facturación - `crm/templates/pages/dashboard.html` — 3 widgets facturación ### 3. Bug Crítico: `</div>` Extra (17:05-17:49) **Síntoma:** Pestañas Facturación e Inventario \"aparecían en negro\" — contenido se renderizaba fuera del layout visible. **Causa raíz:** Dos `</div>` extra cerrando el contenedor principal antes de tiempo: 1. `base.html:92` — `</div>` huérfano después de toast-container 2. `config.html:363` — `</div>` leftover con comentario \"TAB: INVENTAR",
-      "recallCount": 2,
+      "recallCount": 4,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 0.9454445779323577,
-      "maxScore": 0.48261382877826686,
+      "totalScore": 1.9596347212791438,
+      "maxScore": 0.5114779949188232,
       "firstRecalledAt": "2026-05-28T13:56:16.157Z",
-      "lastRecalledAt": "2026-05-28T13:56:21.880Z",
+      "lastRecalledAt": "2026-06-05T16:14:56.464Z",
       "queryHashes": [
         "07260f46eb16",
-        "31d7faa8d680"
+        "31d7faa8d680",
+        "82bd461f7968",
+        "2a34f8c7e160"
       ],
       "recallDays": [
-        "2026-05-28"
+        "2026-05-28",
+        "2026-05-31",
+        "2026-06-05"
       ],
       "conceptTags": [
         "crm/app",
@@ -393,18 +419,22 @@
       "endLine": 72,
       "source": "memory",
       "snippet": "**Iteraciones:** 1. Intenté `@media print` matando flex/grid → no funcionó, todo apiñado 2. Creé plantilla separada con tablas HTML (`factura_template_print.html`) → funcional pero \"sin estilo\" 3. Usuario quería \"imprimir lo que ve en pantalla\" → endpoint `/print` usa la plantilla elegante con `@media print` optimizado 4. Solución final: `/pdf` = plantilla elegante (vista previa), `/print` = plantilla elegante con `@media print` (impresión), ambas comparten el mismo diseño visual ### 6. Clientes — Mejoras Estructurales (18:46-18:55) **Plan en `data/plan_clientes_facturacion.md`:** - DB: columnas `tipo_persona`, `nombre_comercial` en tabla clients - API: filtro `?search=X` en clients - Modal",
-      "recallCount": 1,
+      "recallCount": 3,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 0.4606446802616119,
-      "maxScore": 0.4606446802616119,
+      "totalScore": 1.453733643889427,
+      "maxScore": 0.49995290637016293,
       "firstRecalledAt": "2026-05-28T13:56:16.157Z",
-      "lastRecalledAt": "2026-05-28T13:56:16.157Z",
+      "lastRecalledAt": "2026-06-05T16:14:56.464Z",
       "queryHashes": [
-        "07260f46eb16"
+        "07260f46eb16",
+        "82bd461f7968",
+        "2a34f8c7e160"
       ],
       "recallDays": [
-        "2026-05-28"
+        "2026-05-28",
+        "2026-05-31",
+        "2026-06-05"
       ],
       "conceptTags": [
         "flex/grid",
@@ -486,18 +516,20 @@
       "endLine": 133,
       "source": "memory",
       "snippet": "- Sin sudo disponible (no reiniciar cloudflared-tunnel) - GitHub CLI (`gh`) roto con Node v24 - Flask viejo a veces no reinicia automáticamente → reinicio manual necesario --- ## 📊 Dashboard de Logros del Día - CRM UI rediseñado: ✅ - 43 nuevos leads: ✅ - Frontend modularizado (-95% líneas en crm.js): ✅ - Sitio web v3 reconstruido: ✅ - Admin panel con TinyMCE: ✅ - Plan Maestro v5 cargado: ✅ - Fases 1-5 implementadas: ✅",
-      "recallCount": 1,
+      "recallCount": 2,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 0.4851555466651916,
-      "maxScore": 0.4851555466651916,
+      "totalScore": 0.9893342465162276,
+      "maxScore": 0.504178699851036,
       "firstRecalledAt": "2026-05-29T13:00:02.316Z",
-      "lastRecalledAt": "2026-05-29T13:00:02.316Z",
+      "lastRecalledAt": "2026-06-05T05:05:20.770Z",
       "queryHashes": [
-        "08c230213b49"
+        "08c230213b49",
+        "9c54a98b8ed0"
       ],
       "recallDays": [
-        "2026-05-29"
+        "2026-05-29",
+        "2026-06-05"
       ],
       "conceptTags": [
         "cloudflared-tunnel",
@@ -539,6 +571,278 @@
         "core.js",
         "segments.js",
         "pitches.js"
+      ]
+    },
+    "memory:memory/2026-05-26.md:1:31": {
+      "key": "memory:memory/2026-05-26.md:1:31",
+      "path": "memory/2026-05-26.md",
+      "startLine": 1,
+      "endLine": 31,
+      "source": "memory",
+      "snippet": "# 2026-05-26 — Sesión de Facturación + Mejoras CRM ## Resumen Sesión masiva (~3h). Se diseñó, implementó y depuró el sistema de facturación completo integrado al CRM HTK, más mejoras estructurales en clientes, pagos de OT y navegación. --- ## Hitos Principales ### 1. Plan de Facturación (16:14-16:26) - Dos planes completos en `data/plan_facturacion.md` (1,429 líneas): - Plan 1: Arquitectura (DB, API, frontend, fases) - Plan 2: Diseño visual de plantilla - Corrección de paleta: naranja → azul HTK `#059BDA` (basado en logo real) ### 2. Implementación del Sistema de Facturación (16:43-17:05) **Archivos creados:** - `crm/app/routes/api_invoices.py` — Blueprint con 12 endpoints (CRUD + e",
+      "recallCount": 2,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1.026665312051773,
+      "maxScore": 0.5140262633562088,
+      "firstRecalledAt": "2026-05-31T16:47:46.831Z",
+      "lastRecalledAt": "2026-06-05T16:14:56.464Z",
+      "queryHashes": [
+        "82bd461f7968",
+        "2a34f8c7e160"
+      ],
+      "recallDays": [
+        "2026-05-31",
+        "2026-06-05"
+      ],
+      "conceptTags": [
+        "14-16",
+        "data/plan-facturacion.md",
+        "43-17",
+        "crm/app/routes/api-invoices.py",
+        "sesión",
+        "facturación",
+        "mejoras",
+        "crm"
+      ]
+    },
+    "memory:memory/2026-05-26.md:65:101": {
+      "key": "memory:memory/2026-05-26.md:65:101",
+      "path": "memory/2026-05-26.md",
+      "startLine": 65,
+      "endLine": 101,
+      "source": "memory",
+      "snippet": "- Página de perfil de cliente: `/clients/CLI-XXX` (ruta + template `client_detail.html`) - Usuario prefirió modal → revertido a `showClientDetail()` modal ### 8. Finanzas de OT (19:15-19:30) **Mejoras:** - Lista de abonos visible en detalle de OT - Editar abono (PUT endpoint nuevo) - Eliminar abono (ya existía DELETE, solo faltaba UI) - **Validación:** no permite abonos que excedan el valor total (`valor_total` o `presupuesto`) - **Facturar desde OT:** botón que crea factura automáticamente vinculada a la OT - Arreglado bug: acciones (pagar/emitir/anular) fallaban con \"not valid JSON\" por respuesta HTML de sesión expirada --- ## Commits del día (branch `dev` → `origin/modular-frontend`) `",
+      "recallCount": 3,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1.4624203622341154,
+      "maxScore": 0.49597250819206234,
+      "firstRecalledAt": "2026-05-31T16:47:46.831Z",
+      "lastRecalledAt": "2026-06-05T16:14:56.464Z",
+      "queryHashes": [
+        "82bd461f7968",
+        "f18fa7c9e705",
+        "2a34f8c7e160"
+      ],
+      "recallDays": [
+        "2026-05-31",
+        "2026-06-05"
+      ],
+      "conceptTags": [
+        "clients/cli-xxx",
+        "client-detail.html",
+        "15-19",
+        "valor-total",
+        "pagar/emitir/anular",
+        "origin/modular-frontend",
+        "página",
+        "perfil"
+      ]
+    },
+    "memory:memory/2026-06-02.md:1:15": {
+      "key": "memory:memory/2026-06-02.md:1:15",
+      "path": "memory/2026-06-02.md",
+      "startLine": 1,
+      "endLine": 15,
+      "source": "memory",
+      "snippet": "## Seguimiento Diario (cron) — 9:30 AM **Leads:** - 115 nuevos sin contacto >2 días (muchos de campañas de prospección) - 2 en cotización/negociación (Climatek 29d, e-Charge 29d) - 3 perdidos - 43 leads de restaurantes/hoteles/constructoras cargados el 28/5 llevan 5 días sin contacto **Work Orders:** - HTK-001 (diomar): finalizado desde 26/5, pendiente entrega - HTK-002 (diomar): materiales desde 26/5, 7 días, recomienda notificar **Notificado a Pedro por Telegram con resumen y acciones sugeridas.**",
+      "recallCount": 7,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 3.351712289452553,
+      "maxScore": 0.5080920070409775,
+      "firstRecalledAt": "2026-06-04T13:15:44.920Z",
+      "lastRecalledAt": "2026-06-10T12:59:06.792Z",
+      "queryHashes": [
+        "1d42135888f3",
+        "5cdb59aaddb7",
+        "f18fa7c9e705",
+        "9f887ce4a897",
+        "64fb7b4b0129",
+        "6d52d8023714",
+        "7f3b64025dfa"
+      ],
+      "recallDays": [
+        "2026-06-04",
+        "2026-06-05",
+        "2026-06-08",
+        "2026-06-10"
+      ],
+      "conceptTags": [
+        "cotización/negociación",
+        "e-charge",
+        "28/5",
+        "htk-001",
+        "26/5",
+        "htk-002",
+        "seguimiento",
+        "diario"
+      ]
+    },
+    "memory:memory/2026-06-03.md:1:18": {
+      "key": "memory:memory/2026-06-03.md:1:18",
+      "path": "memory/2026-06-03.md",
+      "startLine": 1,
+      "endLine": 18,
+      "source": "memory",
+      "snippet": "# Daily Note — 2026-06-03 ## Seguimiento Diario HTK ### Leads - **Nuevos sin contacto >2d:** 115 (muchos duplicados/test de bot) - **Cotizando sin respuesta:** 0 - **Vencidos:** 0 ### Órdenes de Trabajo - **HTK-002** — diomar, Estabilizador 6KVA, en *materiales* desde hace 8 días. Pendiente notificar cliente. - **HTK-001** — Entregado/completado. ### Acciones 1. Contactar leads B2B: hoteles y restaurantes (tienen celular directo) 2. Llamar a Diomar por HTK-002 3. Limpiar ~30 leads duplicados/test",
+      "recallCount": 5,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 2.3284140229225154,
+      "maxScore": 0.4786798685789108,
+      "firstRecalledAt": "2026-06-04T13:15:44.920Z",
+      "lastRecalledAt": "2026-06-05T16:15:31.152Z",
+      "queryHashes": [
+        "1d42135888f3",
+        "5cdb59aaddb7",
+        "f18fa7c9e705",
+        "9f887ce4a897",
+        "64fb7b4b0129"
+      ],
+      "recallDays": [
+        "2026-06-04",
+        "2026-06-05"
+      ],
+      "conceptTags": [
+        "duplicados/test",
+        "htk-002",
+        "htk-001",
+        "entregado/completado",
+        "seguimiento",
+        "diario",
+        "htk",
+        "leads"
+      ]
+    },
+    "memory:memory/2026-05-31.md:32:53": {
+      "key": "memory:memory/2026-05-31.md:32:53",
+      "path": "memory/2026-05-31.md",
+      "startLine": 32,
+      "endLine": 53,
+      "source": "memory",
+      "snippet": "- F1.2: Logging (crm.log 5MB×3) - F1.3: Healthcheck (DB/Drive/Bot) - F2.1: Recordatorios facturas - F2.2: Export CSV facturas - F2.3: Dashboard Financiero (Chart.js) - F3.1: Fotos en OT - F3.2: Firma digital - F3.3: Link tracking público /status/<id> - F4.1: CI/CD GitHub Actions - F4.2: Backup a Drive - F4.3: Monitoreo activo ## Sistemas - main: crm.htk-ingenieria.com :18800 - dev: dev.htk-ingenieria.com :18801 - github: pedku/htk-crm - systemctl --user se cuelga → kill + relanzar manual ## Pendiente - Pedro mencionó \"bueno mi llave\" como frase informal del bot → preguntar dónde - Notificaciones no deben disparar ciclo de espera de respuesta",
+      "recallCount": 2,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 0.9794514164328574,
+      "maxScore": 0.529681484401226,
+      "firstRecalledAt": "2026-06-05T05:05:20.770Z",
+      "lastRecalledAt": "2026-06-05T16:15:31.029Z",
+      "queryHashes": [
+        "9c54a98b8ed0",
+        "9f887ce4a897"
+      ],
+      "recallDays": [
+        "2026-06-05"
+      ],
+      "conceptTags": [
+        "backup",
+        "f1.2",
+        "crm.log",
+        "f1.3",
+        "db/drive/bot",
+        "f2.1",
+        "f2.2",
+        "f2.3"
+      ]
+    },
+    "memory:memory/2026-05-31.md:1:44": {
+      "key": "memory:memory/2026-05-31.md:1:44",
+      "path": "memory/2026-05-31.md",
+      "startLine": 1,
+      "endLine": 44,
+      "source": "memory",
+      "snippet": "# 2026-05-31 — Sesión de Bugfixing + ROADMAP v5 Completo ## 🔐 gog (Google Workspace) Reautenticado - Tokens OAuth perdidos. Reautenticado con info@htk-ingenieria.com - Keyring: file backend, password `htk_gog_keyring_2026` - Calendar, Gmail, Drive — todos funcionando ## 🐛 Bugs Arreglados en main ### IVA incluido duplicaba valor - `facturacion.js` updateFacturaPreview(): sub sumaba precio CON IVA + iva_total lo duplicaba - Fix: baseLinea = total - ivaLinea para IVA incluido ### Inputs Cant/IVA ilegibles - Contenedores 70px con spinner nativo → 90px + ocultar spinners ### \"(IVA incl.)\" en todos los items - Causa raíz: iva_incluido TEXT en SQLite, Jinja evalúa '0' como True - Fix: templa",
+      "recallCount": 4,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1.816593250632286,
+      "maxScore": 0.4652308791875839,
+      "firstRecalledAt": "2026-06-05T16:14:56.561Z",
+      "lastRecalledAt": "2026-06-08T14:47:46.110Z",
+      "queryHashes": [
+        "0c4ff084c045",
+        "9f887ce4a897",
+        "6d52d8023714",
+        "0b26056aa8e6"
+      ],
+      "recallDays": [
+        "2026-06-05",
+        "2026-06-08"
+      ],
+      "conceptTags": [
+        "htk-ingenieria.com",
+        "htk-gog-keyring-2026",
+        "facturacion.js",
+        "iva-total",
+        "cant/iva",
+        "iva-incluido",
+        "sesión",
+        "bugfixing"
+      ]
+    },
+    "memory:memory/2026-06-05.md:1:33": {
+      "key": "memory:memory/2026-06-05.md:1:33",
+      "path": "memory/2026-06-05.md",
+      "startLine": 1,
+      "endLine": 33,
+      "source": "memory",
+      "snippet": "# Daily Note — 2026-06-05 ## Visita Hotel 56 Avenue SAS — Reagendada - Reprogramada para **Martes 9 Junio 9:00 AM** - Creado evento en Google Calendar (info@htk-ingenieria.com) - Recordatorio 30min antes ## Facturación CRM — Envío PDF - Pedro preguntó por qué no se envía PDF con factura - Probé el pipeline completo: pdf-gen.py, bot send-document, CRM API - **Todo funciona correctamente:** - INV-FAC-0016 PDF generado (151 KB) y subido a Drive ✅ - Bot send-document endpoint responde 200 ✅ - Test enviado al número de Pedro ✅ - FAC-0015 auto-notificada con PDF ayer 16:34 ✅ ## Fix: Envío de facturas enviaba PDF desactualizado ### Bug Cuando se emitía/cambiaba estado de una factura, el",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 0.498852601647377,
+      "maxScore": 0.498852601647377,
+      "firstRecalledAt": "2026-06-08T14:04:21.680Z",
+      "lastRecalledAt": "2026-06-08T14:04:21.680Z",
+      "queryHashes": [
+        "6d52d8023714"
+      ],
+      "recallDays": [
+        "2026-06-08"
+      ],
+      "conceptTags": [
+        "htk-ingenieria.com",
+        "pdf-gen.py",
+        "send-document",
+        "inv-fac-0016",
+        "fac-0015",
+        "auto-notificada",
+        "emitía/cambiaba",
+        "visita"
+      ]
+    },
+    "memory:memory/2026-06-08.md:1:13": {
+      "key": "memory:memory/2026-06-08.md:1:13",
+      "path": "memory/2026-06-08.md",
+      "startLine": 1,
+      "endLine": 13,
+      "source": "memory",
+      "snippet": "# Daily Note — 2026-06-08 ## Visita Hotel 56 Avenue SAS - Re-confirmada: **Martes 9 Junio** (mañana) - Originalmente programada desde el 5 Junio - Evento en Google Calendar con recordatorio 30min ## Backup Completo del Sistema - Ejecutado `scripts/backup.sh` ✅ - 162 MB en `~/htk-backups/htk-full-20260608_082815.tar.gz` - DB exportada a JSON (21 tablas) - Git push (CRM + workspace) — up to date",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 0.4267309576272964,
+      "maxScore": 0.4267309576272964,
+      "firstRecalledAt": "2026-06-08T14:47:46.110Z",
+      "lastRecalledAt": "2026-06-08T14:47:46.110Z",
+      "queryHashes": [
+        "0b26056aa8e6"
+      ],
+      "recallDays": [
+        "2026-06-08"
+      ],
+      "conceptTags": [
+        "backup",
+        "backups",
+        "re-confirmada",
+        "scripts/backup.sh",
+        "visita",
+        "hotel",
+        "avenue",
+        "sas"
       ]
     }
   }
