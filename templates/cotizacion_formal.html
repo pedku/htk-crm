@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ empresa.comercial }} — Cotización {{ quote.numero }}</title>
+<style>
+/* Don't use @import for Google Fonts — WeasyPrint can't access internet */
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #ffffff;
+  color: #1c1917;
+  font-size: 11.5px;
+  line-height: 1.75;
+  padding: 65px 60px;
+  -webkit-font-smoothing: antialiased;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ─── HEADER ─── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 48px;
+  padding-bottom: 20px;
+  border-bottom: 3px solid #059BDA;
+}
+
+.header-left .logo-text {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: #059BDA;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.header-left .logo-sub {
+  font-size: 8px;
+  font-weight: 500;
+  color: #a8a29e;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-top: 3px;
+}
+
+.header-right {
+  text-align: right;
+}
+
+.header-right .empresa-nombre {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1c1917;
+  letter-spacing: -0.01em;
+}
+
+.header-right .empresa-detalle {
+  font-size: 8.5px;
+  font-weight: 400;
+  color: #a8a29e;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 1px;
+}
+
+.header-right .empresa-datos {
+  font-size: 9px;
+  color: #57534e;
+  margin-top: 5px;
+  line-height: 1.65;
+}
+
+/* ─── FECHA ─── */
+.fecha-line {
+  text-align: right;
+  font-size: 11px;
+  color: #57534e;
+  margin-bottom: 28px;
+}
+
+/* ─── DESTINATARIO ─── */
+.destinatario-block {
+  margin-bottom: 28px;
+}
+
+.destinatario-block .ref-line {
+  font-size: 10px;
+  font-weight: 600;
+  color: #a8a29e;
+  margin-bottom: 2px;
+}
+
+.destinatario-block .ref-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: #059BDA;
+  margin-bottom: 14px;
+}
+
+.destinatario-block .saludo {
+  font-size: 11.5px;
+  color: #57534e;
+  line-height: 1.8;
+}
+
+/* ─── BODY TEXT ─── */
+.body-text {
+  font-size: 11.5px;
+  color: #57534e;
+  line-height: 1.8;
+  margin-bottom: 20px;
+  text-align: justify;
+}
+
+.body-text strong {
+  color: #1c1917;
+}
+
+/* ─── PRODUCT DESCRIPTION ─── */
+.product-desc {
+  margin-bottom: 28px;
+  padding: 18px 22px;
+  background: rgba(5,155,218,0.08);
+  border-left: 4px solid #059BDA;
+  border-radius: 4px;
+}
+
+.product-desc p {
+  font-size: 11px;
+  color: #57534e;
+  line-height: 1.8;
+  text-align: justify;
+}
+
+.product-desc p strong {
+  color: #1c1917;
+}
+
+/* ─── OPTIONS ─── */
+.options-section {
+  margin-bottom: 28px;
+}
+
+.option-block {
+  margin-bottom: 10px;
+  page-break-inside: avoid;
+}
+
+.option-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #1c1917;
+  margin-bottom: 4px;
+}
+
+.option-label .material-cobre {
+  color: #B87333;
+}
+
+.option-label .material-aluminio {
+  color: #6B7280;
+}
+
+.option-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.option-table thead th {
+  padding: 7px 10px;
+  font-size: 7.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #a8a29e;
+  border-bottom: 1px solid #e7e5e4;
+  text-align: right;
+}
+
+.option-table thead th:first-child { text-align: left; width: 60%; }
+.option-table thead th:nth-child(2) { text-align: center; width: 12%; }
+.option-table thead th:nth-child(3) { text-align: right; width: 15%; }
+.option-table thead th:nth-child(4) { text-align: right; width: 13%; }
+
+.option-table tbody td {
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #1c1917;
+  border-bottom: 1px solid #e7e5e4;
+  text-align: right;
+}
+
+.option-table tbody td:first-child { text-align: left; font-weight: 500; }
+.option-table tbody td:nth-child(2) { text-align: center; }
+.option-table tbody td:last-child { font-weight: 700; }
+
+.option-table tbody tr:last-child td { border-bottom: none; }
+
+.option-total {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 2px solid #059BDA;
+}
+
+.option-total .total-label {
+  font-size: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #a8a29e;
+}
+
+.option-total .total-value {
+  font-size: 19px;
+  font-weight: 800;
+  color: #059BDA;
+  line-height: 1;
+}
+
+/* ─── SEPARATOR ─── */
+.separator {
+  height: 1px;
+  background: #e7e5e4;
+  margin: 24px 0;
+}
+
+/* ─── SECTIONS (alcance, garantía) ─── */
+.section-block {
+  margin-bottom: 20px;
+  page-break-inside: avoid;
+}
+
+.section-block .sec-title {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #059BDA;
+  margin-bottom: 6px;
+}
+
+.section-block .sec-body {
+  font-size: 10.5px;
+  color: #57534e;
+  line-height: 1.75;
+  text-align: justify;
+  white-space: pre-line;
+}
+
+.section-block .sec-body em {
+  font-style: italic;
+  color: #a8a29e;
+}
+
+/* ─── CLOSING ─── */
+.closing {
+  margin-top: 36px;
+  font-size: 11px;
+  color: #57534e;
+  line-height: 1.8;
+}
+
+.closing .attentamente {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #a8a29e;
+  margin-bottom: 4px;
+}
+
+/* ─── SIGNATURE ─── */
+.signature {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid #e7e5e4;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.signature-left {
+  font-size: 9.5px;
+  color: #57534e;
+  line-height: 1.7;
+}
+
+.signature-left strong {
+  color: #1c1917;
+}
+
+.signature-right {
+  text-align: center;
+  min-width: 220px;
+}
+
+.signature-right .sig-space {
+  height: 40px;
+}
+
+.signature-right .sig-line {
+  width: 100%;
+  height: 1px;
+  background: #1c1917;
+  margin-bottom: 5px;
+}
+
+.signature-right .sig-nombre {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1c1917;
+}
+
+.signature-right .sig-cargo {
+  font-size: 8.5px;
+  font-weight: 400;
+  color: #a8a29e;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ─── FOOTER ─── */
+.footer {
+  margin-top: 40px;
+  padding-top: 14px;
+  border-top: 1px solid #e7e5e4;
+  text-align: center;
+}
+
+.footer .footer-line1 {
+  font-size: 11px;
+  font-weight: 700;
+  color: #059BDA;
+}
+
+.footer .footer-line2 {
+  font-size: 8px;
+  font-weight: 500;
+  color: #a8a29e;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+.footer .footer-line3 {
+  font-size: 8.5px;
+  color: #57534e;
+  margin-top: 4px;
+}
+
+.footer .footer-line3 span {
+  margin: 0 6px;
+}
+
+/* ─── PRINT ─── */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 16mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  body {
+    padding: 0 !important;
+    font-size: 10px;
+    max-width: 100% !important;
+    color: #1c1917 !important;
+    background: #fff !important;
+  }
+
+  .header { margin-bottom: 28px; padding-bottom: 14px; }
+  .header-left .logo-text { font-size: 22px; }
+  .fecha-line { margin-bottom: 18px; }
+  .destinatario-block { margin-bottom: 18px; }
+  .product-desc { padding: 12px 16px; }
+  .option-total .total-value { font-size: 16px; }
+  .separator { margin: 14px 0; }
+  .closing { margin-top: 24px; }
+  .signature { margin-top: 20px; }
+  .footer { margin-top: 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-text">HTK</div>
+    <div class="logo-sub">Ingeniería · Automatización · Energía</div>
+  </div>
+  <div class="header-right">
+    <div class="empresa-nombre">{{ empresa.comercial or 'HTK INGENIERIA' }}</div>
+    <div class="empresa-detalle">{{ empresa.nombre or 'HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S.' }}</div>
+    <div class="empresa-datos">
+      NIT {{ empresa.nit or '902.052.168-3' }}<br>
+      {{ empresa.direccion or 'Cra 7b #46-108, Barranquilla, Colombia' }}<br>
+      Tel: {{ empresa.telefono or '+57 315 603 2940' }} · {{ empresa.email or 'info@htk-ingenieria.com' }}
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FECHA ═══ -->
+{% set meses = ['', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'] %}
+{% set fe = quote.fecha_emision[:10] if quote.fecha_emision else '' %}
+{% set dia = fe[8:10]|int if fe else '' %}
+{% set mes_num = fe[5:7]|int if fe else '' %}
+{% set anio = fe[:4] if fe else '' %}
+<div class="fecha-line">{{ 'Barranquilla, ' + dia|string + ' de ' + meses[mes_num] + ' de ' + anio if fe else 'Barranquilla, ' + now.strftime('%-d de %B de %Y') }}</div>
+
+<!-- ═══ DESTINATARIO ═══ -->
+<div class="destinatario-block">
+  <div class="ref-line">Ref:</div>
+  <div class="ref-value">{{ quote.numero }} — {{ quote.asunto or 'Cotización' }}</div>
+  <div class="saludo">
+    {% if quote.destinatario %}
+    {{ quote.destinatario }}<br>
+    {% elif quote.cliente_nombre %}
+    Señor(es)<br>
+    <strong>{{ quote.cliente_nombre }}</strong><br>
+    {% endif %}
+    {% if quote.cliente_documento %}
+    {{ quote.cliente_documento }}<br>
+    {% endif %}
+    Ciudad.
+  </div>
+</div>
+
+<!-- ═══ INTRODUCCIÓN ═══ -->
+<div class="body-text">
+  Reciba un cordial saludo. Por medio de la presente, <strong>{{ empresa.comercial or 'HTK INGENIERIA' }}</strong> — {{ empresa.nombre or 'HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S.' }} — se permite someter a su consideración la siguiente cotización formal{% if quote.asunto %} para {{ quote.asunto|lower }}{% endif %}, de acuerdo con los requerimientos técnicos previamente conversados.
+</div>
+
+<div class="body-text">
+  A continuación, presentamos una descripción técnica del equipo ofertado, seguido de las alternativas comerciales disponibles para su evaluación:
+</div>
+
+<!-- ═══ OPCIONES ═══ -->
+{% if opciones %}
+<div class="options-section">
+  {% set opcion_num = namespace(value=0) %}
+  {% for opcion_key, opcion_items in opciones.items() %}
+  {% set opcion_num.value = opcion_num.value + 1 %}
+  <div class="option-block">
+    {% if opcion_key == 'unica' or opcion_key == 'opcion_1' or opcion_key == '1' %}
+    <div class="option-label">
+      <span class="material-cobre">●</span> Opción {{ opcion_num.value }}{% if opcion_items[0].descripcion|length < 60 %} — {{ opcion_items[0].descripcion }}{% endif %}
+    </div>
+    {% elif opcion_key == 'opcion_2' or opcion_key == '2' %}
+    <div class="option-label" style="margin-top:16px;">
+      <span class="material-aluminio">●</span> Opción {{ opcion_num.value }} — Alternativa
+    </div>
+    {% else %}
+    <div class="option-label" style="margin-top:16px;">
+      <span class="material-aluminio">●</span> Opción {{ opcion_num.value }} — {{ opcion_key }}
+    </div>
+    {% endif %}
+    <table class="option-table">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th>Cant.</th>
+          <th>Valor Unit.</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set opcion_total = namespace(val=0) %}
+        {% for item in opcion_items %}
+        {% set opcion_total.val = opcion_total.val + (item.total_linea or 0) %}
+        <tr>
+          <td>
+            {{ item.descripcion }}
+            {% if item.detalle_tecnico %}
+            <br><small style="color:#a8a29e;font-size:9px;">{{ item.detalle_tecnico }}</small>
+            {% endif %}
+          </td>
+          <td>{{ item.cantidad }}</td>
+          <td>${{ '{:,.0f}'.format(item.precio_unitario) }}</td>
+          <td>${{ '{:,.0f}'.format(item.total_linea) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="option-total">
+      <span style="font-size:8.5px;font-style:italic;color:#a8a29e;">{% if quote.incluye_iva %}IVA incluido{% else %}Valor antes de IVA{% endif %}{% if opcion_num.value == 1 %} · No incluye instalación{% endif %}</span>
+      <span class="total-label">Total Opción {{ opcion_num.value }}</span>
+      <span class="total-value">${{ '{:,.0f}'.format(opcion_total.val) }}</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="separator"></div>
+
+<!-- ═══ ALCANCE ═══ -->
+{% if quote.alcance %}
+<div class="section-block">
+  <div class="sec-title">Alcance de la Oferta</div>
+  <div class="sec-body">
+    {{ quote.alcance }}
+  </div>
+</div>
+{% endif %}
+
+<!-- ═══ FORMAS DE PAGO ═══ -->
+{% if quote.formas_pago %}
+<div class="section-block">
+  <div class="sec-title">Formas de Pago</div>
+  <div class="sec-body">
+    {{ quote.formas_pago }}
+  </div>
+</div>
+{% endif %}
+
+<!-- ═══ GARANTÍA ═══ -->
+{% if quote.politica_garantia %}
+<div class="section-block">
+  <div class="sec-title">Política de Garantía y Devoluciones</div>
+  <div class="sec-body">
+    {{ quote.politica_garantia }}
+  </div>
+</div>
+{% endif %}
+
+<div class="separator"></div>
+
+<!-- ═══ CIERRE ═══ -->
+<div class="closing">
+  {% if quote.notas %}
+  {{ quote.notas }}
+  {% else %}
+  Agradecemos la oportunidad de presentar esta oferta y quedamos a su disposición para resolver cualquier inquietud técnica o comercial que pueda surgir. Así mismo, le invitamos a confirmar su decisión para proceder con la fabricación del equipo de acuerdo con la opción seleccionada.
+  {% endif %}
+</div>
+
+<div class="closing">
+  <div class="attentamente">Atentamente,</div>
+</div>
+
+<!-- ═══ FIRMA ═══ -->
+<div class="signature">
+  <div class="signature-left">
+    <strong>{{ empresa.comercial or 'HTK INGENIERIA' }}</strong><br>
+    {{ empresa.nombre or 'HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S.' }}<br>
+    NIT {{ empresa.nit or '902.052.168-3' }}<br>
+    {{ empresa.direccion or 'Cra 7b #46-108, Barranquilla, Colombia' }}<br>
+    Tel: {{ empresa.telefono or '+57 315 603 2940' }}<br>
+    {{ empresa.email or 'info@htk-ingenieria.com' }}
+  </div>
+  <div class="signature-right">
+    <div class="sig-space"></div>
+    <div class="sig-line"></div>
+    <div class="sig-nombre">Pedro Castro</div>
+    <div class="sig-cargo">Gerente — {{ empresa.comercial or 'HTK INGENIERIA' }}</div>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ═══ -->
+<div class="footer">
+  <div class="footer-line1">{{ empresa.comercial or 'HTK INGENIERIA' }}</div>
+  <div class="footer-line2">{{ empresa.nombre or 'HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S.' }}</div>
+  <div class="footer-line3">
+    <span>NIT {{ empresa.nit or '902.052.168-3' }}</span>·<span>{{ empresa.direccion or 'Cra 7b #46-108, Barranquilla' }}</span>·<span>{{ empresa.telefono or '+57 315 603 2940' }}</span>·<span>{{ empresa.email or 'info@htk-ingenieria.com' }}</span>
+  </div>
+</div>
+
+</body>
+</html>

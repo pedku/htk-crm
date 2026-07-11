@@ -161,6 +161,56 @@ def init_db():
     finally:
         conn_fac.close()
 
+    # ── Tablas de Cotizaciones ───────────────────────
+    conn_qt = sqlite3.connect(DB_PATH)
+    try:
+        conn_qt.execute("PRAGMA journal_mode=WAL")
+        conn_qt.execute("PRAGMA foreign_keys=ON")
+        conn_qt.execute('''
+            CREATE TABLE IF NOT EXISTS quotes (
+                id TEXT PRIMARY KEY,
+                numero TEXT NOT NULL UNIQUE,
+                tipo TEXT NOT NULL DEFAULT 'normal',
+                client_id TEXT,
+                cliente_nombre TEXT DEFAULT '',
+                cliente_documento TEXT DEFAULT '',
+                destinatario TEXT DEFAULT '',
+                asunto TEXT DEFAULT '',
+                fecha_emision TEXT NOT NULL,
+                fecha_validez TEXT DEFAULT '',
+                incluye_iva INTEGER DEFAULT 0,
+                sub_total REAL DEFAULT 0,
+                iva_total REAL DEFAULT 0,
+                total_general REAL DEFAULT 0,
+                alcance TEXT DEFAULT '',
+                politica_garantia TEXT DEFAULT '',
+                formas_pago TEXT DEFAULT '',
+                notas TEXT DEFAULT '',
+                estado TEXT DEFAULT 'borrador',
+                pdf_generado INTEGER DEFAULT 0,
+                activo INTEGER DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        ''')
+        conn_qt.execute('''
+            CREATE TABLE IF NOT EXISTS quote_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                quote_id TEXT NOT NULL,
+                opcion TEXT DEFAULT 'unica',
+                item_num INTEGER NOT NULL DEFAULT 1,
+                descripcion TEXT NOT NULL DEFAULT '',
+                detalle_tecnico TEXT DEFAULT '',
+                cantidad REAL NOT NULL DEFAULT 1,
+                precio_unitario REAL NOT NULL DEFAULT 0,
+                total_linea REAL NOT NULL DEFAULT 0,
+                FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE CASCADE
+            )
+        ''')
+        conn_qt.commit()
+    finally:
+        conn_qt.close()
+
     # ── Tablas Auxiliares (payments, ventas, precios, tareas, segmentos, etapas, tags) ──
     conn_aux = sqlite3.connect(DB_PATH)
     try:
@@ -451,6 +501,7 @@ def create_app():
     from app.routes.api_inventory import api_inventory_bp
     from app.routes.api_misc import api_misc_bp
     from app.routes.api_invoices import api_invoices_bp
+    from app.routes.api_quotes import api_quotes_bp
 
     app.register_blueprint(views_bp)
     app.register_blueprint(api_leads_bp)
@@ -460,6 +511,7 @@ def create_app():
     app.register_blueprint(api_inventory_bp)
     app.register_blueprint(api_misc_bp)
     app.register_blueprint(api_invoices_bp)
+    app.register_blueprint(api_quotes_bp)
 
     # Healthcheck endpoint (F1.3)
     from app.routes.health import health_bp

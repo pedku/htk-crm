@@ -1,0 +1,197 @@
+<div id="tab-cotizaciones" class="tab-content">
+ <div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+   <h3 class="page-title mb-0"><i class="bi bi-file-text"></i> Cotizaciones</h3>
+   <small id="cotStatusMsg" class="text-muted"></small>
+  </div>
+  <div class="d-flex gap-2 align-items-center">
+   <select class="form-select form-select-sm" style="width:auto;" id="cotEstadoFilter" onchange="filterCotizacionesDT()">
+    <option value="">Todos los estados</option>
+    <option value="borrador">Borrador</option>
+    <option value="enviada">Enviada</option>
+    <option value="aprobada">Aprobada</option>
+    <option value="rechazada">Rechazada</option>
+   </select>
+   <select class="form-select form-select-sm" style="width:auto;" id="cotTipoFilter" onchange="filterCotizacionesDT()">
+    <option value="">Todos los tipos</option>
+    <option value="normal">Normal</option>
+    <option value="formal">Formal</option>
+   </select>
+   <button class="btn btn-htk" onclick="showCotizacionModal()"><i class="bi bi-plus-lg"></i> Nueva Cotización</button>
+  </div>
+ </div>
+
+ <!-- Search -->
+ <div class="mb-3" style="position:relative;max-width:360px;">
+  <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.3);"></i>
+  <input type="text" class="form-control form-control-sm" id="cotSearchInput" placeholder="Buscar por cliente, número o asunto..." style="padding-left:34px;" oninput="filterCotizacionesDT()">
+ </div>
+
+ <div class="table-container">
+  <div class="table-responsive">
+   <table id="tableCotizaciones" class="table table-hover align-middle mb-0">
+    <thead>
+     <tr>
+      <th>N° Cotización</th>
+      <th>Cliente</th>
+      <th>Asunto</th>
+      <th>Emisión</th>
+      <th>Tipo</th>
+      <th>Total</th>
+      <th>Estado</th>
+      <th style="width:160px;">Acciones</th>
+     </tr>
+    </thead>
+    <tbody id="cotBody">
+     <tr><td colspan="8" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</td></tr>
+    </tbody>
+   </table>
+  </div>
+ </div>
+ <div class="text-center py-4" id="cotEmpty" style="display:none;">
+  <i class="bi bi-file-text" style="font-size:2rem;opacity:0.3;"></i>
+  <p class="mt-2 text-muted">Sin cotizaciones registradas</p>
+ </div>
+
+</div>
+
+<!-- Modal: Crear / Editar Cotización -->
+<div class="modal fade" id="cotizacionModal" tabindex="-1">
+ <div class="modal-dialog modal-xl modal-dialog-scrollable">
+  <div class="modal-content">
+   <div class="modal-header">
+    <h5 class="modal-title" id="cotizacionModalTitle">Nueva Cotización</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+   </div>
+   <div class="modal-body">
+    <input type="hidden" id="cotEditId">
+    <div class="row g-3">
+     <div class="col-md-4">
+      <label class="form-label">Tipo de Cotización</label>
+      <select class="form-select" id="cotTipo" onchange="onCotTipoChange()">
+       <option value="normal">Normal (Compacta)</option>
+       <option value="formal">Formal (Carta)</option>
+      </select>
+     </div>
+     <div class="col-md-4">
+      <label class="form-label" for="cotIncluyeIva">Incluye IVA</label>
+      <div class="form-check form-switch mt-2">
+       <input class="form-check-input" type="checkbox" id="cotIncluyeIva" onchange="updateCotizacionPreview()">
+       <label class="form-check-label" for="cotIncluyeIva">Mostrar IVA en el total</label>
+      </div>
+     </div>
+     <div class="col-md-4">
+      <label class="form-label">Fecha Emisión</label>
+      <input type="date" class="form-control" id="cotFechaEmision">
+     </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+     <div class="col-md-6">
+      <label class="form-label">Cliente</label>
+      <div class="client-search-wrapper">
+       <input type="text" class="form-control" id="cotClientSearch" placeholder="🔍 Buscar por nombre, documento o teléfono..." autocomplete="off" oninput="quoteSearchClientsDebounce()">
+       <div class="client-search-dropdown" id="cotClientDropdown" style="display:none;"></div>
+      </div>
+      <input type="hidden" id="cotClientId">
+     </div>
+     <div class="col-md-3 d-none" id="cotDestinatarioGroup">
+      <label class="form-label">Destinatario</label>
+      <input type="text" class="form-control" id="cotDestinatario" placeholder="Nombre del destinatario">
+     </div>
+     <div class="col-md-3">
+      <label class="form-label">Asunto</label>
+      <input type="text" class="form-control" id="cotAsunto" placeholder="Ej: Estabilizador 15 kVA">
+     </div>
+    </div>
+
+    <!-- Items -->
+    <div class="mt-4">
+     <div class="d-flex justify-content-between align-items-center mb-2">
+      <strong style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.5);">Items</strong>
+      <button class="btn btn-sm" style="background:var(--htk-primary);color:#fff;" onclick="addQuoteItem()">
+       <i class="bi bi-plus-lg"></i> Agregar
+      </button>
+     </div>
+     <div class="d-flex gap-2 align-items-end mb-1 px-2" style="font-size:0.7rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.05em;">
+      <div style="width:110px;">Opción</div>
+      <div style="flex:1;min-width:180px;">Descripción</div>
+      <div style="flex:0.8;min-width:120px;">Detalle Técnico</div>
+      <div style="width:80px;text-align:center;">Cant</div>
+      <div style="width:110px;text-align:right;">Vr. Unitario</div>
+      <div style="width:110px;text-align:right;">Total</div>
+      <div style="width:36px;"></div>
+     </div>
+     <div id="cotItemsContainer" style="max-height:350px;overflow-y:auto;">
+     </div>
+    </div>
+
+    <!-- Totals preview -->
+    <div class="mt-3 p-3" style="background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,255,255,0.05);">
+     <div class="d-flex justify-content-end gap-4">
+      <div style="text-align:right;">
+       <small style="color:rgba(255,255,255,0.5);">Subtotal</small>
+       <div id="cotPreviewSub" style="font-weight:600;color:#fff;">$0</div>
+      </div>
+      <div style="text-align:right;" id="cotIvaCol">
+       <small style="color:rgba(255,255,255,0.5);">IVA 19%</small>
+       <div id="cotPreviewIva" style="font-weight:600;color:#fff;">$0</div>
+      </div>
+      <div style="text-align:right;">
+       <small style="color:var(--htk-primary);">TOTAL</small>
+       <div id="cotPreviewTotal" style="font-size:1.2rem;font-weight:800;color:var(--htk-primary);">$0</div>
+      </div>
+     </div>
+    </div>
+
+    <!-- Additional fields -->
+    <div class="row g-3 mt-3">
+     <div class="col-md-6">
+      <label class="form-label">Alcance de la Oferta</label>
+      <textarea class="form-control" id="cotAlcance" rows="3" placeholder="Qué incluye y qué no incluye esta cotización..."></textarea>
+     </div>
+     <div class="col-md-6">
+      <label class="form-label">Formas de Pago</label>
+      <input type="text" class="form-control" id="cotFormasPago" placeholder="Transferencia · Efectivo · Datafono">
+     </div>
+     <div class="col-md-12">
+      <label class="form-label">Política de Garantía</label>
+      <textarea class="form-control" id="cotGarantia" rows="4" style="font-size:0.8rem;"></textarea>
+     </div>
+     <div class="col-md-12">
+      <label class="form-label">Notas / Cierre</label>
+      <textarea class="form-control" id="cotNotas" rows="2" placeholder="Notas adicionales o mensaje de cierre..."></textarea>
+     </div>
+    </div>
+   </div>
+   <div class="modal-footer">
+    <button type="button" class="btn btn-outline-light btn-sm" onclick="generateQuotePDF(currentQuoteEditId||document.getElementById('cotEditId').value)" title="Generar PDF">
+     <i class="bi bi-file-pdf"></i> Generar PDF
+    </button>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+    <button type="button" class="btn" style="background:var(--htk-primary);color:#fff;" onclick="saveCotizacion()">Guardar</button>
+   </div>
+  </div>
+ </div>
+</div>
+
+<!-- Modal: Ver / Vista previa Cotización -->
+<div class="modal fade" id="cotizacionViewModal" tabindex="-1">
+ <div class="modal-dialog modal-xl modal-dialog-scrollable">
+  <div class="modal-content">
+   <div class="modal-header">
+    <h5 class="modal-title" id="cotizacionViewTitle">Cotización</h5>
+    <div class="d-flex gap-2" id="cotViewActions">
+     <button class="btn btn-sm btn-outline-light" onclick="imprimirCotizacion(currentQuoteViewId)" title="Imprimir"><i class="bi bi-printer"></i></button>
+     <button class="btn btn-sm btn-outline-success" onclick="enviarCotWhatsApp(currentQuoteViewId)" title="Enviar WhatsApp"><i class="bi bi-whatsapp"></i></button>
+     <button class="btn btn-sm" style="background:var(--htk-primary);color:#fff;" title="Editar" onclick="bootstrap.Modal.getInstance(document.getElementById('cotizacionViewModal')).hide();showCotizacionModal(currentQuoteViewId);"><i class="bi bi-pencil"></i></button>
+     <button class="btn btn-sm btn-outline-danger" onclick="deleteCotizacion(currentQuoteViewId)" title="Eliminar"><i class="bi bi-trash"></i></button>
+     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+   </div>
+   <div class="modal-body p-0">
+    <iframe id="cotizacionPreviewIframe" style="width:100%;height:75vh;border:none;background:#fff;" srcdoc="<p style='text-align:center;padding:40px;color:#999;font-family:sans-serif;'>Cargando cotización...</p>"></iframe>
+   </div>
+  </div>
+ </div>
+</div>

@@ -59,6 +59,9 @@
       <a class="nav-link mobile-nav-link" href="#" data-tab="facturacion" onclick="toggleMobileMenu()">
         <i class="bi bi-receipt"></i> Facturación
       </a>
+      <a class="nav-link mobile-nav-link" href="#" data-tab="cotizaciones" onclick="toggleMobileMenu()">
+        <i class="bi bi-file-text"></i> Cotizaciones
+      </a>
       <a class="nav-link mobile-nav-link" href="#" data-tab="config" onclick="toggleMobileMenu()">
         <i class="bi bi-sliders"></i> Configuración
       </a>
@@ -120,6 +123,9 @@
           <i class="bi bi-receipt"></i> Facturación
           <span class="notif-badge d-none" id="factNotif">0</span>
         </a>
+        <a class="nav-link" href="#" data-tab="cotizaciones">
+          <i class="bi bi-file-text"></i> Cotizaciones
+        </a>
         <a class="nav-link" href="#" data-tab="config"><i class="bi bi-sliders"></i> Configuración</a>
         <a class="nav-link" href="/bot-whatsapp"><i class="bi bi-robot"></i> Bot WhatsApp</a>
         <hr style="border-color:rgba(255,255,255,0.06);margin-top:auto;">
@@ -160,6 +166,7 @@
  {% include 'pages/config.html' %}
  {% include 'pages/inventario.html' %}
  {% include 'pages/facturacion.html' %}
+ {% include 'pages/cotizaciones.html' %}
 
 <div class="modal fade" id="genericModal" tabindex="-1">
  <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -269,6 +276,7 @@
 <script src="/static/js/config.js?v=2"></script>
 <script src="/static/js/inventario.js?v=1"></script>
 <script src="/static/js/facturacion.js?v=7"></script>
+<script src="/static/js/cotizaciones.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="/static/js/company.js?v=1"></script>
 <script src="/static/js/crm.js?v=2"></script>

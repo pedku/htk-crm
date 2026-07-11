@@ -141,7 +141,8 @@ function navigateToTab(tabName) {
  if (tabName === 'leads') { _segmentsCache = null; populateSegmentSelects().then(() => loadLeads()); }
  if (tabName === 'interactions') loadInteractions();
  if (tabName === 'inventario') loadInventario();
- if (tabName === 'facturacion') loadFacturas();
+ if (tabName === 'facturacion') { loadFacturas(); initFacturacionFromURL(); }
+ if (tabName === 'cotizaciones') loadCotizaciones();
  if (tabName === 'config') { switchConfigTab('general'); }
  }
 }
