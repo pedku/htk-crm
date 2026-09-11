@@ -28,6 +28,8 @@
     .action-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
     .btn-htk { background: var(--htk-primary); color: #000; border: none; font-weight: 600; }
     .btn-htk:hover { background: #00bf9a; color: #000; }
+    .btn-outline-htk { background: transparent; color: var(--htk-primary); border: 1px solid var(--htk-primary); font-weight: 600; }
+    .btn-outline-htk:hover { background: var(--htk-primary); color: #000; }
     .modal-content { background: var(--htk-card); border: 1px solid rgba(255,255,255,0.08); }
     .form-control { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; }
     .form-control:focus { border-color: var(--htk-primary); }
@@ -113,6 +115,14 @@
         <div class="card-crm" id="financialSection">
           <div class="section-title"><i class="bi bi-cash-coin"></i> Financiero</div>
           <div id="financialContent">
+            <div class="text-center py-3"><div class="spinner-border spinner-border-sm" role="status"></div> Cargando...</div>
+          </div>
+        </div>
+
+        <!-- Facturas vinculadas -->
+        <div class="card-crm" id="invoicesSection">
+          <div class="section-title"><i class="bi bi-receipt"></i> Facturas</div>
+          <div id="invoicesContent">
             <div class="text-center py-3"><div class="spinner-border spinner-border-sm" role="status"></div> Cargando...</div>
           </div>
         </div>
@@ -517,6 +527,78 @@
     setTimeout(() => { toastEl.style.opacity = '0'; setTimeout(() => toastEl.remove(), 300); }, 3000);
   }
 
+  // ════════════════════════════════════════════════════════
+  //  FACTURAS VINCULADAS
+  // ════════════════════════════════════════════════════════
+
+  async function loadInvoices() {
+    try {
+      const resp = await fetch('/api/work_orders/' + WO_ID + '/invoices');
+      const invoices = await resp.json();
+      const container = document.getElementById('invoicesContent');
+
+      if (!invoices || invoices.length === 0) {
+        container.innerHTML = `
+          <p class="text-muted text-center small" style="margin-bottom:12px;">Sin facturas vinculadas</p>
+          <div style="text-align:center;">
+            <button class="btn btn-sm btn-htk" onclick="crearFactura()"><i class="bi bi-plus-circle"></i> Generar factura</button>
+          </div>`;
+        return;
+      }
+
+      const badges = {
+        'borrador': '<span class="badge bg-secondary">BORRADOR</span>',
+        'emitida': '<span class="badge bg-warning text-dark">EMITIDA</span>',
+        'pagada': '<span class="badge bg-success">PAGADA</span>',
+        'vencida': '<span class="badge bg-danger">VENCIDA</span>',
+        'anulada': '<span class="badge bg-dark">ANULADA</span>'
+      };
+
+      const fmt = (n) => '$' + Number(n).toLocaleString('es-CO', {minimumFractionDigits:0, maximumFractionDigits:0});
+
+      let tableRows = invoices.map(inv => {
+        const badge = badges[inv.estado] || '<span class="badge bg-secondary">' + inv.estado.toUpperCase() + '</span>';
+        return `<tr>
+          <td><a href="/#facturacion" onclick="window.open('/#facturacion');return false;" style="color:var(--htk-primary);font-weight:600;text-decoration:none;">${escHtml(inv.numero)}</a></td>
+          <td>${fmt(inv.total_general)}</td>
+          <td>${badge}</td>
+          <td><small>${(inv.fecha_emision||'').slice(0,10)}</small></td>
+        </tr>`;
+      }).join('');
+
+      container.innerHTML = `
+        <table class="table-crm" style="margin-bottom:12px;">
+          <thead>
+            <tr style="color:rgba(255,255,255,0.4);font-size:0.8em;">
+              <td>N°</td><td>Total</td><td>Estado</td><td>Emisión</td>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+        <div style="text-align:center;">
+          <button class="btn btn-sm btn-outline-htk" onclick="crearFactura()"><i class="bi bi-plus-circle"></i> Nueva factura</button>
+        </div>`;
+    } catch(e) {
+      document.getElementById('invoicesContent').innerHTML = '<p class="text-muted text-center small">Error al cargar facturas</p>';
+    }
+  }
+
+  function crearFactura() {
+    // Open CRM main page with facturacion tab, pre-fill via query params
+    const clientId = woData?.cliente_vinculado?.id || '';
+    const params = new URLSearchParams({wo_id: WO_ID});
+    if (clientId) params.set('client_id', clientId);
+    window.open('/#facturacion?' + params.toString(), '_blank');
+  }
+
+  // ── Utility ──
+  function escHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
   // ── Helper Modal ──
   function setModal(title, body, footer) {
     document.getElementById('modalTitle').textContent = title;
@@ -525,7 +607,10 @@
   }
 
   // ── Inicio ──
-  loadWO().then(() => refreshFinancials());
+  loadWO().then(() => {
+    refreshFinancials();
+    loadInvoices();
+  });
   </script>
 </body>
 </html>

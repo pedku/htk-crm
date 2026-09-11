@@ -471,3 +471,29 @@ function exportarFacturas() {
   const params = new URLSearchParams({ estado });
   window.location.href = '/api/facturas/export?' + params;
 }
+
+// ── URL Params (desde WO detail) ──
+async function initFacturacionFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const woId = params.get('wo_id');
+  if (!woId) return;
+  // Wait for modal to be ready
+  setTimeout(async () => {
+    await showFacturaModal(null);
+    if (woId) document.getElementById('factWoId').value = woId;
+    const clientId = params.get('client_id');
+    if (clientId) {
+      document.getElementById('factClientId').value = clientId;
+      try {
+        const resp = await fetch('/api/clients/' + clientId);
+        if (resp.ok) {
+          const cli = await resp.json();
+          document.getElementById('factClientSearch').value = cli.nombre || '';
+        }
+      } catch(e) {}
+    }
+    updateFacturaPreview();
+    // Clean URL
+    window.history.replaceState({}, '', '/#facturacion');
+  }, 300);
+}

@@ -361,6 +361,23 @@ body {
 </div>
 {% endif %}
 
+<!-- Firma -->
+<div class="inv-footer-divider"></div>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;margin:28px 0;">
+  <div style="font-size:13px;color:#71717a;line-height:1.8;">
+    <strong>{{ empresa.comercial }}</strong><br>
+    {{ empresa.nombre }}<br>
+    NIT {{ empresa.nit }}<br>
+    {{ empresa.direccion }}<br>
+    {{ empresa.email }} · {{ empresa.telefono }}
+  </div>
+  <div style="text-align:center;">
+    <img src="/static/img/firma_pedro.png" alt="Firma Pedro Castro" style="height:60px;width:auto;margin-bottom:4px;">
+    <div style="font-size:14px;font-weight:700;color:#18181b;">Pedro Castro</div>
+    <div style="font-size:11px;color:#a1a1aa;text-transform:uppercase;letter-spacing:0.06em;">Gerente — {{ empresa.comercial }}</div>
+  </div>
+</div>
+
 <!-- Footer -->
 <div class="inv-footer">
   <div class="footer-brand">⚡ {{ empresa.comercial }}</div>

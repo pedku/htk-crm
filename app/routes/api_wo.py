@@ -807,6 +807,26 @@ def api_wo_template(template_id):
     finally:
         conn.close()
 
+# ── FACTURAS VINCULADAS ──────────────────────────────────────────────
+
+@api_wo_bp.route('/api/work_orders/<wo_id>/invoices')
+@login_required
+def api_wo_invoices(wo_id):
+    """Return invoices linked to this work order."""
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            """SELECT id, numero, total_general, estado, fecha_emision, fecha_vencimiento
+                FROM invoices
+                WHERE wo_id = ? AND activo = 1
+                ORDER BY created_at DESC""",
+            (wo_id,)
+        ).fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
+
 # ── FOTOS OT (F3.1) ──────────────────────────────────────────────────
 import uuid, os as _os, json as _json
 from werkzeug.utils import secure_filename

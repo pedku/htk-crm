@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ empresa.comercial }} — Cotización {{ quote.numero }}</title>
+<title>HTK INGENIERIA — Cotización COT-2026-001</title>
 <style>
 /* Don't use @import for Google Fonts — WeasyPrint can't access internet */
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -404,45 +404,40 @@ body {
     <div class="logo-sub">Ingeniería · Automatización · Energía</div>
   </div>
   <div class="header-right">
-    <div class="empresa-nombre">{{ empresa.comercial or 'HTK INGENIERIA' }}</div>
-    <div class="empresa-detalle">{{ empresa.nombre or 'HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S.' }}</div>
+    <div class="empresa-nombre">HTK INGENIERIA</div>
+    <div class="empresa-detalle">HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S</div>
     <div class="empresa-datos">
-      NIT {{ empresa.nit or '902.052.168-3' }}<br>
-      {{ empresa.direccion or 'Cra 7b #46-108, Barranquilla, Colombia' }}<br>
-      Tel: {{ empresa.telefono or '+57 315 603 2940' }} · {{ empresa.email or 'info@htk-ingenieria.com' }}
+      NIT 902052168-3<br>
+      Cra 7b #46-108, Barranquilla, Colombia<br>
+      Tel: +57 315 603 2940 · info@htk-ingenieria.com
     </div>
   </div>
 </div>
 
 <!-- ═══ FECHA ═══ -->
-{% set meses = ['', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'] %}
-{% set fe = quote.fecha_emision[:10] if quote.fecha_emision else '' %}
-{% set dia = fe[8:10]|int if fe else '' %}
-{% set mes_num = fe[5:7]|int if fe else '' %}
-{% set anio = fe[:4] if fe else '' %}
-<div class="fecha-line">{{ 'Barranquilla, ' + dia|string + ' de ' + meses[mes_num] + ' de ' + anio if fe else 'Barranquilla, ' + now.strftime('%-d de %B de %Y') }}</div>
+
+
+
+
+
+<div class="fecha-line">Barranquilla, 13 de julio de 2026</div>
 
 <!-- ═══ DESTINATARIO ═══ -->
 <div class="destinatario-block">
   <div class="ref-line">Ref:</div>
-  <div class="ref-value">{{ quote.numero }} — {{ quote.asunto or 'Cotización' }}</div>
+  <div class="ref-value">COT-2026-001 — estabilizador 10kva</div>
   <div class="saludo">
-    {% if quote.destinatario %}
-    {{ quote.destinatario }}<br>
-    {% elif quote.cliente_nombre %}
-    Señor(es)<br>
-    <strong>{{ quote.cliente_nombre }}</strong><br>
-    {% endif %}
-    {% if quote.cliente_documento %}
-    {{ quote.cliente_documento }}<br>
-    {% endif %}
+    
+    PEDRO CASTRO <br>
+    
+    
     Ciudad.
   </div>
 </div>
 
 <!-- ═══ INTRODUCCIÓN ═══ -->
 <div class="body-text">
-  Reciba un cordial saludo. Por medio de la presente, <strong>{{ empresa.comercial or 'HTK INGENIERIA' }}</strong> — {{ empresa.nombre or 'HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S.' }} — se permite someter a su consideración la siguiente cotización formal{% if quote.asunto %} para {{ quote.asunto|lower }}{% endif %}, de acuerdo con los requerimientos técnicos previamente conversados.
+  Reciba un cordial saludo. Por medio de la presente, <strong>HTK INGENIERIA</strong> — HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S — se permite someter a su consideración la siguiente cotización formal para estabilizador 10kva, de acuerdo con los requerimientos técnicos previamente conversados.
 </div>
 
 <div class="body-text">
@@ -450,25 +445,17 @@ body {
 </div>
 
 <!-- ═══ OPCIONES ═══ -->
-{% if opciones %}
+
 <div class="options-section">
-  {% set opcion_num = namespace(value=0) %}
-  {% for opcion_key, opcion_items in opciones.items() %}
-  {% set opcion_num.value = opcion_num.value + 1 %}
+  
+  
+  
   <div class="option-block">
-    {% if opcion_key == 'unica' or opcion_key == 'opcion_1' or opcion_key == '1' %}
+    
     <div class="option-label">
-      <span class="material-cobre">●</span> Opción {{ opcion_num.value }}{% if opcion_items[0].descripcion|length < 60 %} — {{ opcion_items[0].descripcion }}{% endif %}
+      <span class="material-cobre">●</span> Opción 1 — un estabilizador de 10kva
     </div>
-    {% elif opcion_key == 'opcion_2' or opcion_key == '2' %}
-    <div class="option-label" style="margin-top:16px;">
-      <span class="material-aluminio">●</span> Opción {{ opcion_num.value }} — Alternativa
-    </div>
-    {% else %}
-    <div class="option-label" style="margin-top:16px;">
-      <span class="material-aluminio">●</span> Opción {{ opcion_num.value }} — {{ opcion_key }}
-    </div>
-    {% endif %}
+    
     <table class="option-table">
       <thead>
         <tr>
@@ -479,74 +466,71 @@ body {
         </tr>
       </thead>
       <tbody>
-        {% set opcion_total = namespace(val=0) %}
-        {% for item in opcion_items %}
-        {% set opcion_total.val = opcion_total.val + (item.total_linea or 0) %}
+        
+        
+        
         <tr>
           <td>
-            {{ item.descripcion }}
-            {% if item.detalle_tecnico %}
-            <br><small style="color:#a8a29e;font-size:9px;">{{ item.detalle_tecnico }}</small>
-            {% endif %}
+            un estabilizador de 10kva
+            
+            <br><small style="color:#a8a29e;font-size:9px;">juanito alimaña</small>
+            
           </td>
-          <td>{{ item.cantidad }}</td>
-          <td>${{ '{:,.0f}'.format(item.precio_unitario) }}</td>
-          <td>${{ '{:,.0f}'.format(item.total_linea) }}</td>
+          <td>1.0</td>
+          <td>$1,900,000</td>
+          <td>$1,900,000</td>
         </tr>
-        {% endfor %}
+        
       </tbody>
     </table>
     <div class="option-total">
-      <span style="font-size:8.5px;font-style:italic;color:#a8a29e;">{% if quote.incluye_iva %}IVA incluido{% else %}Valor antes de IVA{% endif %}{% if opcion_num.value == 1 %} · No incluye instalación{% endif %}</span>
-      <span class="total-label">Total Opción {{ opcion_num.value }}</span>
-      <span class="total-value">${{ '{:,.0f}'.format(opcion_total.val) }}</span>
+      <span style="font-size:8.5px;font-style:italic;color:#a8a29e;">Valor antes de IVA · No incluye instalación</span>
+      <span class="total-label">Total Opción 1</span>
+      <span class="total-value">$1,900,000</span>
     </div>
   </div>
-  {% endfor %}
+  
 </div>
-{% endif %}
+
 
 <div class="separator"></div>
 
 <!-- ═══ ALCANCE ═══ -->
-{% if quote.alcance %}
+
 <div class="section-block">
   <div class="sec-title">Alcance de la Oferta</div>
   <div class="sec-body">
-    {{ quote.alcance }}
+    este es una oferta unica
   </div>
 </div>
-{% endif %}
+
 
 <!-- ═══ FORMAS DE PAGO ═══ -->
-{% if quote.formas_pago %}
-<div class="section-block">
-  <div class="sec-title">Formas de Pago</div>
-  <div class="sec-body">
-    {{ quote.formas_pago }}
-  </div>
-</div>
-{% endif %}
+
 
 <!-- ═══ GARANTÍA ═══ -->
-{% if quote.politica_garantia %}
+
 <div class="section-block">
   <div class="sec-title">Política de Garantía y Devoluciones</div>
   <div class="sec-body">
-    {{ quote.politica_garantia }}
+    HTK INGENIERIA (HOUSETRONIK S.A.S.) garantiza el transformador del equipo ofertado por un periodo de un (1) año, contado a partir de la fecha de entrega, contra defectos de fábrica y fallos de funcionamiento imputables al proceso de fabricación del mismo, así como por acondicionamiento y ajuste. La presente garantía se limita exclusivamente al transformador, elemento fabricado directamente por nuestra empresa, bajo la condición de que el equipo haya sido operado dentro de los parámetros eléctricos y condiciones de uso para los cuales fue diseñado.
+
+Quedan excluidos de la cobertura de garantía: los componentes internos de conmutación, control y accesorios (relés, contactores, tableros, cableado interno, entre otros); así como daños ocasionados por mal uso, uso inadecuado, manipulación por personal no autorizado, sobretensiones o descargas atmosféricas, conexiones incorrectas, y en general cualquier condición de operación que exceda el rango normal de funcionamiento del equipo. Los componentes de conmutación y control cuentan con mantenimiento preventivo y correctivo disponible por separado.
+
+Los equipos ofertados son fabricados bajo pedido y diseñados de acuerdo con las necesidades específicas de cada cliente. En consecuencia, no se aceptan devoluciones del equipo, ya sea en dinero o en especie, salvo que medie un mutuo acuerdo entre las partes debidamente formalizado.
+
+Para hacer efectiva la garantía, el cliente deberá presentar el presente documento de cotización o la factura correspondiente, y facilitar la revisión técnica del equipo en nuestras instalaciones ubicadas en la ciudad de Barranquilla.
   </div>
 </div>
-{% endif %}
+
 
 <div class="separator"></div>
 
 <!-- ═══ CIERRE ═══ -->
 <div class="closing">
-  {% if quote.notas %}
-  {{ quote.notas }}
-  {% else %}
+  
   Agradecemos la oportunidad de presentar esta oferta y quedamos a su disposición para resolver cualquier inquietud técnica o comercial que pueda surgir. Así mismo, le invitamos a confirmar su decisión para proceder con la fabricación del equipo de acuerdo con la opción seleccionada.
-  {% endif %}
+  
 </div>
 
 <div class="closing">
@@ -556,26 +540,26 @@ body {
 <!-- ═══ FIRMA ═══ -->
 <div class="signature">
   <div class="signature-left">
-    <strong>{{ empresa.comercial or 'HTK INGENIERIA' }}</strong><br>
-    {{ empresa.nombre or 'HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S.' }}<br>
-    NIT {{ empresa.nit or '902.052.168-3' }}<br>
-    {{ empresa.direccion or 'Cra 7b #46-108, Barranquilla, Colombia' }}<br>
-    Tel: {{ empresa.telefono or '+57 315 603 2940' }}<br>
-    {{ empresa.email or 'info@htk-ingenieria.com' }}
+    <strong>HTK INGENIERIA</strong><br>
+    HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S<br>
+    NIT 902052168-3<br>
+    Cra 7b #46-108, Barranquilla, Colombia<br>
+    Tel: +57 315 603 2940<br>
+    info@htk-ingenieria.com
   </div>
   <div class="signature-right">
     <img src="/static/img/firma_pedro.png" alt="Firma Pedro Castro" style="height:60px;width:auto;margin-bottom:4px;">
     <div class="sig-nombre">Pedro Castro</div>
-    <div class="sig-cargo">Gerente — {{ empresa.comercial or 'HTK INGENIERIA' }}</div>
+    <div class="sig-cargo">Gerente — HTK INGENIERIA</div>
   </div>
 </div>
 
 <!-- ═══ FOOTER ═══ -->
 <div class="footer">
-  <div class="footer-line1">{{ empresa.comercial or 'HTK INGENIERIA' }}</div>
-  <div class="footer-line2">{{ empresa.nombre or 'HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S.' }}</div>
+  <div class="footer-line1">HTK INGENIERIA</div>
+  <div class="footer-line2">HOUSETRONIK INGENIERÍA Y AUTOMATIZACIÓN INTELIGENTE S.A.S</div>
   <div class="footer-line3">
-    <span>NIT {{ empresa.nit or '902.052.168-3' }}</span>·<span>{{ empresa.direccion or 'Cra 7b #46-108, Barranquilla' }}</span>·<span>{{ empresa.telefono or '+57 315 603 2940' }}</span>·<span>{{ empresa.email or 'info@htk-ingenieria.com' }}</span>
+    <span>NIT 902052168-3</span>·<span>Cra 7b #46-108, Barranquilla, Colombia</span>·<span>+57 315 603 2940</span>·<span>info@htk-ingenieria.com</span>
   </div>
 </div>
 

@@ -401,7 +401,7 @@ def generate_quote_pdf(quote_id):
         if weasyprint_bin:
             try:
                 result = subprocess.run(
-                    [weasyprint_bin, html_path, pdf_path],
+                    [weasyprint_bin, html_path, pdf_path, '--base-url', 'file://' + BASE_DIR + '/'],
                     capture_output=True, text=True, timeout=30
                 )
                 if result.returncode == 0 and os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 500:
@@ -417,7 +417,7 @@ def generate_quote_pdf(quote_id):
         # Fallback: use weasyprint Python API directly
         try:
             from weasyprint import HTML
-            HTML(filename=html_path).write_pdf(pdf_path)
+            HTML(filename=html_path, base_url='file://' + BASE_DIR + '/').write_pdf(pdf_path)
             if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 500:
                 conn.execute("UPDATE quotes SET pdf_generado = 1, updated_at = ? WHERE id = ?",
                              (now_iso(), quote_id))
@@ -487,7 +487,7 @@ def download_quote_pdf(quote_id):
 
             try:
                 from weasyprint import HTML
-                HTML(filename=html_path).write_pdf(pdf_path)
+                HTML(filename=html_path, base_url='file://' + BASE_DIR + '/').write_pdf(pdf_path)
             except ImportError:
                 pass
             except Exception as e:

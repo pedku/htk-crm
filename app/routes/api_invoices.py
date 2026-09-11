@@ -283,6 +283,11 @@ def create_invoice():
                   int(item.get('iva_incluido', 0)), item['total_linea']))
 
         conn.commit()
+        # Notificar a Pedro
+        try:
+            _notify_invoice_emitted(inv_id)
+        except Exception as e:
+            logger.warning('Error notificando factura creada: %s', e)
         return jsonify({'id': inv_id, 'numero': numero, 'total_general': total_general}), 201
     finally:
         conn.close()
@@ -446,6 +451,13 @@ def emitir_factura(inv_id):
     result, err = _change_status(inv_id, 'emitida')
     if err:
         return jsonify({'error': err[0]}), err[1]
+    
+    # Notificar a Pedro por Telegram
+    try:
+        _notify_invoice_emitted(inv_id)
+    except Exception as e:
+        logger.warning('Error notificando factura emitida: %s', e)
+    
     return jsonify(result)
 
 @api_invoices_bp.route('/api/facturas/<inv_id>/pagar', methods=['POST'])
@@ -961,3 +973,56 @@ def public_factura_view(inv_id):
             total_abonado=round(sum(float(p['monto']) for p in all_pay), 2))
     finally:
         conn.close()
+
+
+# ── NOTIFICAR A PEDRO ────────────────────────────────────────────────
+# Telegram notification when an invoice is emitted
+
+def _notify_invoice_emitted(inv_id):
+    """Send Telegram notification to Pedro when a factura is emitted."""
+    import urllib.request as _ur
+    import json as _json
+
+    conn = get_db()
+    try:
+        inv = dict(conn.execute("SELECT * FROM invoices WHERE id = ?", (inv_id,)).fetchone())
+        if not inv:
+            return
+        client = dict(conn.execute("SELECT * FROM clients WHERE id = ?",
+                                   (inv['client_id'],)).fetchone())
+    finally:
+        conn.close()
+
+    fecha = inv.get('fecha_emision', '')[:10]
+    total = float(inv.get('total_general', 0))
+    nombre_cliente = (client or {}).get('nombre', '—')
+    telefono = (client or {}).get('telefono', '').replace('+', '').replace(' ', '')
+
+    msg = (
+        f"📄 *Factura Emitida*\n\n"
+        f"📋 *{inv.get('numero', inv_id)}*\n"
+        f"👤 {nombre_cliente}\n"
+        f"💰 ${total:,.0f} COP\n"
+        f"📅 {fecha}\n"
+        f"📌 Estado: {inv.get('estado', 'emitida')}\n"
+        f"📱 +{telefono}\n\n"
+        f"➡️ *Abrir WhatsApp:* https://wa.me/{telefono}"
+    )
+
+    payload = _json.dumps({
+        'chat_id': '5199965596',
+        'text': msg,
+        'parse_mode': 'Markdown'
+    }).encode()
+
+    try:
+        req = _ur.Request(
+            'https://api.telegram.org/bot8580263059:AAE9YR_eIRna1T43DMZDQPt3m3_1vTkxlCs/sendMessage',
+            data=payload,
+            headers={'Content-Type': 'application/json'},
+            method='POST'
+        )
+        with _ur.request.urlopen(req, timeout=10) as resp:
+            logger.info('📄 Notificación de factura %s enviada a Telegram', inv_id)
+    except Exception as e:
+        logger.warning('⚠️ Error notificando factura %s: %s', inv_id, e)

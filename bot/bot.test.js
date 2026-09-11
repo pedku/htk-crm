@@ -7,7 +7,7 @@
 //     silencing con expiración (7d pitch / 30min lead), despedida con reset,
 //     logging post-respuesta, manejo graceful de puerto API
 
-const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
+const { Client, LocalAuth } = require("whatsapp-web.js");
 const qrcode = require("qrcode-terminal");
 const qrcodePng = require("qrcode");
 const { execSync } = require("child_process");
@@ -667,7 +667,6 @@ function responder(session, estado, opcion, texto, nombre) {
 Responde *CC* (Cédula), *NIT* (empresa) o *CE* (extranjería).
 
 Si prefieres no registrar, responde *NO* y un ingeniero te contactará igual. 😊`;
-    }
 
     // ─── AWAITING REGISTRO: capturando datos del cliente ──
     case ESTADOS.AWAITING_REGISTRO: {
@@ -1331,55 +1330,6 @@ const apiServer = http.createServer((req, res) => {
         console.log(`✅ Mensaje enviado a ${realChatId} 🔇 silenciado`);
         res.writeHead(200);
         return res.end(JSON.stringify({ ok: true, to: fullNumber }));
-      }
-      
-      if (req.url === "/send-document") {
-        const { to, caption, document } = data;
-        if (!to || !document) {
-          res.writeHead(400);
-          return res.end(JSON.stringify({ error: "Faltan 'to' o 'document'" }));
-        }
-        const fullNumber = normalizarNumero(to);
-        
-        let media;
-        if (document.startsWith("http://") || document.startsWith("https://")) {
-          try {
-            const resp = await new Promise((resolve, reject) => {
-              const httpMod = require(document.startsWith("https") ? "https" : "http");
-              httpMod.get(document, (resHttp) => {
-                if (resHttp.statusCode !== 200) {
-                  reject(new Error(`HTTP ${resHttp.statusCode}`));
-                  return;
-                }
-                const chunks = [];
-                resHttp.on("data", (c) => chunks.push(c));
-                resHttp.on("end", () => resolve(Buffer.concat(chunks)));
-              }).on("error", reject);
-            });
-            media = new MessageMedia("application/pdf", resp.toString("base64"), "factura.pdf");
-          } catch (e) {
-            res.writeHead(400);
-            return res.end(JSON.stringify({ error: "Error descargando: " + e.message }));
-          }
-        } else {
-          try {
-            media = MessageMedia.fromFilePath(document);
-          } catch (e) {
-            res.writeHead(400);
-            return res.end(JSON.stringify({ error: "Error leyendo archivo: " + e.message }));
-          }
-        }
-        
-        try {
-          const sentMsg = await client.sendMessage(fullNumber, media, { caption: caption || "" });
-          const sentId = sentMsg?.id?._serialized || "";
-          res.writeHead(200, { "Content-Type": "application/json" });
-          return res.end(JSON.stringify({ ok: true, id: sentId, to: fullNumber }));
-        } catch (sendErr) {
-          const errMsg = sendErr.message || String(sendErr);
-          res.writeHead(400);
-          return res.end(JSON.stringify({ ok: false, error: errMsg.substring(0,200), to: fullNumber }));
-        }
       }
       
       if (req.url === "/silence") {
