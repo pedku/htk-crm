@@ -180,9 +180,43 @@ def api_campanas_create():
 @api_campanas_bp.route('/api/respuestas')
 @login_required
 def api_respuestas():
+    import sqlite3
     p = os.path.join(DATA, 'pending_replies.json')
     d = json.load(open(p)) if os.path.exists(p) else []
+    con = sqlite3.connect(DB); con.row_factory = sqlite3.Row
+    for x in d:
+        lid = x.get('lead_id')
+        r = con.execute("SELECT id,nombre,estado,telefono,email,segmento FROM leads WHERE id=?", (lid,)).fetchone() if lid else None
+        x['lead'] = dict(r) if r else None
+        num = re.sub(r'\D', '', str(x.get('numero') or ''))
+        if num and not num.startswith('57'):
+            num = '57' + num[-10:]
+        x['wa_link'] = f'https://wa.me/{num}' if num else None
+    con.close()
     return jsonify(d)
+
+
+@api_campanas_bp.route('/api/respuestas/estado', methods=['POST'])
+@login_required
+def api_respuestas_estado():
+    import sqlite3
+    b = request.get_json(force=True) or {}
+    lid, estado = b.get('lead_id'), b.get('estado')
+    if not lid or estado not in ('contactado', 'negociacion', 'perdido', 'cliente', 'ganado'):
+        return jsonify({'error': 'datos invalidos'}), 400
+    ts = datetime.date.today().isoformat()
+    con = sqlite3.connect(DB); cur = con.cursor()
+    cur.execute("UPDATE leads SET estado=?, notas=COALESCE(notas,'')||? WHERE id=?",
+                (estado, f"\n[{ts}] Estado -> {estado} (desde bandeja de respuestas).", lid))
+    con.commit(); con.close()
+    return jsonify({'ok': True, 'lead_id': lid, 'estado': estado})
+
+
+@api_campanas_bp.route('/api/escalaciones')
+@login_required
+def api_escalaciones():
+    p = os.path.join(DATA, 'escalations.json')
+    return jsonify(json.load(open(p)) if os.path.exists(p) else [])
 
 
 @api_campanas_bp.route('/api/respuestas/responder', methods=['POST'])

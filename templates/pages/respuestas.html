@@ -1,0 +1,95 @@
+<div id="tab-respuestas" class="tab-content">
+
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h3 class="page-title mb-0"><i class="bi bi-inbox"></i> Respuestas de leads</h3>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-htk" onclick="loadRespuestasTab()"><i class="bi bi-arrow-repeat"></i> Refrescar</button>
+      <button class="btn btn-sm btn-outline-htk" onclick="clasificarTodo()"><i class="bi bi-tags"></i> Clasificar automáticamente</button>
+    </div>
+  </div>
+
+  <div id="escalacionesBox" class="mb-3"></div>
+
+  <div class="d-flex gap-2 mb-3 flex-wrap">
+    <button class="btn btn-sm btn-outline-htk" onclick="setRespFiltro('todas')">Todas</button>
+    <button class="btn btn-sm btn-outline-htk" onclick="setRespFiltro('nuevas')">Sin procesar</button>
+    <button class="btn btn-sm btn-outline-htk" onclick="setRespFiltro('interes_fuerte')">Interés fuerte</button>
+    <button class="btn btn-sm btn-outline-htk" onclick="setRespFiltro('desinteres')">Desinterés</button>
+    <button class="btn btn-sm btn-outline-htk" onclick="setRespFiltro('cortesia')">Cortesía</button>
+  </div>
+
+  <div id="respFull" class="d-flex flex-column gap-2"></div>
+</div>
+
+<script>
+let _respFiltro = 'todas';
+let _respCache = [];
+
+function setRespFiltro(f){ _respFiltro = f; renderRespuestas(); }
+
+function _rbadge(clas){
+  const m = {interes_fuerte:'bg-success', desinteres:'bg-danger', info:'bg-primary',
+             auto_respuesta:'bg-secondary', cortesia:'bg-secondary', otro:'bg-dark'};
+  return `<span class="badge ${m[clas]||'bg-dark'}">${clas||'nueva'}</span>`;
+}
+
+async function loadRespuestasTab(){
+  const box = document.getElementById('respFull');
+  box.innerHTML = '<div class="text-muted">Cargando…</div>';
+  try{
+    const r = await fetch('/api/respuestas'); _respCache = await r.json();
+    const re = await fetch('/api/escalaciones'); const esc = await re.json();
+    const eb = document.getElementById('escalacionesBox');
+    eb.innerHTML = esc.length ? `<div class="alert alert-warning mb-0"><strong><i class="bi bi-exclamation-triangle"></i> ${esc.length} caso(s) que requieren tu atención:</strong>
+      <ul class="mb-0">${esc.slice(-8).map(e=>`<li>${_esc(e.nombre)} — ${_esc((e.mensaje||'').substring(0,90))} ${e.numero?`<a href="https://wa.me/${('57'+String(e.numero).replace(/\D/g,'').slice(-10))}" target="_blank">WhatsApp</a>`:''}</li>`).join('')}</ul></div>` : '';
+    renderRespuestas();
+  }catch(e){ box.innerHTML = '<div class="text-danger">Error: '+_esc(''+e)+'</div>'; }
+}
+
+function renderRespuestas(){
+  const box = document.getElementById('respFull');
+  let data = _respCache.slice().reverse();
+  if(_respFiltro==='nuevas') data = data.filter(x=>!x.procesado);
+  else if(_respFiltro!=='todas') data = data.filter(x=>x.clasificacion===_respFiltro);
+  if(!data.length){ box.innerHTML = '<div class="text-muted">Sin respuestas.</div>'; return; }
+  box.innerHTML = data.map(x => {
+    const l = x.lead || {};
+    const wa = x.wa_link ? `<a class="btn btn-sm btn-outline-success" href="${x.wa_link}" target="_blank"><i class="bi bi-whatsapp"></i> Abrir</a>` : '';
+    const estado = x.lead_id ? `<span class="badge bg-info">${_esc(l.estado||'')}</span>` : '';
+    return `<div class="card"><div class="card-body py-2">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div><strong>${_esc(x.nombre)}</strong> <small class="text-muted">${_esc(x.lead_id||'')} · ${_esc(l.segmento||'')}</small></div>
+        <div class="d-flex gap-1">${estado} ${_rbadge(x.clasificacion)} ${x.procesado?'':'<span class="badge bg-warning">nueva</span>'}</div>
+      </div>
+      <div class="small my-2" style="white-space:pre-wrap;">${_esc(x.mensaje)}</div>
+      <div class="d-flex gap-2 flex-wrap align-items-center">
+        <input class="form-control form-control-sm" style="max-width:420px;" id="rfull_${_esc(x.id)}" placeholder="Escribir respuesta…">
+        <button class="btn btn-sm btn-outline-htk" onclick="responderFull('${_esc(x.numero)}','${_esc(x.id)}')"><i class="bi bi-send"></i> Enviar</button>
+        ${wa}
+        ${x.lead_id?`<button class="btn btn-sm btn-outline-success" onclick="setEstadoResp('${_esc(x.lead_id)}','negociacion')">→ Negociación</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="setEstadoResp('${_esc(x.lead_id)}','perdido')">→ Perdido</button>`:''}
+      </div>
+    </div></div>`;
+  }).join('');
+}
+
+async function responderFull(numero, id){
+  const inp = document.getElementById('rfull_'+id);
+  const msg = inp.value.trim(); if(!msg) return;
+  const r = await fetch('/api/respuestas/responder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numero,mensaje:msg})});
+  const d = await r.json();
+  if(d.ok){ inp.value=''; if(window.showToast) showToast('Respondido'); } else alert('Error: '+(d.error||''));
+}
+
+async function setEstadoResp(lid, estado){
+  const r = await fetch('/api/respuestas/estado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lead_id:lid,estado})});
+  const d = await r.json();
+  if(d.ok){ if(window.showToast) showToast('Lead -> '+estado); loadRespuestasTab(); }
+}
+
+async function clasificarTodo(){
+  await fetch('/api/respuestas/clasificar',{method:'POST'});
+  if(window.showToast) showToast('Clasificación ejecutada');
+  loadRespuestasTab();
+}
+</script>

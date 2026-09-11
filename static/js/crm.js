@@ -144,6 +144,7 @@ function navigateToTab(tabName) {
  if (tabName === 'facturacion') { loadFacturas(); initFacturacionFromURL(); }
  if (tabName === 'cotizaciones') loadCotizaciones();
  if (tabName === 'campanas' && window.loadCampanasTab) loadCampanasTab();
+ if (tabName === 'respuestas' && window.loadRespuestasTab) loadRespuestasTab();
  if (tabName === 'config') { switchConfigTab('general'); }
  }
 }
