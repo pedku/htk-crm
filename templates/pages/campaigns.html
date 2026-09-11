@@ -1,0 +1,145 @@
+<div id="tab-campanas" class="tab-content">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="page-title mb-0"><i class="bi bi-megaphone"></i> Campañas</h3>
+    <button class="btn btn-sm btn-outline-htk" onclick="loadCampanas()"><i class="bi bi-arrow-repeat"></i> Refrescar</button>
+  </div>
+
+  <!-- Lista de campañas -->
+  <div id="campanasLista" class="row g-3 mb-4"></div>
+
+  <!-- Crear campaña -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title"><i class="bi bi-plus-circle"></i> Nueva campaña</h5>
+      <div class="row g-2">
+        <div class="col-md-3"><input class="form-control" id="cmpNombre" placeholder="nombre (ej: hoteles2)"></div>
+        <div class="col-md-3">
+          <select class="form-select" id="cmpSegmento">
+            <option value="hoteles">hoteles</option>
+            <option value="restaurantes">restaurantes</option>
+            <option value="B2B fábrica">B2B fábrica</option>
+            <option value="distribuidor cargadores">distribuidor cargadores</option>
+            <option value="clinicas">clínicas</option>
+            <option value="energía solar">energía solar</option>
+            <option value="taller">taller</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" id="cmpCanal">
+            <option value="whatsapp">WhatsApp</option>
+            <option value="email">Email</option>
+          </select>
+        </div>
+        <div class="col-md-2"><input class="form-control" id="cmpLimit" type="number" value="30" placeholder="límite"></div>
+        <div class="col-md-2"><button class="btn btn-outline-htk w-100" onclick="crearCampana()"><i class="bi bi-check2"></i> Crear</button></div>
+        <div class="col-md-12" id="cmpAsuntoWrap"><input class="form-control" id="cmpAsunto" placeholder="Asunto (solo email)"></div>
+        <div class="col-md-12"><textarea class="form-control" id="cmpMensaje" rows="4" placeholder="Mensaje / cuerpo de la campaña"></textarea></div>
+      </div>
+      <div id="cmpResult" class="small mt-2"></div>
+    </div>
+  </div>
+
+  <!-- Bandeja de respuestas -->
+  <div class="card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="card-title mb-0"><i class="bi bi-inbox"></i> Respuestas de leads</h5>
+        <button class="btn btn-sm btn-outline-htk" onclick="clasificarRespuestas()"><i class="bi bi-tags"></i> Clasificar automáticamente</button>
+      </div>
+      <div id="respuestasLista" class="d-flex flex-column gap-2"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function _esc(s){return (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+async function loadCampanas(){
+  const box = document.getElementById('campanasLista');
+  box.innerHTML = '<div class="text-muted">Cargando…</div>';
+  try{
+    const r = await fetch('/api/campanas'); const data = await r.json();
+    if(!data.length){ box.innerHTML = '<div class="text-muted">No hay campañas.</div>'; return; }
+    box.innerHTML = data.map(c => {
+      const pct = c.total ? Math.round(c.enviados*100/c.total) : 0;
+      return `<div class="col-md-6 col-lg-4">
+        <div class="card h-100"><div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-1">${_esc(c.name)} ${c.running?'<span class="badge bg-success">activa</span>':'<span class="badge bg-secondary">pausada</span>'}</h6>
+            <small class="text-muted">${c.enviados}/${c.total}</small>
+          </div>
+          <div class="progress mb-2" style="height:6px;"><div class="progress-bar bg-info" style="width:${pct}%"></div></div>
+          <div class="small text-muted mb-2">Canales: ${Object.entries(c.canales).map(([k,v])=>k+':'+v).join(' · ')||'-'}<br>Siguiente: ${_esc(c.siguiente||'—')}</div>
+          <div class="d-flex gap-2">
+            ${c.running
+              ? `<button class="btn btn-sm btn-outline-warning" onclick="campanaAccion('${c.name}','pause')">Pausar</button>`
+              : `<button class="btn btn-sm btn-outline-success" onclick="campanaAccion('${c.name}','resume')">Reanudar</button>`}
+            <button class="btn btn-sm btn-outline-htk" onclick="campanaAccion('${c.name}','run')">Enviar 1 ahora</button>
+          </div>
+        </div></div></div>`;
+    }).join('');
+  }catch(e){ box.innerHTML = '<div class="text-danger">Error: '+_esc(''+e)+'</div>'; }
+}
+
+async function campanaAccion(name, accion){
+  const r = await fetch('/api/campanas/'+encodeURIComponent(name)+'/'+accion,{method:'POST'});
+  const d = await r.json();
+  if(accion==='run' && d.out) window.showToast ? showToast(d.out.split('\n').slice(-2).join(' ')) : alert(d.out);
+  loadCampanas();
+}
+
+async function crearCampana(){
+  const body = {
+    nombre: document.getElementById('cmpNombre').value,
+    segmento: document.getElementById('cmpSegmento').value,
+    canal: document.getElementById('cmpCanal').value,
+    asunto: document.getElementById('cmpAsunto').value,
+    mensaje: document.getElementById('cmpMensaje').value,
+    limit: document.getElementById('cmpLimit').value
+  };
+  const r = await fetch('/api/campanas/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d = await r.json();
+  document.getElementById('cmpResult').textContent = d.error ? ('Error: '+d.error) : ('Creada "'+d.name+'" con '+d.total+' destinatarios.');
+  loadCampanas();
+}
+
+async function loadRespuestas(){
+  const box = document.getElementById('respuestasLista');
+  box.innerHTML = '<div class="text-muted">Cargando…</div>';
+  const r = await fetch('/api/respuestas'); const data = await r.json();
+  if(!data.length){ box.innerHTML = '<div class="text-muted">Sin respuestas.</div>'; return; }
+  box.innerHTML = data.slice().reverse().map(x => `
+    <div class="card"><div class="card-body py-2">
+      <div class="d-flex justify-content-between">
+        <strong>${_esc(x.nombre)}</strong>
+        <span class="badge ${x.procesado?'bg-secondary':'bg-warning'}">${x.clasificacion|| (x.procesado?'procesado':'nueva')}</span>
+      </div>
+      <div class="small mb-2" style="white-space:pre-wrap;">${_esc(x.mensaje)}</div>
+      <div class="d-flex gap-2">
+        <input class="form-control form-control-sm" id="resp_${_esc(x.id)}" placeholder="Responder…">
+        <button class="btn btn-sm btn-outline-htk" onclick="responder('${_esc(x.numero)}','${_esc(x.id)}')"><i class="bi bi-send"></i></button>
+      </div>
+    </div></div>`).join('');
+}
+
+async function responder(numero, id){
+  const inp = document.getElementById('resp_'+id);
+  const msg = inp.value.trim();
+  if(!msg) return;
+  const r = await fetch('/api/respuestas/responder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numero:numero,mensaje:msg})});
+  const d = await r.json();
+  if(d.ok){ inp.value=''; if(window.showToast) showToast('Respondido'); }
+  else alert('Error: '+(d.error||''));
+}
+
+async function clasificarRespuestas(){
+  const r = await fetch('/api/respuestas/clasificar',{method:'POST'});
+  const d = await r.json();
+  if(window.showToast) showToast('Clasificación ejecutada'); 
+  loadRespuestas();
+}
+
+function loadCampanasTab(){ loadCampanas(); loadRespuestas(); }
+</script>

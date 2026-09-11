@@ -502,6 +502,7 @@ def create_app():
     from app.routes.api_misc import api_misc_bp
     from app.routes.api_invoices import api_invoices_bp
     from app.routes.api_quotes import api_quotes_bp
+    from app.routes.api_campanas import api_campanas_bp
 
     app.register_blueprint(views_bp)
     app.register_blueprint(api_leads_bp)
@@ -512,6 +513,7 @@ def create_app():
     app.register_blueprint(api_misc_bp)
     app.register_blueprint(api_invoices_bp)
     app.register_blueprint(api_quotes_bp)
+    app.register_blueprint(api_campanas_bp)
 
     # Healthcheck endpoint (F1.3)
     from app.routes.health import health_bp
